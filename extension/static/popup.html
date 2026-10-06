@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GitLearn</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <svg
+        class="logo"
+        width="23"
+        height="29"
+        viewBox="0 0 32 36"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M8 28V8M8 21c0-6 17-3 17-14"
+          stroke="currentColor"
+          stroke-width="1.6"
+        />
+        <circle cx="8" cy="6" r="3" fill="currentColor" />
+        <circle cx="8" cy="30" r="3" fill="currentColor" />
+        <circle cx="25" cy="5" r="3" fill="currentColor" />
+      </svg>
+      <strong>Git<span>Learn</span></strong>
+      <small>UDEMY COMPANION</small>
+    </header>
+    <div id="status">Connecting…</div>
+    <section id="details"></section>
+    <p id="pending"></p>
+    <form id="pair-form">
+      <div id="pairing" hidden>
+        <label for="code">Connection code from Setup</label>
+        <div class="pair-input">
+          <input
+            id="code"
+            pattern="[0-9]{6}"
+            maxlength="6"
+            placeholder="000000"
+            autocomplete="off"
+          /><button type="submit">Connect</button>
+        </div>
+        <p class="hint">Find your code in the companion’s Setup page.</p>
+      </div>
+    </form>
+    <p id="error" role="alert"></p>
+    <button id="open" class="primary">
+      Open my workspace <span aria-hidden="true">↗</span>
+    </button>
+    <button id="retry" class="retry">Retry pending updates</button>
+    <footer>Watch. Make. Keep your progress.</footer>
+    <script src="popup.js"></script>
+  </body>
+</html>

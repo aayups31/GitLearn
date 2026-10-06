@@ -1,0 +1,42 @@
+{
+  "name": "git-for-learning",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "tsx src/server/index.ts --dev",
+    "build": "tsc --noEmit && node scripts/build.mjs",
+    "start": "node dist/server/index.js",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "ignore": "^7.0.5",
+    "lucide-react": "^0.468.0",
+    "openai": "^6.0.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/chrome": "^0.1.25",
+    "@types/express": "^5.0.5",
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "esbuild": "^0.25.12",
+    "jsdom": "^29.0.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.2",
+    "vitest": "^5.0.3"
+  }
+}
