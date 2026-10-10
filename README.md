@@ -24,7 +24,7 @@ Use `npm run dev` for the interface and server with development transforms. Doub
 
 ## Your first Udemy session
 
-1. Open **Setup**. Choose an **empty learning-history folder**, then select **Create my workspace**. GitHub and AI are optional and off by default.
+1. Follow desktop setup and choose a **parent learning folder**. GitLearn creates history and practice folders inside it. In the developer browser version, choose an empty learning-history folder in **Setup**. GitHub and AI are optional and off by default.
 2. Add your Udemy lesson manually, or connect the Chrome extension below.
 3. Select **Mirror course** to create accessible lesson structure and separate coding workspaces. Discovery is partial; more lessons can be added as you go. Refresh preserves stable lesson paths and your notes.
 4. Select **Start lesson**. Create a lesson folder or choose an existing folder containing your own code.
@@ -59,7 +59,7 @@ Retrieval combines SQLite FTS5 with locally stored 384-dimensional embeddings an
 
 ## Optional OpenAI
 
-The companion reads `.env` from the project root. Both `OPENAI_API_KEY` and your existing `OPEN_AI_API` alias work. `OPENAI_API_KEY` takes precedence. No key goes into the extension, frontend, course metadata, Git, or logs.
+In the installed app, add your own key during setup or in Settings. It is encrypted with your Windows account and passed privately to the companion. The developer companion can read `.env` from the project root; both `OPENAI_API_KEY` and the `OPEN_AI_API` alias work, with `OPENAI_API_KEY` taking precedence. Packaged apps never read the developer `.env`. No key goes into the extension, frontend, course metadata, Git, or logs.
 
 Enable **AI-assisted commit messages** in Setup to send a small secret-scanned diff, course context, and your note to OpenAI. The default is `gpt-4o-mini`; set `OPENAI_MODEL` to override. Requests use foreground Responses, Structured Outputs, `store: false`, and a short timeout. API failures fall back to a useful deterministic message.
 
@@ -90,9 +90,9 @@ Tests use temporary folders and sanitized Udemy fixtures, including a real unpac
 
 Stop the running companion before `npm run test:e2e`; the browser suite starts its own isolated instance on the same local port.
 
-## Initial build boundaries
+## Preview boundaries
 
-This is a working Windows/Chrome local build. It requires Node 24+ and Git, plus Python for Python execution; the runtime is not packaged into an installer yet. It uses authenticated loopback HTTP, an embedded CodeMirror editor, optional VS Code CLI integration, and Node's built-in SQLite (experimental in the tested Node version). No hosted backend, account system, or separate vector database is required. Interactive terminal input, dependency installation, multi-file HTML serving, debuggers, and language-server integration remain outside this focused editor.
+This is a working unsigned Windows x64/Chrome preview with a downloadable installer. The desktop app bundles its JavaScript runtime; Git is required for checkpoints, and Python is needed for Python execution. Running from source requires Node 24+. It uses authenticated loopback HTTP, an embedded CodeMirror editor, optional VS Code CLI integration, and Node's built-in SQLite. No hosted backend, account system, or separate vector database is required. Interactive terminal input, dependency installation, multi-file HTML serving, debuggers, and language-server integration remain outside this focused editor.
 
 Real authenticated Udemy layouts vary and need live validation on your course. The complete workflow is covered by fixtures plus manual fallback. Ignore rules, hard exclusions, and credential patterns reduce leakage risk; they cannot detect every sensitive value. Inspect previews and select only learner-owned source folders.
 

@@ -87,6 +87,23 @@ if (args[0] === "status") {
   console.log(
     `Published preview release: https://github.com/aayups31/GitLearn/releases/tag/v${version}`,
   );
+} else if (args[0] === "replace-installer") {
+  const { version } = JSON.parse(await readFile("package.json", "utf8"));
+  await command(
+    "gh",
+    [
+      "release",
+      "upload",
+      `v${version}`,
+      `dist/releases/GitLearn-Setup-${version}.exe`,
+      "dist/releases/SHA256SUMS.txt",
+      "--repo",
+      "aayups31/GitLearn",
+      "--clobber",
+    ],
+    env,
+  );
+  console.log(`Updated preview installer and checksums for v${version}.`);
 } else if (args[0] === "view") {
   console.log(
     (
@@ -105,4 +122,4 @@ if (args[0] === "status") {
       )
     ).trim(),
   );
-} else throw Error("Use status, publish, or view.");
+} else throw Error("Use status, publish, replace-installer, or view.");

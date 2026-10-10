@@ -34,7 +34,7 @@ Single purpose: bring the user's accessible Udemy lesson context and explicitly 
 
 Review the dashboard's current privacy form against actual handling. Course-page URLs/context fall within website content or browsing activity; imported transcript text is website content. Disclose local processing and optional OpenAI/GitHub processing in the companion. Never select a no-data declaration that contradicts these behaviors. The source privacy page is `src/site/privacy.html`; supply its actual public URL after hosting is configured.
 
-Prepare a 128px icon and at least one 1280x800 or 640x400 screenshot showing the actual extension, with no private learner data. Use supplied generated brand icons, and a fixture Udemy page for screenshots. The optional promotional tile is 440x280. Describe what is visible; do not imply automatic video access or support beyond Udemy.
+The 128px icon is in extension/static/icons/icon-128.png. A ready 1280x800 listing screenshot is in docs/store-assets/extension-1280x800.png. It uses the actual tested popup with an example course and no private learner data. The optional promotional tile is 440x280. Describe what is visible; do not imply automatic video access or support beyond Udemy.
 
 Complete account verification, listing category/language, privacy practices, the public privacy-policy URL, and tester instructions before requesting store review. Explain that reviewers need the Windows companion running, how to pair it, and that no paid course content or API key is required to test metadata pairing. An API key is needed only for optional AI inside the companion.
 

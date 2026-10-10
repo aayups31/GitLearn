@@ -1,6 +1,12 @@
 {
   "version": "0.2.0",
-  "windows": null,
-  "extension": null,
+  "windows": {
+    "url": "https://github.com/aayups31/GitLearn/releases/download/v0.2.0/GitLearn-Setup-0.2.0.exe",
+    "size": "111 MB"
+  },
+  "extension": {
+    "url": "https://github.com/aayups31/GitLearn/releases/download/v0.2.0/GitLearn-Chrome-0.2.0.zip",
+    "size": "134 KB"
+  },
   "chromeStoreUrl": null
 }

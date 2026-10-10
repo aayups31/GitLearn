@@ -18,6 +18,9 @@ app.setName("GitLearn");
 if (process.env.GITLEARN_DESKTOP_USER_DATA)
   app.setPath("userData", process.env.GITLEARN_DESKTOP_USER_DATA);
 const root = app.getAppPath();
+const extensionSource = app.isPackaged
+  ? path.join(process.resourcesPath, "extension")
+  : path.join(root, "dist/extension");
 const port = Number(process.env.GITLEARN_PORT || "47831");
 const origin = `http://127.0.0.1:${port}`;
 let window: BrowserWindow | undefined;
@@ -253,15 +256,14 @@ else {
       });
       ipcMain.handle("desktop:extension", async (event) => {
         trusted(event);
-        const source = path.join(root, "dist/extension");
-        // Chrome needs an unpacked folder outside the read-only app archive.
+        // Chrome needs ordinary files. Packaged extension resources stay outside ASAR.
         const { cp } = await import("node:fs/promises");
         const target = path.join(
           app.getPath("userData"),
           "extension",
           app.getVersion(),
         );
-        await cp(source, target, { recursive: true });
+        await cp(extensionSource, target, { recursive: true });
         const error = await shell.openPath(target);
         if (error) throw new Error(error);
       });
@@ -273,7 +275,7 @@ else {
         show: false,
         backgroundColor: "#101114",
         title: "GitLearn",
-        icon: path.join(root, "dist/extension/icons/icon-256.png"),
+        icon: path.join(extensionSource, "icons/icon-256.png"),
         autoHideMenuBar: true,
         webPreferences: {
           preload: path.join(root, "dist/desktop/preload.cjs"),

@@ -33,6 +33,24 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
         bridge: typeof window.gitLearnDesktop?.chooseFolder,
       })),
     ).toEqual({ require: "undefined", bridge: "function" });
+    await desktop.evaluate(({ shell }) => {
+      shell.openPath = async () => "";
+    });
+    await page.evaluate(() => window.gitLearnDesktop!.openExtensionFolder());
+    const extensionDirectory = path.join(
+      directory,
+      "profile",
+      "extension",
+      "0.2.0",
+    );
+    expect(
+      JSON.parse(
+        await readFile(path.join(extensionDirectory, "manifest.json"), "utf8"),
+      ).version,
+    ).toBe("0.2.0");
+    expect(
+      (await readFile(path.join(extensionDirectory, "background.js"))).length,
+    ).toBeGreaterThan(1000);
     if (!process.env.GITLEARN_PACKAGED_TEST)
       await page.screenshot({ path: ".local/design/desktop-first-run.png" });
     await page.getByRole("button", { name: "Let’s get started" }).click();

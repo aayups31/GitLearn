@@ -27,7 +27,12 @@ async function directory(root) {
     }
   }
 }
-for (const root of ["dist/site", "dist/web", "dist/extension"])
+for (const root of [
+  "dist/site",
+  "dist/web",
+  "dist/extension",
+  "dist/releases/win-unpacked/resources/extension",
+])
   await directory(root);
 const archive = "dist/releases/win-unpacked/resources/app.asar";
 await scan(archive);
@@ -52,5 +57,5 @@ if (process.argv.includes("--staged")) {
   }
 }
 console.log(
-  "Verified: configured API keys and environment files are absent from website, extension, desktop archive, and requested staged source.",
+  "Verified: configured API keys and environment files are absent from website, extension, desktop archive/resources, and requested staged source.",
 );

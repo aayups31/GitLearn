@@ -21,7 +21,7 @@ flowchart LR
   Git -->|Optional manual sync| GitHub[One private learning repository]
 ```
 
-The renderer has no Node access and runs with context isolation and sandboxing. Only the main frame can invoke the narrow native bridge. The companion uses the bundled Electron runtime for JavaScript; Python and Git are local prerequisites. Source folders, API credentials, and app data are excluded from installer resources. Native API keys use Electron safeStorage backed by Windows account encryption and are transferred to the companion over private IPC. Development can still read the project's .env, but packaged apps never do.
+The renderer has no Node access and runs with context isolation and sandboxing. Only the main frame can invoke the narrow native bridge. The companion uses the bundled Electron runtime for JavaScript; Python and Git are local prerequisites. Learner folders, API credentials, and app data are excluded from installer resources. Native API keys use Electron safeStorage backed by Windows account encryption and are transferred to the companion over private IPC. Development can still read the project's .env, but packaged apps never do.
 
 The installed app uses the existing `LOCALAPPDATA/GitForLearning` companion database so an existing user's local course history is retained. Native preferences and encrypted keys live in Electron's GitLearn user-data directory. A standalone companion already listening on GitLearn's port can be reused; close it and reopen the desktop app to manage keys from the native UI. The installer retains learning files and app data on uninstall.
 
@@ -51,7 +51,7 @@ Desktop/My Learning/
     udemy/<course>/<section>/<lesson>/
 ```
 
-The native app copies its included extension into a version-specific folder in app data when the learner clicks Open included extension folder. Chrome can Load unpacked from that actual folder, even though the app itself uses an ASAR archive. Pair once; after pairing, Open my workspace focuses the desktop window when its own companion is running. Existing browser-only companion users retain the browser fallback.
+The installer keeps the extension in resources/extension as ordinary files outside ASAR. The native app copies it into a version-specific folder in app data when the learner clicks Open included extension folder. Chrome can Load unpacked from that actual folder. Pair once; after pairing, Open my workspace focuses the desktop window when its own companion is running. Existing browser-only companion users retain the browser fallback.
 
 ## Distribution state
 
