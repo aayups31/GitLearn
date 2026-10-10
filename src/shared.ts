@@ -60,6 +60,7 @@ export interface Settings {
   repoPath: string;
   aiEnabled: boolean;
   remote: string;
+  assistantEnabled?: boolean;
 }
 export interface AppState {
   settings: Settings;

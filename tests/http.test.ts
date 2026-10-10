@@ -12,13 +12,15 @@ let store: Store;
 let server: Server;
 let base: string;
 let localToken: string;
+let focused: number;
 beforeEach(async () => {
   directory = await mkdtemp(path.join(tmpdir(), "gitlearn-http-"));
   store = new Store(directory);
   localToken = store.get<string>("localToken")!;
   const app = new Application(store);
   const port = 49153 + Math.floor(Math.random() * 1000);
-  server = createApp(app, port).listen(port, "127.0.0.1");
+  focused = 0;
+  server = createApp(app, port, () => focused++).listen(port, "127.0.0.1");
   await new Promise<void>((resolve) => server.once("listening", resolve));
   base = `http://127.0.0.1:${port}`;
 });
@@ -97,6 +99,16 @@ it("pairs an extension with a one-use code and limits its authority", async () =
   expect(paired.status).toBe(200);
   const { token } = (await paired.json()) as { token: string };
   expect(
+    (await fetch(`${base}/api/open-desktop`, { method: "POST" })).status,
+  ).toBe(401);
+  expect(focused).toBe(0);
+  const opened = await fetch(`${base}/api/open-desktop`, {
+    method: "POST",
+    headers: { Origin: origin, Authorization: `Bearer ${token}` },
+  });
+  expect(await opened.json()).toEqual({ opened: true });
+  expect(focused).toBe(1);
+  expect(
     (
       await fetch(`${base}/api/state`, {
         headers: { Origin: origin, Authorization: `Bearer ${token}` },
@@ -124,6 +136,26 @@ it("pairs an extension with a one-use code and limits its authority", async () =
       })
     ).status,
   ).toBe(403);
+  for (const route of [
+    "workspace-file",
+    "workspace-run",
+    "library-index",
+    "assistant-chat",
+    "assistant-enable",
+  ]) {
+    expect(
+      (
+        await fetch(`${base}/api/${route}`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: "{}",
+        })
+      ).status,
+    ).toBe(403);
+  }
   expect(
     (
       await fetch(`${base}/api/extension-status`, {
@@ -170,4 +202,19 @@ it("bounds pairing attempts and validates malformed requests", async () => {
     body: "{}",
   });
   expect(result.status).toBe(400);
+});
+it("rejects a delayed note save for a different lesson session", async () => {
+  const response = await fetch(`${base}/api/note`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${localToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      sessionId: "old-lesson-session",
+      note: "An old tab’s note",
+    }),
+  });
+  expect(response.status).toBe(409);
+  expect(store.state().session).toBeNull();
 });

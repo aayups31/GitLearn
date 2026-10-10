@@ -102,6 +102,40 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
   )
     return false;
   (async () => {
+    if (message.type === "open-workspace") return send("open-desktop", {});
+    if (message.type === "capture-transcript") {
+      const tabs = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      const tab = tabs.find(
+        (item) =>
+          item.id &&
+          /^https:\/\/(?:[a-z0-9-]+\.)*udemy\.com\/course\//.test(
+            item.url || "",
+          ),
+      );
+      if (!tab?.id)
+        throw new Error("Open your Udemy lesson in the current tab first.");
+      const result = await chrome.tabs
+        .sendMessage(tab.id, { type: "read-transcript" })
+        .catch(() => {
+          throw new Error(
+            "Reload your Udemy course after updating the extension, then open its Transcript panel.",
+          );
+        });
+      if (result.error) throw new Error(result.error);
+      const observation = observationSchema.parse(result.observation);
+      await send("course-material", {
+        courseId: observation.courseId,
+        title: result.title,
+        content: result.content,
+        kind: "transcript",
+        lessonId: result.lessonId || "",
+        observation,
+      });
+      return { ok: true };
+    }
     if (message.type === "pair") {
       const result = await send("pair", { code: message.code });
       await stored(() => chrome.storage.local.set({ token: result.token }));

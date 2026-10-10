@@ -47,12 +47,33 @@ document
   });
 document
   .getElementById("open")!
-  .addEventListener("click", () =>
-    chrome.tabs.create({ url: "http://127.0.0.1:47831" }),
-  );
+  .addEventListener("click", async () => {
+    const result = await chrome.runtime.sendMessage({ type: "open-workspace" }).catch(() => null);
+    if (!result?.opened) await chrome.tabs.create({ url: "http://127.0.0.1:47831" });
+  });
 document.getElementById("retry")!.addEventListener("click", async () => {
   await chrome.runtime.sendMessage({ type: "retry" });
   await update();
+});
+document.getElementById("transcript")!.addEventListener("click", async () => {
+  const button = document.getElementById("transcript") as HTMLButtonElement;
+  button.disabled = true;
+  document.getElementById("error")!.textContent = "";
+  try {
+    const result = await chrome.runtime.sendMessage({
+      type: "capture-transcript",
+    });
+    if (result.error) throw new Error(result.error);
+    document.getElementById("transcript-status")!.textContent =
+      "Transcript saved. Open GitLearn → Code & learn → Sources.";
+  } catch (error) {
+    document.getElementById("error")!.textContent =
+      error instanceof Error
+        ? error.message
+        : "Could not import this transcript.";
+  } finally {
+    button.disabled = false;
+  }
 });
 update().catch(() => {
   statusEl.textContent = "Reload the extension to reconnect.";

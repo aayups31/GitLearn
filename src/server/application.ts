@@ -39,7 +39,7 @@ export class Application {
   private queue: Promise<unknown> = Promise.resolve();
   constructor(
     readonly store: Store,
-    readonly apiKey?: string,
+    public apiKey?: string,
   ) {}
   serial<T>(action: () => Promise<T>): Promise<T> {
     const result = this.queue.then(action);

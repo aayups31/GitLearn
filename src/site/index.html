@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#101216" />
+    <meta
+      name="description"
+      content="Turn Udemy lessons into your own working code. GitLearn brings courses, a local editor, sourced AI help, and learning history into one Windows workspace."
+    />
+    <title>GitLearn · Go beyond the lesson</title>
+    <link rel="icon" href="assets/mark.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/site.css" />
+    <link
+      rel="preload"
+      href="assets/fonts/Manrope.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <meta property="og:title" content="GitLearn · Go beyond the lesson" />
+    <meta
+      property="og:description"
+      content="Your courses. Your code. A place to make it your own."
+    />
+    <!-- DEPLOY STEP: add canonical og:url and an absolute og:image after the public domain is chosen. -->
+    <script src="assets/site.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="wordmark" href="#" aria-label="GitLearn home"
+        ><img src="assets/mark.svg" width="28" height="28" alt="" />GitLearn</a
+      >
+      <nav aria-label="Main navigation">
+        <a href="#product">Product</a><a href="#guide">How it works</a
+        ><a href="#faq">FAQ</a>
+      </nav>
+      <a href="#download" class="button small"
+        >Download <span aria-hidden="true">↗</span></a
+      >
+    </header>
+    <main id="main" tabindex="-1">
+      <section class="hero wrap">
+        <p class="eyebrow">
+          <span class="status-dot" aria-hidden="true"></span> THE WORKSPACE FOR
+          SELF-TAUGHT DEVELOPERS
+        </p>
+        <h1>Go beyond <br />the <span>lesson.</span></h1>
+        <p class="hero-lede">
+          Watch on Udemy. Build in GitLearn.<br />Your courses, code, and
+          sourced AI help in one workspace that lives on your computer.
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="#download"
+            >Download GitLearn <span aria-hidden="true">↓</span></a
+          ><a class="plain-link" href="#product"
+            >Explore the workspace <span aria-hidden="true">↗</span></a
+          >
+        </div>
+        <p class="platform-note">
+          Windows preview · Udemy first · GitHub optional
+        </p>
+      </section>
+      <section
+        id="product"
+        class="product-proof wrap"
+        aria-label="GitLearn workspace preview"
+      >
+        <div class="proof-top">
+          <span
+            ><span class="status-dot" aria-hidden="true"></span> A LITTLE MORE
+            FOCUS. A LOT MORE MAKING.</span
+          ><span class="proof-version">GITLEARN / WORKSPACE</span>
+        </div>
+        <div class="proof-scroll">
+          <img
+            src="assets/workspace.png"
+            width="1500"
+            height="1000"
+            fetchpriority="high"
+            alt="GitLearn example workspace with courses on the left, a working code editor in the center, and course AI help with source citations on the right."
+          />
+        </div>
+        <p class="image-caption">
+          The actual GitLearn interface. Example course and assistant
+          conversation shown.
+        </p>
+      </section>
+      <section class="manifesto wrap">
+        <p class="eyebrow">LEARNING IS IN THE DOING</p>
+        <h2>The video ends.<br /><span>Your learning shouldn’t.</span></h2>
+        <p>
+          Following along is a start. Understanding comes from trying it
+          yourself, getting unstuck, and picking up where you left off. GitLearn
+          gives that work a home.
+        </p>
+      </section>
+      <section class="workflow wrap" aria-label="GitLearn workflow">
+        <article>
+          <div class="step-meta"><span>01</span><span>CONNECT</span></div>
+          <h3>Watch with context.</h3>
+          <p>
+            The browser extension brings your Udemy course and current lesson
+            into GitLearn. No juggling course names, folders, and scattered
+            tabs.
+          </p>
+          <div class="mini-lesson">
+            <span class="tiny-label">UDEMY / CURRENT LESSON</span
+            ><strong>Building your first agent</strong
+            ><span><i class="status-dot"></i> Connected to your workspace</span>
+          </div>
+        </article>
+        <article>
+          <div class="step-meta"><span>02</span><span>PRACTICE</span></div>
+          <h3>Make it your own.</h3>
+          <p>
+            Write real files in the local editor. Run JavaScript or Python,
+            preview a single HTML page, and ask for help grounded in your own
+            code.
+          </p>
+          <pre
+            class="mini-code"
+          ><span class="code-muted">// Try it. Change it. Understand it.</span>
+<span class="code-blue">const</span> lesson = <span class="code-green">"Your next idea"</span>;
+console.log(lesson);<span class="code-cursor" aria-hidden="true">▍</span></pre>
+        </article>
+        <article>
+          <div class="step-meta"><span>03</span><span>KEEP</span></div>
+          <h3>Keep what you learn.</h3>
+          <p>
+            Save notes with a reviewed Git checkpoint. Course by course, build a
+            history of what you made. Connect one private GitHub repository when
+            you’re ready.
+          </p>
+          <div class="mini-history">
+            <span class="commit-line" aria-hidden="true">●<br />│<br />●</span>
+            <div>
+              <strong>Understand the agent loop</strong
+              ><span>Code + notes · Local checkpoint</span
+              ><strong>Build the first tool</strong
+              ><span>Earlier in this course</span>
+            </div>
+          </div>
+        </article>
+      </section>
+      <section class="assistant-section wrap">
+        <div class="assistant-intro">
+          <p class="eyebrow">HELP THAT KNOWS WHAT YOU’RE LEARNING</p>
+          <h2>Less guessing.<br />More understanding.</h2>
+          <p>
+            Ask about your code, or ask the course. GitLearn retrieves relevant
+            passages from your local learning library and shows the sources
+            behind the answer.
+          </p>
+          <p class="footnote">
+            Add transcripts you can see or material you have permission to use.
+            GitLearn doesn’t download course videos. AI requires your own OpenAI
+            API key.
+          </p>
+        </div>
+        <div class="assistant-demo">
+          <div class="demo-label">
+            ASSISTANT <span>Interactive example</span>
+          </div>
+          <div class="demo-tabs" role="tablist" aria-label="Assistant example">
+            <button
+              id="code-tab"
+              role="tab"
+              aria-controls="code-example"
+              aria-selected="true"
+            >
+              Code help</button
+            ><button
+              id="course-tab"
+              role="tab"
+              aria-controls="course-example"
+              aria-selected="false"
+              tabindex="-1"
+            >
+              Ask the course
+            </button>
+          </div>
+          <div id="code-example" role="tabpanel" aria-labelledby="code-tab">
+            <p class="demo-question">
+              Why does my loop stop after one tool call?
+            </p>
+            <p>
+              Return the tool result to the conversation, then let the model
+              choose the next step. Your function currently returns immediately
+              after the first call.
+            </p>
+            <pre><span class="code-muted"># Keep the conversation going</span>
+messages.append(tool_result)
+<span class="code-blue">continue</span></pre>
+            <div class="demo-source">
+              <span>↳</span>
+              <div>
+                <strong>agent.py</strong
+                ><small>Your working code · lines 24–38</small>
+              </div>
+              <span class="source-pill">SOURCE 01</span>
+            </div>
+          </div>
+          <div
+            id="course-example"
+            role="tabpanel"
+            aria-labelledby="course-tab"
+            hidden
+          >
+            <p class="demo-question">
+              What makes an agent different from one prompt?
+            </p>
+            <p>
+              An agent repeats a loop: decide, use a tool, read the result, and
+              decide again. The lesson’s example keeps going until the task is
+              complete. <span class="citation">[1]</span>
+            </p>
+            <div class="demo-source">
+              <span>↳</span>
+              <div>
+                <strong>The agent loop</strong
+                ><small>Imported transcript · lines 12–20</small>
+              </div>
+              <span class="source-pill">SOURCE 01</span>
+            </div>
+            <p class="demo-detail">
+              The real assistant opens each cited passage so you can check the
+              explanation against your course.
+            </p>
+          </div>
+        </div>
+      </section>
+      <section class="local-section wrap">
+        <div class="local-heading">
+          <p class="eyebrow">YOUR COMPUTER. YOUR LEARNING.</p>
+          <h2>One home for<br />every new skill.</h2>
+        </div>
+        <div class="folder-tree" aria-label="Example learning folder structure">
+          <div><span>⌁</span> My Learning</div>
+          <div class="tree-branch">
+            ├ <strong>workspaces</strong><small>Your editable files</small>
+          </div>
+          <div class="tree-leaf">│　├ Python foundations / lessons</div>
+          <div class="tree-leaf">│　└ Building AI agents / lessons</div>
+          <div class="tree-branch">
+            └ <strong>history</strong><small>Reviewed code + notes</small>
+          </div>
+          <div class="tree-leaf">　　└ udemy / courses / lessons</div>
+          <p>
+            <span class="status-dot"></span> Local by default. One optional
+            GitHub repository.
+          </p>
+        </div>
+      </section>
+      <section id="guide" class="guide wrap">
+        <div class="guide-heading">
+          <p class="eyebrow">FROM DOWNLOAD TO FIRST CHECKPOINT</p>
+          <h2>Get into your flow.</h2>
+          <p>
+            A guided setup inside the app takes care of the starting point.
+            Here’s the whole journey.
+          </p>
+        </div>
+        <ol class="guide-list">
+          <li>
+            <span>01</span>
+            <div>
+              <h3>Install GitLearn.</h3>
+              <p>
+                Download the Windows installer below. Install
+                <a
+                  href="https://git-scm.com/downloads/win"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Git for Windows</a
+                >
+                if needed. JavaScript’s runtime comes with the app; install
+                Python only for Python lessons.
+              </p>
+            </div>
+          </li>
+          <li>
+            <span>02</span>
+            <div>
+              <h3>Choose your learning folder.</h3>
+              <p>
+                Open the app and follow setup. Use a parent folder such as
+                Desktop / My Learning. GitLearn creates history and practice
+                folders inside it and organizes each course automatically.
+              </p>
+            </div>
+          </li>
+          <li>
+            <span>03</span>
+            <div>
+              <h3>Add AI help, if you want it.</h3>
+              <p>
+                Add your OpenAI API key during setup or later in settings. The
+                desktop app encrypts it with Windows. Local coding and
+                checkpoints work without a key.
+              </p>
+            </div>
+          </li>
+          <li>
+            <span>04</span>
+            <div>
+              <h3>Connect the browser extension.</h3>
+              <p>
+                Until the Chrome store listing is published, use the included
+                extension folder from setup. Open
+                <code>chrome://extensions</code>, enable Developer mode, choose
+                Load unpacked, and select that folder. Enter the app’s
+                connection code in the extension.
+              </p>
+            </div>
+          </li>
+          <li>
+            <span>05</span>
+            <div>
+              <h3>Open a lesson. Make something.</h3>
+              <p>
+                Visit a Udemy course. In GitLearn, choose the course, start a
+                lesson, and open Code &amp; learn. Create or edit files, run
+                your code, and keep notes. Your existing local coding folder
+                works too.
+              </p>
+            </div>
+          </li>
+          <li>
+            <span>06</span>
+            <div>
+              <h3>Ask, check, and save.</h3>
+              <p>
+                For course-specific answers, open Udemy’s transcript panel and
+                choose Import visible transcript in the extension. You can also
+                add permitted text in Sources. Review a checkpoint when you’re
+                done, then save locally. GitHub sync is optional in settings.
+              </p>
+            </div>
+          </li>
+        </ol>
+      </section>
+      <section id="faq" class="faq wrap">
+        <div>
+          <p class="eyebrow">A FEW THINGS TO KNOW</p>
+          <h2>Before you start.</h2>
+        </div>
+        <div class="faq-list">
+          <details>
+            <summary>Do I need a GitHub repository?</summary>
+            <p>
+              No. GitLearn creates local Git history when you choose your
+              learning folder. Later, you can connect one private repository for
+              all your courses. GitHub account connection uses GitHub CLI; setup
+              explains what to install.
+            </p>
+          </details>
+          <details>
+            <summary>Can I keep using VS Code?</summary>
+            <p>
+              Yes. Choose an existing local coding folder when you start a
+              lesson, or use GitLearn’s built-in editor. You’re working with
+              ordinary files on your computer.
+            </p>
+          </details>
+          <details>
+            <summary>
+              Does the assistant know the whole course automatically?
+            </summary>
+            <p>
+              No. Course answers use transcripts and material you explicitly
+              import. The extension imports the transcript currently visible on
+              the lesson page. If a source is missing, GitLearn tells you rather
+              than claiming to know the lecture.
+            </p>
+          </details>
+          <details>
+            <summary>What can I run inside GitLearn?</summary>
+            <p>
+              JavaScript comes ready to run. Python needs a local Python
+              installation or the lesson folder’s virtual environment. A single
+              HTML file with inline CSS and JavaScript can be previewed. Other
+              languages and full applications use your own local toolchain. The
+              runner limits each run to 10 seconds.
+            </p>
+          </details>
+          <details>
+            <summary>What leaves my computer?</summary>
+            <p>
+              Your files, notes, library, and history live locally. When you
+              enable and use AI, selected context goes to OpenAI. GitHub
+              receives reviewed checkpoints only when you connect a repository
+              and sync. GitLearn does not run a hosted workspace or collect
+              analytics. <a href="privacy.html">Read the privacy details.</a>
+            </p>
+          </details>
+          <details>
+            <summary>Is this the final public release?</summary>
+            <p>
+              This is a Windows preview. The installer is currently unsigned, so
+              Windows may show a publisher warning. The Chrome store listing is
+              still being prepared. GitLearn is independent of Udemy and is not
+              affiliated with or endorsed by Udemy, Linear, or Anthropic.
+            </p>
+          </details>
+        </div>
+      </section>
+      <section id="download" class="download wrap">
+        <div>
+          <p class="eyebrow">YOUR NEXT LESSON DESERVES A WORKSPACE</p>
+          <h2>Make learning<br /><span>your own.</span></h2>
+          <p>Start with the Windows app. Bring your browser along.</p>
+        </div>
+        <div class="download-options">
+          <a
+            id="windows-download"
+            class="button primary"
+            href="https://github.com/aayups31/GitLearn/releases"
+            >Get GitLearn for Windows <span aria-hidden="true">↗</span></a
+          >
+          <p id="windows-status" class="download-note">
+            Preview builds appear on GitHub Releases.
+          </p>
+          <a
+            id="extension-download"
+            class="button secondary"
+            href="https://github.com/aayups31/GitLearn/releases"
+            >Get the Chrome extension <span aria-hidden="true">↗</span></a
+          >
+          <p id="extension-status" class="download-note">
+            Chrome Web Store listing pending. Use the upload ZIP or the app’s
+            included extension.
+          </p>
+          <a class="plain-link" href="#guide"
+            >Read the setup steps <span aria-hidden="true">↑</span></a
+          >
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer wrap">
+      <a class="wordmark" href="#"
+        ><img src="assets/mark.svg" width="24" height="24" alt="" />GitLearn</a
+      >
+      <p>Keep what you learn.</p>
+      <div>
+        <a href="privacy.html">Privacy</a
+        ><a
+          href="https://github.com/aayups31/GitLearn"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Source code ↗</a
+        ><span>© 2026 GitLearn</span>
+      </div>
+    </footer>
+  </body>
+</html>

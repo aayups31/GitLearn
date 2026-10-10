@@ -11,6 +11,8 @@ import { observationSchema } from "../shared.js";
 import { UserError } from "./safety.js";
 import { run } from "./git.js";
 import { githubStatus, signInGithub } from "./github.js";
+import { Workspace } from "./workspace.js";
+import { CourseLibrary } from "./library.js";
 
 const text = z.string().max(2000);
 function matches(a: string, b: string) {
@@ -18,8 +20,15 @@ function matches(a: string, b: string) {
   const bb = Buffer.from(b);
   return aa.length === bb.length && timingSafeEqual(aa, bb);
 }
-export function createApp(application: Application, port: number) {
+export function createApp(
+  application: Application,
+  port: number,
+  focusDesktop?: () => void,
+) {
   const app = express();
+  const workspace = new Workspace(application);
+  app.locals.stopPrograms = () => workspace.stopAll();
+  const library = new CourseLibrary(application);
   app.disable("x-powered-by");
   const localOrigins = new Set([
     `http://127.0.0.1:${port}`,
@@ -60,8 +69,17 @@ export function createApp(application: Application, port: number) {
   });
   app.use(express.json({ limit: "1mb" }));
   app.get("/api/health", (_req, res) =>
-    res.json({ ok: true, name: "GitLearn", version: "0.1.0" }),
+    res.json({ ok: true, name: "GitLearn", version: "0.2.0" }),
   );
+  app.get("/preview/:token", (req, res) => {
+    res.setHeader("X-Frame-Options", "SAMEORIGIN");
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader(
+      "Content-Security-Policy",
+      "sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'",
+    );
+    res.type("html").send(workspace.previewDocument(req.params.token));
+  });
   app.get("/api/bootstrap", (_req, res) =>
     res.status(403).json({ error: "Connect from the local GitLearn page." }),
   );
@@ -142,7 +160,12 @@ export function createApp(application: Application, port: number) {
     }
     if (
       isExtension &&
-      !["/observations", "/extension-status"].includes(req.path)
+      ![
+        "/observations",
+        "/extension-status",
+        "/course-material",
+        "/open-desktop",
+      ].includes(req.path)
     ) {
       res.status(403).json({
         error: "Use the local app for workspace and repository actions.",
@@ -155,6 +178,139 @@ export function createApp(application: Application, port: number) {
   app.get("/api/state", async (_req, res) =>
     res.json(await application.status()),
   );
+  app.post("/api/open-desktop", (_req, res) => {
+    focusDesktop?.();
+    res.json({ opened: !!focusDesktop });
+  });
+  const fileQuery = z.object({ sessionId: text.min(1), path: text.min(1) });
+  app.get("/api/workspace-files", async (req, res) =>
+    res.json(await workspace.list(text.min(1).parse(req.query.sessionId))),
+  );
+  app.get("/api/workspace-file", async (req, res) => {
+    const input = fileQuery.parse(req.query);
+    res.json(await workspace.read(input.sessionId, input.path));
+  });
+  app.post("/api/workspace-file", async (req, res) => {
+    const input = fileQuery
+      .extend({
+        content: z.string().max(512000),
+        version: z.string().length(64).nullable(),
+      })
+      .parse(req.body);
+    res.json(
+      await application.serial(() =>
+        workspace.save(
+          input.sessionId,
+          input.path,
+          input.content,
+          input.version,
+        ),
+      ),
+    );
+  });
+  app.post("/api/workspace-run", async (req, res) => {
+    const input = fileQuery.parse(req.body);
+    res.json(await workspace.run(input.sessionId, input.path));
+  });
+  app.post("/api/workspace-preview", async (req, res) => {
+    const input = fileQuery.parse(req.body);
+    res.json(await workspace.preview(input.sessionId, input.path));
+  });
+  app.post("/api/workspace-stop", (req, res) => {
+    workspace.stop(text.min(1).parse(req.body.sessionId));
+    res.json({ ok: true });
+  });
+  app.get("/api/library", (req, res) =>
+    res.json(library.status(text.min(1).parse(req.query.courseId))),
+  );
+  app.post("/api/library-index", async (req, res) => {
+    const input = z
+      .object({ courseId: text.min(1), semantic: z.boolean().default(true) })
+      .parse(req.body);
+    res.json(await library.index(input.courseId, input.semantic));
+  });
+  app.post("/api/library-remove", (req, res) => {
+    const input = z
+      .object({ courseId: text.min(1), documentId: text.min(1) })
+      .parse(req.body);
+    library.remove(input.courseId, input.documentId);
+    res.json(library.status(input.courseId));
+  });
+  app.post("/api/course-material", async (req, res) => {
+    const input = z
+      .object({
+        courseId: text.min(1),
+        title: z.string().min(1).max(200),
+        content: z.string().min(1).max(240000),
+        kind: z.enum(["material", "transcript"]).default("material"),
+        lessonId: text.default(""),
+        observation: observationSchema.optional(),
+      })
+      .parse(req.body);
+    if (input.observation) {
+      if (input.observation.courseId !== input.courseId)
+        throw new UserError("The transcript must match the selected course.");
+      await application.serial(async () =>
+        application.observe(input.observation!),
+      );
+    }
+    const documentId = library.document(
+      input.courseId,
+      input.title,
+      input.content,
+      input.kind,
+      input.lessonId,
+    );
+    res.json({ documentId, ...library.status(input.courseId) });
+  });
+  app.post("/api/assistant-enable", async (req, res) => {
+    const input = z.object({ enabled: z.boolean() }).parse(req.body);
+    if (input.enabled && !application.apiKey)
+      throw new UserError(
+        "Add an OpenAI API key in the desktop app's Workspace settings, or in .env for the source-development companion.",
+      );
+    res.json(
+      await application.serial(async () => {
+        const state = application.configured();
+        state.settings.assistantEnabled = input.enabled;
+        application.store.save(state);
+        return state;
+      }),
+    );
+  });
+  app.post("/api/assistant-chat", async (req, res) => {
+    const input = z
+      .object({
+        courseId: text.min(1),
+        question: z.string().min(1).max(4000),
+        mode: z.enum(["help", "course"]),
+        selectedCode: z
+          .object({ path: z.string().max(300), content: z.string().max(16000) })
+          .optional(),
+      })
+      .parse(req.body);
+    if (
+      input.selectedCode &&
+      application.store.state().session?.courseId !== input.courseId
+    )
+      throw new UserError(
+        "Select the active course before attaching your current code.",
+      );
+    res.json(
+      await library.ask(
+        input.courseId,
+        input.question,
+        input.mode,
+        input.selectedCode,
+      ),
+    );
+  });
+  app.post("/api/assistant-clear", (req, res) => {
+    const id = text.min(1).parse(req.body.courseId);
+    library.course(id);
+    application.store.remove(`chat:${id}`);
+    res.json({ messages: [] });
+  });
   app.get("/api/extension-status", (_req, res) => {
     const state = application.store.state();
     res.json({
@@ -212,8 +368,22 @@ export function createApp(application: Application, port: number) {
     );
   });
   app.post("/api/note", async (req, res) => {
-    const input = z.object({ note: z.string().max(12000) }).parse(req.body);
-    res.json(await application.serial(() => application.saveNote(input.note)));
+    const input = z
+      .object({ note: z.string().max(12000), sessionId: text.optional() })
+      .parse(req.body);
+    res.json(
+      await application.serial(() => {
+        if (
+          input.sessionId &&
+          application.store.state().session?.id !== input.sessionId
+        )
+          throw new UserError(
+            "Your session has changed. Reopen the current workspace.",
+            409,
+          );
+        return application.saveNote(input.note);
+      }),
+    );
   });
   app.post("/api/session", async (req, res) => {
     const input = z

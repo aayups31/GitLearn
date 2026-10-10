@@ -9,7 +9,6 @@ await viteBuild({
     rollupOptions: {
       input: {
         workspace: path.resolve("index.html"),
-        welcome: path.resolve("welcome.html"),
       },
     },
   },
@@ -36,4 +35,18 @@ await bundle({
   target: "chrome120",
 });
 await cp("extension/static", "dist/extension", { recursive: true });
-console.log("Built companion, interface, and Chrome extension. Run npm start.");
+await cp("src/site", "dist/site", { recursive: true });
+for (const name of ["main", "preload", "companion"]) {
+  await bundle({
+    entryPoints: [`src/desktop/${name}.ts`],
+    bundle: true,
+    platform: "node",
+    format: "cjs",
+    packages: "external",
+    outfile: `dist/desktop/${name}.cjs`,
+    target: "node24",
+  });
+}
+console.log(
+  "Built desktop app, local workspace, static site, and Chrome extension.",
+);

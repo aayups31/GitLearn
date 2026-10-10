@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   ArrowRight,
@@ -30,6 +30,11 @@ import {
 } from "lucide-react";
 import type { Course, PublicPreview as Preview, Status } from "../shared";
 import "./style.css";
+import "./studio.css";
+import { Onboarding, DesktopKeySettings } from "./onboarding";
+const Studio = lazy(() =>
+  import("./studio").then((module) => ({ default: module.Studio })),
+);
 
 let token = "";
 type Theme = "light" | "dark";
@@ -49,7 +54,7 @@ async function request<T>(route: string, body?: unknown): Promise<T> {
     throw new Error(result.error || "Could not complete this action.");
   return result as T;
 }
-type Page = "overview" | "courses" | "history" | "setup";
+type Page = "overview" | "courses" | "history" | "setup" | "studio";
 function App() {
   const [theme, setTheme] = useState<Theme>(initialTheme);
   useEffect(() => {
@@ -62,9 +67,12 @@ function App() {
     } catch {}
   }, [theme]);
   const [state, setState] = useState<Status>();
+  const [onboarding, setOnboarding] = useState(false);
   const [page, setPage] = useState<Page>(() => {
     const view = new URLSearchParams(location.search).get("view");
-    return ["overview", "courses", "history", "setup"].includes(view || "")
+    return ["overview", "courses", "history", "setup", "studio"].includes(
+      view || "",
+    )
       ? (view as Page)
       : "overview";
   });
@@ -76,6 +84,25 @@ function App() {
   const [preview, setPreview] = useState<Preview>();
   const [message, setMessage] = useState("");
   const [note, setNote] = useState("");
+  const [selectedCourse, setSelectedCourse] = useState<string>();
+  const [draftDirty, setDraftDirty] = useState(false);
+  function navigate(next: Page, courseId?: string) {
+    if (
+      draftDirty &&
+      (next !== page ||
+        (courseId &&
+          courseId !==
+            (selectedCourse ||
+              state?.session?.courseId ||
+              state?.courses[0]?.id))) &&
+      !confirm(
+        "Leave the editor with unsaved changes? Save your files and let notes finish saving first to keep them.",
+      )
+    )
+      return;
+    if (courseId) setSelectedCourse(courseId);
+    setPage(next);
+  }
   const refresh = async () => {
     const result = await request<Status>("state");
     setState(result);
@@ -87,7 +114,22 @@ function App() {
       .then(async (result) => {
         token = result.token;
         const loaded = await refresh();
+        if (
+          window.gitLearnDesktop &&
+          (!loaded.settings.configured ||
+            ["2", "3"].includes(
+              localStorage.getItem("gitlearn-setup-step") || "",
+            ))
+        )
+          setOnboarding(true);
         setNote(loaded.session?.note || "");
+        if (
+          loaded.session &&
+          !new URLSearchParams(location.search).has("view")
+        ) {
+          setSelectedCourse(loaded.session.courseId);
+          setPage("studio");
+        }
       })
       .catch(() =>
         setError(
@@ -122,8 +164,9 @@ function App() {
       return () => clearTimeout(timer);
     }
   }, [notice]);
-  async function finish() {
-    await request("note", { note });
+  async function finish(studioNote?: string) {
+    if (studioNote !== undefined) setNote(studioNote);
+    await request("note", { note: studioNote ?? note });
     const result = await request<Preview>("preview", {});
     setPreview(result);
     setMessage(result.message);
@@ -136,15 +179,29 @@ function App() {
     setNotice("Checkpoint saved. Your work now has a local version history.");
   }
   const configured = state?.settings.configured;
+  if (state && onboarding)
+    return (
+      <Onboarding
+        state={state}
+        request={request}
+        onDone={() => {
+          setOnboarding(false);
+          setPage("courses");
+          refresh().catch(() => {});
+        }}
+      />
+    );
   return (
-    <div className={`shell ${!configured ? "first-visit" : ""}`}>
+    <div
+      className={`shell ${!configured ? "first-visit" : ""} ${page === "studio" ? "studio-shell" : ""}`}
+    >
       <aside className="sidebar">
         <a
           className="brand"
           href="#"
           onClick={(event) => {
             event.preventDefault();
-            setPage("overview");
+            navigate("overview");
           }}
         >
           <BrandMark />
@@ -156,6 +213,7 @@ function App() {
           {(
             [
               { id: "overview", label: "Overview", icon: LayoutGrid },
+              { id: "studio", label: "Code & learn", icon: Code2 },
               { id: "courses", label: "My courses", icon: BookOpen },
               { id: "history", label: "Checkpoints", icon: History },
             ] as const
@@ -163,7 +221,7 @@ function App() {
             <button
               key={item.id}
               className={page === item.id ? "nav active" : "nav"}
-              onClick={() => setPage(item.id)}
+              onClick={() => navigate(item.id)}
               aria-label={item.label}
               aria-current={page === item.id ? "page" : undefined}
             >
@@ -175,10 +233,43 @@ function App() {
             </button>
           ))}
         </nav>
+        {!!state?.courses.length && (
+          <div className="sidebar-course-list">
+            <div className="sidebar-course-caption">
+              Your courses <span>{state.courses.length}</span>
+            </div>
+            {state.courses.map((course) => (
+              <button
+                key={course.id}
+                className={
+                  page === "studio" &&
+                  (selectedCourse ||
+                    state.session?.courseId ||
+                    state.courses[0]?.id) === course.id
+                    ? "selected"
+                    : ""
+                }
+                onClick={() => navigate("studio", course.id)}
+                title={course.title}
+              >
+                <BookOpen size={13} />
+                <span>
+                  {course.title}
+                  <small>
+                    {state.session?.courseId === course.id
+                      ? "Session in progress"
+                      : `${course.lessons.length} lessons`}
+                  </small>
+                </span>
+                {state.session?.courseId === course.id && <i />}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="sidebar-bottom">
           <button
             className={page === "setup" ? "nav active" : "nav"}
-            onClick={() => setPage("setup")}
+            onClick={() => navigate("setup")}
             aria-label="Setup & preferences"
             aria-current={page === "setup" ? "page" : undefined}
           >
@@ -189,7 +280,7 @@ function App() {
           <div className="connection">
             <span className={state ? "dot" : "dot offline"} />
             {state ? "Companion connected" : "Connecting…"}
-            <span className="version">v0.1</span>
+            <span className="version">v0.2</span>
           </div>
         </div>
       </aside>
@@ -205,11 +296,24 @@ function App() {
                   ? "My courses"
                   : page === "history"
                     ? "Checkpoints"
-                    : "Settings"}
+                    : page === "studio"
+                      ? "Code & learn"
+                      : "Settings"}
             </span>
           </div>
           <div className="topbar-actions">
-            <a href="/welcome" className="workspace-guide">
+            <a
+              href="/welcome/"
+              className="workspace-guide"
+              onClick={(event) => {
+                if (window.gitLearnDesktop) {
+                  event.preventDefault();
+                  window.gitLearnDesktop
+                    .openExternal(`${location.origin}/welcome/`)
+                    .catch((e) => setError(e.message));
+                }
+              }}
+            >
               Product & guide <ArrowUpRight size={13} />
             </a>
             <span className="local-pill">
@@ -258,6 +362,34 @@ function App() {
             </div>
           ) : (
             <>
+              {page === "studio" && (
+                <Suspense
+                  fallback={
+                    <div className="loading">
+                      <Loader2 className="spin" />
+                      Opening your learning desk…
+                    </div>
+                  }
+                >
+                  <Studio
+                    state={state}
+                    selectedCourse={selectedCourse}
+                    theme={theme}
+                    api={request}
+                    onCourses={() => navigate("courses")}
+                    onSetup={() => navigate("setup")}
+                    onStart={(course) => setStarting(course)}
+                    onFinish={(nextNote) =>
+                      act("preview", () => finish(nextNote))
+                    }
+                    onRefresh={refresh}
+                    onDirty={setDraftDirty}
+                    sessionNote={note}
+                    onNoteChange={setNote}
+                    busy={!!busy}
+                  />
+                </Suspense>
+              )}
               {page === "overview" && (
                 <>
                   <div className="page-heading">
@@ -443,6 +575,16 @@ function App() {
                           Only your selected folder is included.
                         </span>
                         <div>
+                          <button
+                            className="button secondary"
+                            onClick={() => {
+                              setSelectedCourse(state.session!.courseId);
+                              navigate("studio");
+                            }}
+                          >
+                            <Code2 size={16} />
+                            Open in GitLearn
+                          </button>
                           <button
                             className="text-button"
                             disabled={!!busy}
@@ -721,7 +863,8 @@ function App() {
           act={act}
           busy={!!busy}
           onStarted={() => {
-            setPage("overview");
+            if (starting) setSelectedCourse(starting.id);
+            if (page !== "studio") setPage("overview");
             setNote("");
           }}
         />
@@ -1435,6 +1578,9 @@ function Setup({
         <p>Start locally. Connect the extras when you want them.</p>
       </div>
       <div className="setup-stack">
+        <DesktopKeySettings
+          onSaved={() => act("key-refresh", async () => {})}
+        />
         <section className="setup-card">
           <div className="setup-heading">
             <span className="setup-icon">
@@ -1498,7 +1644,9 @@ function Setup({
               <small>
                 {state.hasApiKey
                   ? "Your API key is configured in the local companion."
-                  : "No API key configured. Add it to .env and restart to enable this."}
+                  : window.gitLearnDesktop
+                    ? "Add your key above to enable this."
+                    : "No API key configured. Add it to .env and restart to enable this."}
               </small>
             </div>
             <input

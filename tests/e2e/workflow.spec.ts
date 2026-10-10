@@ -255,7 +255,7 @@ test("loads and pairs the actual unpacked extension, captures an accessible Udem
     await course.route("https://www.udemy.com/**", (route) =>
       route.fulfill({
         contentType: "text/html",
-        body: '<h1 data-purpose="course-header-title">Python Essentials</h1><section data-purpose="section-panel"><h2 data-purpose="section-title">Functions</h2><a href="/course/python-essentials/learn/lecture/100"><span data-purpose="item-title">First function</span></a></section>',
+        body: '<h1 data-purpose="course-header-title">Python Essentials</h1><section data-purpose="section-panel"><h2 data-purpose="section-title">Functions</h2><a href="/course/python-essentials/learn/lecture/100"><span data-purpose="item-title">First function</span></a></section><section data-purpose="transcript-panel"><p data-purpose="transcript-cue">A Python function has a name and a focused responsibility. Use return to send a result back to the caller.</p></section>',
       }),
     );
     await course.goto(
@@ -293,6 +293,32 @@ test("loads and pairs the actual unpacked extension, captures an accessible Udem
     await popup.screenshot({ path: "test-results/extension-popup.png" });
     await popup.emulateMedia({ colorScheme: "dark" });
     await popup.screenshot({ path: "test-results/extension-popup-dark.png" });
+    const libraryBefore = await (
+      await request.get("/api/library?courseId=python-essentials", {
+        headers: { Authorization: `Bearer ${bootstrap.token}` },
+      })
+    ).json();
+    expect(
+      libraryBefore.sources.filter(
+        (source: { kind: string }) => source.kind === "transcript",
+      ),
+    ).toHaveLength(0);
+    await course.bringToFront();
+    await popup.evaluate(() =>
+      (document.querySelector("#transcript") as HTMLButtonElement).click(),
+    );
+    await expect
+      .poll(async () => {
+        const library = await (
+          await request.get("/api/library?courseId=python-essentials", {
+            headers: { Authorization: `Bearer ${bootstrap.token}` },
+          })
+        ).json();
+        return library.sources.filter(
+          (source: { kind: string }) => source.kind === "transcript",
+        ).length;
+      })
+      .toBe(1);
     await request.post("/api/unpair", {
       headers: { Authorization: `Bearer ${bootstrap.token}` },
       data: {},

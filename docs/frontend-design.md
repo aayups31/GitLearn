@@ -15,6 +15,8 @@ The sun/moon control in the top bar switches between light and dark mode. The fi
 - Overview shows course and checkpoint counts and current session status. First-time setup includes an actionable checklist with actual connection states and clearly optional integrations. Once configured, the focus shifts to the current session, courses, and recent history from the companion.
 - Courses use ruled rows with lesson context and direct actions, rather than a grid of decorative cards.
 - A coding session places lesson context and the selected folder beside optional notes. Review remains explicit before saving.
+- **Code & learn** extends the shell into a full-height three-column workspace: actual courses in the left sidebar, a file explorer and CodeMirror editor in the center, and a compact course assistant on the right. Thin rules, charcoal surfaces, blue selection states, and restrained typography follow the supplied Linear reference. The editor is lazy-loaded. Source and conversation panels show real local state.
+- Assistant replies render safe Markdown with copyable code blocks and source buttons. A citation opens its exact passage and line range. Code help and course-only help have separate controls; enabling AI and importing sources are explicit. Narrow layouts switch between Code and Assistant, preserving both panels’ state.
 - Checkpoints use dated rows with commit context and the actual local or remote save state.
 - Setup follows three numbered sections: local history, extension pairing, and optional GitHub.
 - The extension popup shares the wordmark, colors, typography direction, and restrained controls.

@@ -33,10 +33,7 @@ if (isDev) {
     server: { middlewareMode: true },
     appType: "spa",
   });
-  app.get("/welcome", (req, _res, next) => {
-    req.url = "/welcome.html";
-    next();
-  });
+  app.use("/welcome", express.static(path.join(projectRoot, "src/site")));
   app.use(vite.middlewares);
 } else {
   app.use((_req, res, next) => {
@@ -46,10 +43,8 @@ if (isDev) {
     );
     next();
   });
+  app.use("/welcome", express.static(path.join(projectRoot, "dist/site")));
   app.use(express.static(path.join(projectRoot, "dist", "web")));
-  app.get("/welcome", (_req, res) =>
-    res.sendFile(path.join(projectRoot, "dist", "web", "welcome.html")),
-  );
   app.get("/{*splat}", (_req, res) =>
     res.sendFile(path.join(projectRoot, "dist", "web", "index.html")),
   );
@@ -65,9 +60,10 @@ server.on("error", () => {
   process.exitCode = 1;
 });
 for (const signal of ["SIGINT", "SIGTERM"] as const)
-  process.on(signal, () =>
+  process.on(signal, () => {
+    app.locals.stopPrograms();
     server.close(() => {
       store.close();
       process.exit(0);
-    }),
-  );
+    });
+  });

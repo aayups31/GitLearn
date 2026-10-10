@@ -227,6 +227,19 @@ input:focus-visible {
 [hidden] {
   display: none !important;
 }
+.transcript-hint {
+  font-size: 9px;
+  line-height: 1.7;
+  margin-top: 8px;
+}
+#transcript-status {
+  font-size: 10px;
+  line-height: 1.7;
+  color: var(--accent);
+}
+#transcript-status:empty {
+  display: none;
+}
 @media (prefers-reduced-motion: reduce) {
   button {
     transition: none;

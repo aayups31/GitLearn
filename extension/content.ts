@@ -1,5 +1,25 @@
 import type { Observation } from "../src/shared";
 
+export function extractTranscript(document: Document) {
+  const panel = document.querySelector(
+    '[data-purpose="transcript-panel"], [data-purpose="transcript-container"], [class*="transcript--transcript-panel"], [class*="transcript--transcript-container"]',
+  );
+  if (!panel || panel.closest('[hidden], [aria-hidden="true"]')) return "";
+  let node: Element | null = panel;
+  while (node) {
+    const style = document.defaultView?.getComputedStyle(node);
+    if (style?.display === "none" || style?.visibility === "hidden") return "";
+    node = node.parentElement;
+  }
+  const cues = panel.querySelectorAll(
+    '[data-purpose="transcript-cue"], [data-purpose="transcript-cue-container"], [class*="transcript--cue-container"]',
+  );
+  const result = cues.length
+    ? [...cues].map((cue) => cue.textContent?.trim() || "").join("\n")
+    : panel.textContent || "";
+  return result.trim().slice(0, 240000);
+}
+
 function text(element: Element | null) {
   return element?.textContent?.replace(/\s+/g, " ").trim() || "";
 }
@@ -85,6 +105,30 @@ if (
   chrome.runtime?.id &&
   typeof document !== "undefined"
 ) {
+  chrome.runtime.onMessage.addListener((message, _sender, respond) => {
+    if (message.type !== "read-transcript") return;
+    const observation = extractUdemy(document, location.href);
+    const content = extractTranscript(document);
+    if (!observation || content.length < 40) {
+      respond({
+        error:
+          "Open the Transcript panel in your Udemy lesson first. If Udemy does not expose it, paste or import the transcript in GitLearn Sources.",
+      });
+      return;
+    }
+    const lesson = observation.lessons.find(
+      (item) => item.id === observation.currentLessonId,
+    );
+    respond({
+      observation: { ...observation, eventId: crypto.randomUUID() },
+      content,
+      title: `Udemy transcript · ${lesson?.title || observation.title}`.slice(
+        0,
+        200,
+      ),
+      lessonId: lesson ? lesson.id : "",
+    });
+  });
   let previous = "";
   let timer: ReturnType<typeof setTimeout> | undefined;
   const observe = () => {

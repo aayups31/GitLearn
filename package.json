@@ -1,6 +1,9 @@
 {
   "name": "git-for-learning",
-  "version": "0.1.0",
+  "version": "0.2.0",
+  "description": "A local learning workspace for Udemy, code, and sourced AI help.",
+  "author": "Aayu Pratap Singh",
+  "main": "dist/desktop/main.cjs",
   "private": true,
   "type": "module",
   "engines": {
@@ -9,12 +12,61 @@
   "scripts": {
     "dev": "tsx src/server/index.ts --dev",
     "build": "tsc --noEmit && node scripts/build.mjs",
+    "build:site": "node scripts/build-site.mjs",
     "start": "node dist/server/index.js",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "desktop": "node scripts/desktop.mjs",
+    "package:desktop": "npm run build && electron-builder --win nsis --x64 --publish never",
+    "package:extension": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-extension.ps1",
+    "preview:site": "node scripts/preview-site.mjs",
+    "test:desktop": "playwright test --config playwright.desktop.config.ts"
+  },
+  "build": {
+    "appId": "com.gitlearn.workspace",
+    "productName": "GitLearn",
+    "directories": {
+      "output": "dist/releases"
+    },
+    "files": [
+      "dist/desktop/**",
+      "dist/web/**",
+      "dist/site/**",
+      "dist/extension/**",
+      "package.json",
+      "!**/*.map",
+      "!**/.env*"
+    ],
+    "asar": true,
+    "win": {
+      "target": "nsis",
+      "artifactName": "GitLearn-Setup-${version}.${ext}",
+      "icon": "extension/static/icons/icon-256.png",
+      "signExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "aayups31",
+      "repo": "GitLearn"
+    }
   },
   "dependencies": {
+    "@codemirror/lang-css": "^6.3.1",
+    "@codemirror/lang-html": "^6.4.12",
+    "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/lang-json": "^6.0.2",
+    "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/lang-python": "^6.2.1",
+    "codemirror": "^6.0.2",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "ignore": "^7.0.5",
@@ -22,6 +74,7 @@
     "openai": "^6.0.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-markdown": "^10.1.0",
     "zod": "^4.1.12"
   },
   "devDependencies": {
@@ -32,8 +85,11 @@
     "@types/node": "^24.10.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3",
     "esbuild": "^0.25.12",
     "jsdom": "^29.0.1",
+    "prettier": "^3.9.10",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "vite": "^7.2.2",
