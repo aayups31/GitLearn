@@ -1,6 +1,8 @@
-# Udemy first build
+# GitLearn 0.2 Windows and Udemy preview
 
 Updated October 10, 2026. This is the current delivery scope and architecture. The full specification and earlier architecture/implementation plan retain the longer product roadmap; they do not describe every feature as already delivered.
+
+The next-release [learning-to-contribution roadmap](learning-to-contribution-roadmap.md) and [supporting architecture](learning-architecture.md) add independent practice, project workflows, personal reviews, and guided open source work. Those additions are planned; the delivered capabilities are listed below.
 
 ## What works
 
@@ -28,7 +30,9 @@ No GitHub repository is required for the complete local workflow. Coding workspa
 flowchart LR
     Udemy[Udemy accessible context] --> Extension[Chrome extension + durable outbox]
     Extension -->|Paired bearer / loopback HTTP| Companion[Node local companion]
-    UI[React local app] -->|Local bearer / loopback HTTP| Companion
+    Site[Static Vercel-ready product site] --> Desktop[Windows desktop download]
+    Desktop --> UI[Isolated Electron React workspace]
+    UI -->|Local bearer / loopback HTTP| Companion
     UI --> EditorUI[Embedded CodeMirror editor]
     EditorUI -->|Read / versioned save / explicit Run| Companion
     Companion --> Runtime[Local Node / Python + restricted HTML preview]
@@ -50,36 +54,36 @@ flowchart LR
     Tutor -->|Validated citations + passage snapshots| UI
 ```
 
-The code is one npm/TypeScript project. Shared schemas are in `src/shared.ts`; companion modules are in `src/server/`; the React workspace is in `src/ui/`; the separate product page is in `src/landing/`; Udemy extraction, extension worker, and popup are in `extension/`. Vite builds two HTML entries with shared React/icon assets. `scripts/build.mjs` creates `dist/server`, `dist/web`, and the unpacked `dist/extension`. The guide uses the existing companion and adds no hosted backend, router, or account system.
+The code is one npm/TypeScript project. Shared schemas are in `src/shared.ts`; companion modules are in `src/server/`; the React workspace is in `src/ui/`; the static public site is in `src/site/`; the native bridge and utility-process entry are in `src/desktop/`; Udemy extraction, worker, and popup are in `extension/`. Vite builds the workspace into `dist/web`. The build also creates `dist/server`, `dist/desktop`, `dist/site`, and the unpacked `dist/extension`. Vercel publishes only the static site. The desktop runs the local companion in an Electron utility process and includes extension resources outside ASAR. There is no hosted learner backend or account system.
 
-The companion binds only `127.0.0.1:47831`. Host/origin checks protect browser access. Local-page bootstrap requires a same-local-origin POST. A short-lived, one-use six-digit code grants an extension its own random bearer. Extension access is restricted to observations, explicit course-material import, and connection status; it cannot choose folders, use the editor/runtime, run Git, or call OpenAI. Chrome may omit Origin on extension GETs, so those still require the extension bearer.
+The companion binds only `127.0.0.1:47831`. Host/origin checks protect browser access. Local-page bootstrap requires a same-local-origin POST. A short-lived, one-use six-digit code grants an extension its own random bearer. Extension access is restricted to observations, explicit course-material import, minimal connection status, and focusing an already running desktop; it cannot choose folders, use the editor/runtime, run Git, or call OpenAI. Chrome may omit Origin on extension GETs, so those still require the extension bearer.
 
 `workspace.ts` owns active-session file access, optimistic version checks, tracked child processes, and ephemeral preview capabilities. `library.ts` owns source chunks, FTS5, locally cached 384-dimensional `text-embedding-3-small` vectors, reciprocal ranking, bounded context, and chat. Six diverse retrieved passages feed Responses with `store: false` and structured citations. The answer stores cited passage snapshots so later source changes do not change the evidence shown. The default chat model is `gpt-4o-mini` (`OPENAI_CHAT_MODEL` overrides it). Source imports are secret-scanned and bounded to 120 documents/2,000 passages per course. Working files have priority over archived files in the bounded automatic code index. A semantic refresh processes at most 320 pending passages; keyword retrieval works immediately and remains available on an embedding outage.
 
-Portable files live in the chosen managed Git repository. Operational state lives in `%LOCALAPPDATA%/GitForLearning/learning.sqlite`, outside OneDrive. The companion reads the root `.env`, supporting both `OPENAI_API_KEY` and `OPEN_AI_API`; neither frontend nor extension receives its value.
+Portable files live in the chosen managed Git repository. Operational state lives in `%LOCALAPPDATA%/GitForLearning/learning.sqlite`, outside OneDrive. Development can read the root `.env`, supporting both `OPENAI_API_KEY` and `OPEN_AI_API`. The packaged app never reads that file; native setup uses Windows account encryption and private IPC for the learner's key. Neither frontend nor extension receives its value.
 
 ## Deliberate simplifications
 
 | Earlier target | First build |
 | --- | --- |
 | pnpm workspace monorepo | One npm project with clear module boundaries |
-| Native messaging host, registry registration, installer | Authenticated loopback HTTP and a Windows launcher |
+| Native messaging host and registry registration | Authenticated loopback HTTP with a Windows desktop installer; development launchers remain available |
 | Separate VS Code extension | Embedded CodeMirror editor with optional installed VS Code CLI |
-| Packaged Node and native SQLite dependency | Installed Node 24+ and built-in `node:sqlite` |
+| Separate Node distribution and native SQLite dependency | Bundled Electron JavaScript runtime and built-in SQLite; source development requires Node 24+ |
 | Continuous file watchers and automatic checkpoint triggers | Explicit Start / Finish; saved disk files collected during preview |
 | Durable automatic push worker | Durable local checkpoints and explicit Sync now retry |
 | AI note cleanup and broad manual learning sources | Original notes, course-material imports, and course RAG; Udemy focus |
 
-Node's built-in SQLite is experimental in the tested Node version. Packaging, Edge verification, other learning platforms, multi-device coordination, video transcription, and richer course progress capture remain future work. The editor has no interactive shell, package manager, debugger, or language server. Python execution requires an installed interpreter; HTML preview supports inline assets only. The Git repository is companion-managed: external edits/staging pause saves; direct existing-repository automation and normal Git hooks are outside this build.
+Windows x64 packaging is delivered as an unsigned preview. Edge verification, other learning platforms, multi-device coordination, video transcription, and richer course progress capture remain future work. The editor has no interactive shell, package manager, debugger, or language server. Python execution requires an installed interpreter; HTML preview supports inline assets only. The Git repository is companion-managed: external edits/staging pause saves; direct existing-repository automation and normal Git hooks are outside this build.
 
 ## Validation and remaining limits
 
 Automated validation uses temporary real Git repositories, HTTP boundary checks, sanitized Udemy DOM fixtures, the actual unpacked Chrome extension, and the full browser workflow. It covers exact reviewed-byte commits, source edits after review, excluded secrets, unrelated staging, branch changes, interrupted-save recovery, event deduplication, pairing, context capture, reconnect replay, and mobile overflow.
 
-Verification includes backend tests, six browser workflows, a successful TypeScript/production build, and the Windows launcher. Additional checks cover multiple real course checkpoints in one archive, GitHub account verification and credential preparation, private repository creation arguments, shared-archive sync state, failed push preservation, retryable Git setup, AI outage fallback, unsafe model output, changed Git remotes, and alternate push destinations. Editor/RAG checks cover real disk saves and JavaScript/Python execution, Stop, external-edit conflicts, restricted HTML preview, explicit extension transcript import, source deduplication/removal, course isolation, cached embeddings, missing evidence, cited passages, local history, and checkpoints. OpenAI and GitHub boundaries are mocked; new RAG requests have not been tested against the supplied key or a real paid Udemy course.
+Verification includes 59 backend tests, six browser workflows, a successful TypeScript/production build, static-site desktop/mobile checks, and the actual packaged desktop workflow. Additional checks cover multiple course checkpoints in one archive, GitHub account verification and credential preparation, private repository creation arguments, shared-archive sync state, failed push preservation, retryable Git setup, AI outage fallback, unsafe model output, changed Git remotes, and alternate push destinations. Editor/RAG checks cover disk saves and JavaScript/Python execution, Stop, external-edit conflicts, restricted HTML preview, explicit extension transcript import, source deduplication/removal, course isolation, cached embeddings, missing evidence, cited passages, local history, and checkpoints. Routine tests mock remote APIs.
 
-The supplied API key passed one minimal synthetic OpenAI request. Built assets were checked for accidental key inclusion. Application tests use no paid calls and no external repository writes.
+A separate live synthetic check passed semantic embeddings, a cited course answer, and an AI checkpoint using the supplied local key. No real learner course material or code was accessed. Site, extension, frontend, packaged ASAR, external extension resources, and staged source passed configured-key/environment-file scans. [Release validation](release-validation.md) contains the verification record.
 
-Live authenticated Udemy layouts still need validation on the user's actual course. The adapter reports only accessible partial curriculum and includes manual fallback. GitHub CLI is installed on this machine. The checked account is not signed in, so live sign-in, repository creation, and pushing have not been performed. Complete sign-in and connect a repository in Settings before a real upload. A week of real learning remains the product usefulness check from the specification.
+Live authenticated Udemy layouts still need validation on the user's actual course. The adapter reports only accessible partial curriculum and includes manual fallback. Learner GitHub sign-in/private-repository creation still needs a live in-app check; publishing GitLearn's source and release assets does not verify that separate learner workflow. A week of real learning remains the product usefulness check from the specification. Chrome Store submission and Vercel account import remain separate release steps.
 
 See the root [README](../README.md) for the shortest setup flow.

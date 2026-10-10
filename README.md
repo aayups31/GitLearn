@@ -99,3 +99,7 @@ Real authenticated Udemy layouts vary and need live validation on your course. T
 Portable artifacts live in your chosen Git repository. Session state, grants, pairing credentials, and checkpoint journal live in `%LOCALAPPDATA%/GitForLearning/`, outside the OneDrive project. `GITLEARN_DATA_DIR` overrides this for isolated testing. Never sync the live SQLite database through OneDrive.
 
 See [current build and architecture](docs/current-build.md), the [longer-term architecture](docs/architecture.md), [implementation plan](docs/implementation-plan.md), [frontend design](docs/frontend-design.md), and [original product specification](GIT_FOR_LEARNING_PRODUCT_SPEC.md).
+
+## Next: from tutorials to independent work
+
+The [active product roadmap](docs/learning-to-contribution-roadmap.md) defines contextual debugging, persistent course projects, practice tasks, evidence-backed learning memory, short reviews, and guided open source contributions. The [learning and contribution architecture](docs/learning-architecture.md) specifies local data, retrieval scopes, runtime boundaries, matching, and verification. These features are planned beyond the 0.2 preview. Coding-agent integration is deliberately deferred.

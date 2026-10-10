@@ -1,8 +1,8 @@
 # Git for Learning: Proposed Architecture
 
-Status: reviewed architecture and longer-term target, prepared October 4, 2026. The user authorized implementation and requested a simple Udemy-first delivery. [Current build](current-build.md) describes the delivered architecture, deliberate simplifications, verification, and remaining limits. The detailed design below retains future native messaging, VSIX, packaging, and broader product work; those components are not installed in the first build.
+Status: original longer-term design, prepared October 4, 2026. The Windows desktop preview is now delivered; [desktop architecture](desktop-release.md) and [current build](current-build.md) describe it. The October 10 [learning and contribution architecture](learning-architecture.md) governs the active next-release roadmap. Native messaging, a VSIX, alternative storage/runtime choices, and the monorepo below are retained design options rather than prerequisites. Desktop packaging is already shipped.
 
-Source: `GIT_FOR_LEARNING_PRODUCT_SPEC.md`, all 112 sections. Sections 79–112 make Course Mirror first-class. The user's subsequent direction overrides the original §110 ordering: deliver Udemy Course Mirror with local coding first, coding-problem Quick Save second, one interactive course platform third, then Learning Memory.
+Source: `GIT_FOR_LEARNING_PRODUCT_SPEC.md`, all 112 sections, supplemented by the user's later product direction. Course Mirror and local coding shipped first. The current priority is practical learning, projects, memory, and guided open source contribution; platform breadth follows that workflow. Coding agents are explicitly deferred.
 
 ## 1. Architectural decision
 

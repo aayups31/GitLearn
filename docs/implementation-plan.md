@@ -1,6 +1,6 @@
 # Git for Learning: Full Scope and Implementation Plan
 
-Status: implementation authorized; the Udemy-first local build is delivered. [Current build](current-build.md) lists exactly what is implemented and what remains. This plan preserves the broader rollout and its release criteria; MVP 0 items beyond that delivered scope are future work.
+Status: the Udemy-first Windows 0.2 preview is delivered. [Current build](current-build.md) lists shipped capabilities. Updated direction, October 10, 2026: [Learning to contribution](learning-to-contribution-roadmap.md) is the active next-release plan, with [supporting architecture](learning-architecture.md). It prioritizes daily resume, contextual tutoring, real projects, practice, evidence-backed memory, and guided open source work. Coding-agent integration is deferred at the user's request. The older rollout below remains a reference; its platform-expansion sequence does not override the active roadmap.
 Prepared October 4, 2026, from all 112 sections of `GIT_FOR_LEARNING_PRODUCT_SPEC.md`.
 Architecture details: [architecture.md](architecture.md).
 
@@ -18,7 +18,7 @@ The three layers are:
 
 Course Mirror is explicitly enabled. Learning records preserve the learner's work and lightweight course structure/resources. They do not automatically copy full paid content. AI improves semantic descriptions; deterministic code owns storage, paths, events, Git, and synchronization.
 
-The later specification (§§79–112) refines the earlier broad MVP (§59). Its original §110 rollout starts with accepted solutions. The user's subsequent direction overrides that order: deliver Udemy Course Mirror with local coding first, coding-problem Quick Save second, and exactly one interactive course platform third. All earlier useful features remain in the roadmap. Filtering/secret scanning precedes AI, following §101.
+The later specification (§§79–112) refines the earlier broad MVP (§59). The user selected Udemy with local coding for the first release. The October 10 direction adds a path from tutorial practice to independent projects and real open source contribution before broad platform expansion. Coding-problem capture and interactive course adapters remain planned. Filtering/secret scanning precedes AI, following §101.
 
 ## 2. Full product scope
 
@@ -33,6 +33,10 @@ The later specification (§§79–112) refines the earlier broad MVP (§59). Its
 | Independent learning | Topic + approved workspace without a browser platform | Shared session engine in MVP 0 | 10, 13 |
 | Notebooks/data science | Meaningful notebook versions, configurable outputs, dataset references, token checks | Later local notebook support; Colab/Kaggle/JupyterLab adapters separately | 11 |
 | Course projects | Project-sized work, promotion to a separate repo with meaningful history and timeline link | Later expansion | 12 |
+| Independent practice | Contextual debugging, lesson tasks, changed-requirement attempts, hints, actual behavioral feedback | Active roadmap stages A–C | October 10 direction |
+| Learning outcomes | Evidence-backed skill records, personal review, cited past attempts, project development story | Active roadmap stages C–D | October 10 direction |
+| Live work | Explainable repository/issue matching, contribution prerequisites, repository tutor, reproduction/tests, reviewed PR drafts and feedback | Active roadmap stages E–F | October 10 direction |
+| Coding agents | Explore provider-supported integrations and account entitlements only in a later separately scoped stage | Explicitly deferred | October 10 direction |
 | Books/docs/articles/PDFs | Manual source/chapter/topic and permitted references | Manual context in MVP 0; richer capture later | 13, 53 |
 | Onboarding/storage | Local-only, selected private GitHub repo, explicit new private repo; platform/workspace grants | MVP 0; public-product GitHub App later | 14, 28 |
 | Session/checkpoint controls | Active/idle/pause/finish, notes, commit preview/edit/discard, exclusions, local-only, strong and soft triggers | Workspace sessions and controls in MVP 0; problem events in MVP 1 | 15–19, 45, 50–54 |
@@ -71,6 +75,8 @@ These are the original proposed defaults. The first delivery uses the simplifica
 Deliberate MVP exclusions: browser-only/GitHub-only execution, every learning platform at once, cross-device automation, arbitrary existing-repo commits, notebook cloud adapters, project history extraction, hosted accounts/billing, vector database, concept graph, tutor, and course downloads. These remain roadmap items where specified.
 
 ## 4. Delivery sequence
+
+The active sequence after the shipped preview is A: daily workspace, B: practical projects, C: practice and feedback, D: memory and review, E: open source discovery, F: contribution workspace, then broader access. Each stage has user-outcome acceptance criteria in [the active roadmap](learning-to-contribution-roadmap.md#8-delivery-order-and-exit-criteria). The foundation/MVP sequence below records the original rollout and retained platform backlog.
 
 ### Foundation: reliable local save and integration feasibility
 
@@ -181,8 +187,8 @@ Use synthetic/sanitized fixtures in the implementation repository; do not commit
 
 ## 7. User-review checkpoints
 
-The user reviewed the direction, selected Udemy first, and explicitly authorized implementation. The supplied key passed one minimal synthetic API request; it was not printed or bundled. No external GitHub repository has been created and nothing has been deployed. The first delivery and validation results are documented in [current-build.md](current-build.md).
+The user reviewed the direction, selected Udemy first, authorized implementation, and requested continued GitHub pushes. The source and Windows/Chrome preview downloads are published in the GitLearn repository. Vercel configuration is included, with account import required for the public landing page; Chrome Store submission is pending. A separate live check verified embeddings, a cited synthetic course answer, and an AI checkpoint without learner data. Credentials were not printed or bundled. See [release validation](release-validation.md).
 
-The user has selected Udemy with local coding as the first implementation target. The remaining proposed defaults are the required companion, Windows/Chrome-first support, VS Code integration, personal-prototype GitHub onboarding, nonmutating source mirror, and freeCodeCamp as the first interactive platform. LeetCode follows the first working Udemy release. These choices keep the full product roadmap intact.
+The shipped product uses the Windows desktop app, Chrome, a local companion, an embedded editor with optional VS Code, optional learner GitHub setup, and nonmutating course checkpoints. The next work is defined in the October 10 roadmap. Additional adapters remain candidates to validate after the learning workflow is useful; no unimplemented platform is advertised as supported.
 
 The MVP's usefulness is validated when a week of ordinary learning produces useful, recoverable, correctly attributed history with minimal manual organization, trustworthy checkpoints, and a clear Continue Learning view (§75). Automated fixture tests validate the first build's technical workflow; live course use remains necessary. AI and GitHub actions are explicit opt-ins in Setup.
