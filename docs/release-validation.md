@@ -1,4 +1,21 @@
-# GitLearn preview verification
+# OutClass preview verification
+
+## 0.4.2 OutClass identity and homepage
+
+Verified on Windows, October 10, 2026. GitLearn is now OutClass. The existing GitHub repository, application ID, saved profile and learning-data locations, pairing protocol, and checkpoint trailers stay compatible. No learner folders were moved.
+
+- All 81 backend cases in 13 files passed in 129.26 seconds. All nine workspace browser workflows passed in 1.4 minutes, including real unpacked-extension pairing, explicit import, queue replay, reviewed checkpoints, practical tasks, and contribution guidance.
+- All three public-site scenarios passed. They cover desktop/phone layouts, keyboard tabs, eight setup steps, no workspace API calls, no JavaScript, reversible scroll motion, live reduced-motion changes in both directions, and a blocked animation library. The final run completed in 6.3 seconds. A moving-on-focus click bug was found and fixed before publishing.
+- The actual packaged OutClass executable passed its desktop scenario in 24.7 seconds, including the new application name/title and extension identity, first-run setup, encrypted-key persistence/removal, local files, real checks, bundled JavaScript, restart, project scaffolds, and stopping tracked commands on close.
+- TypeScript, production build, installer packaging, package/extension identity, included guide, and configured-secret/environment-file exclusion checks passed. The installer is unsigned.
+- The OutClass homepage was visibly verified on the public Vercel URL with locally served GSAP/ScrollTrigger and the tutorial-to-practice story. The public download verification is recorded against the 0.4.2 release assets below.
+
+| Artifact                  |       Bytes | SHA-256                                                            |
+| ------------------------- | ----------: | ------------------------------------------------------------------ |
+| OutClass-Setup-0.4.2.exe  | 116,109,922 | `31b5fbe1d3cfac33a952dc70296abe7644da3896ead6cb0242758842bed356d6` |
+| OutClass-Chrome-0.4.2.zip |     134,881 | `55fc77c000468bda4338d513c81da7429bb7ae2cf554c7bc573eb7ccea8ca752` |
+
+The existing GitLearn 0.4.1 Chrome submission remains separate from these OutClass downloads. No second item or store approval is implied. Six curated JavaScript/Python practice briefs, real learner beta sessions, signed distribution, and broader platform/curriculum coverage retain the scope limits below.
 
 ## 0.4.1 Windows project-command patch
 
@@ -13,10 +30,10 @@ Verified on Windows, October 10, 2026. Restored the credential-free Windows syst
 - The public site at https://git-learn-black.vercel.app/ was verified with the setup guide, privacy page, and 0.4.1 release links. The live privacy page includes the extension data categories and Limited Use disclosure. Vercel automatically deployed the `main` checkpoint `526f73c` successfully.
 - Chrome accepted the 0.4.1 package and confirmed submission on October 10, 2026. Item `iaokfcjeghdefpgcgbcomiehhogbkbcp` is **Pending review**, with automatic publication selected after approval. Two-step verification, verified publisher contact, and the three explicitly approved privacy certifications are complete. The landing page keeps its pending-store state until a public listing is verified.
 
-| Artifact | Bytes | SHA-256 |
-| --- | ---: | --- |
-| GitLearn-Setup-0.4.1.exe | 115,970,859 | `2466120e9c6848ee31b5096cd350522d96927a583f8d3255af675800e057b0a1` |
-| GitLearn-Chrome-0.4.1.zip | 137,008 | `76a70a107535d9d839c42b59079c0d4fd26266335d6608817eaf7c956dce797e` |
+| Artifact                  |       Bytes | SHA-256                                                            |
+| ------------------------- | ----------: | ------------------------------------------------------------------ |
+| GitLearn-Setup-0.4.1.exe  | 115,970,859 | `2466120e9c6848ee31b5096cd350522d96927a583f8d3255af675800e057b0a1` |
+| GitLearn-Chrome-0.4.1.zip |     137,008 | `76a70a107535d9d839c42b59079c0d4fd26266335d6608817eaf7c956dce797e` |
 
 The installer remains unsigned. Google store approval and real Udemy learner beta sessions are separate release gates. The six curated JavaScript/Python briefs do not claim broad curriculum coverage or certify industry readiness; remaining roadmap depth is described below and in the learning roadmap.
 
@@ -35,10 +52,10 @@ Verified on Windows, October 10, 2026. Implementation checkpoint: `dba7e54` on `
 
 Final artifacts:
 
-| Artifact | Bytes | SHA-256 |
-| --- | ---: | --- |
-| GitLearn-Setup-0.4.0.exe | 115,970,588 | `61811facd844c657a52e6c180ad3715da18f26165e12c2bbe56074e91679f28c` |
-| GitLearn-Chrome-0.4.0.zip | 137,008 | `e91792e81ead0fec4ac557e2424f0bdfcd0ac86864ea916af5902c1f7446b873` |
+| Artifact                  |       Bytes | SHA-256                                                            |
+| ------------------------- | ----------: | ------------------------------------------------------------------ |
+| GitLearn-Setup-0.4.0.exe  | 115,970,588 | `61811facd844c657a52e6c180ad3715da18f26165e12c2bbe56074e91679f28c` |
+| GitLearn-Chrome-0.4.0.zip |     137,008 | `e91792e81ead0fec4ac557e2424f0bdfcd0ac86864ea916af5902c1f7446b873` |
 
 At the 0.4.0 checkpoint, Chrome upload was rejected because the publisher's Google account needed two-step verification. That account gate was subsequently resolved and 0.4.1 was submitted as recorded above. Real learner beta sessions on Udemy, signed Windows distribution, broader platforms, generated transfer tasks, and the remaining roadmap depth are not claimed complete by these automated checks.
 
@@ -53,10 +70,10 @@ Checked on Windows, October 10, 2026. The first daily-workspace stage is impleme
 - Both static-site scenarios passed desktop, phone, keyboard navigation, privacy, reduced-motion, and no-JavaScript checks. The site made no requests to workspace APIs. Packaged site copy includes the updated run-evidence privacy disclosure.
 - Configured-key and environment-file scans passed for the staged source, public site, frontend, extension, desktop ASAR, and external extension resources. The packaged app and included extension both report version 0.3.0. Published download requests returned HTTP 200 with the expected sizes; GitHub's SHA-256 asset digests and the downloaded checksum file match the tested local assets.
 
-| Public asset | Bytes | SHA-256 |
-| --- | ---: | --- |
-| GitLearn-Setup-0.3.0.exe | 115,946,942 | `97b35354ae3174ed3a113cadfc534944c4283748a5ac6b297eae16d42a6b2290` |
-| GitLearn-Chrome-0.3.0.zip | 137,008 | `54bc402e754f87e9c29aea77e5e636f91d5b0c7dcc78783022857f4b01dd8d82` |
+| Public asset              |       Bytes | SHA-256                                                            |
+| ------------------------- | ----------: | ------------------------------------------------------------------ |
+| GitLearn-Setup-0.3.0.exe  | 115,946,942 | `97b35354ae3174ed3a113cadfc534944c4283748a5ac6b297eae16d42a6b2290` |
+| GitLearn-Chrome-0.3.0.zip |     137,008 | `54bc402e754f87e9c29aea77e5e636f91d5b0c7dcc78783022857f4b01dd8d82` |
 
 ## 0.2.0 preview verification
 

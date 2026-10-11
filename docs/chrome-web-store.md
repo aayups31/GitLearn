@@ -4,7 +4,9 @@ Version 0.4.1 was submitted on October 10, 2026. The developer dashboard confirm
 
 ## Upload package
 
-Build and run `npm run package:extension`. Upload `dist/releases/GitLearn-Chrome-0.4.1.zip` when creating a new item in the developer dashboard. It contains the MV3 manifest, built background/content/popup scripts, popup assets, and icons. It contains no API key, source environment, server, local data, or Node modules.
+The product was renamed OutClass after this submission. The 0.4.2 Windows app and unpacked extension keep the same pairing and permission scope. The privacy page identifies the rename. The existing reviewed item remains GitLearn 0.4.1 until its next store update; do not create a second item or claim OutClass is approved.
+
+Build and run `npm run package:extension` to produce `dist/releases/OutClass-Chrome-0.4.2.zip`. Use this package for the next update to the existing item after its current review is resolved. The submitted GitLearn 0.4.1 package remains available in its GitHub release. Packages contain the MV3 manifest, built background/content/popup scripts, popup assets, and icons. They contain no API key, source environment, server, local data, or Node modules.
 
 ## Suggested listing
 
@@ -42,7 +44,7 @@ Complete account verification, listing category/language, privacy practices, the
 
 ## Reviewer walkthrough
 
-1. Use Windows x64 with Git for Windows installed. Download the 0.4.1 companion from the public homepage or GitHub Releases, install it, and open GitLearn. This preview installer is unsigned.
+1. Use Windows x64 with Git for Windows installed. Download the current companion from the public homepage or GitHub Releases, install it, and open OutClass (previously GitLearn). This preview installer is unsigned. The submitted GitLearn extension also pairs with this companion; its protocol and permissions are unchanged.
 2. Follow first-run setup and select an empty parent learning folder. Skip optional OpenAI and GitHub connection. There is no GitLearn account, username, or password.
 3. Keep the companion open. In Setup, find its connection code. Open the extension popup, enter that code, and connect. The popup should show the connected companion.
 4. Open a Udemy course page accessible to you. Course titles and available lesson metadata appear in the popup and companion. Paid course purchases and OpenAI access are not required for pairing or accessible metadata; authenticated lecture/transcript access follows the reviewer's own Udemy permissions.

@@ -8,7 +8,7 @@ The public site is deployed at https://git-learn-black.vercel.app/. Vercel proje
 - Output directory: dist/site.
 - Environment variables: none. Do not add your OpenAI API key to Vercel.
 
-The static site has product information, setup steps, privacy, real GitHub release links, and the pending Chrome store state. The editor and authenticated companion APIs are excluded from the output. Vercel does not run the desktop app.
+The OutClass static site has product information, setup steps, privacy, real GitHub release links, and the pending Chrome store state. GSAP and ScrollTrigger are committed as local website assets, so production needs no npm install or external script CDN. The editor and authenticated companion APIs are excluded from the output. Vercel does not run the desktop app.
 
 Preview downloads are published through GitHub Releases. The page and `src/site/assets/release.json` reference the tested release; Chrome Web Store links stay pending until an approved listing is available. The Vercel deployment needs no API key or desktop data.
 

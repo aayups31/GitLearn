@@ -1,4 +1,6 @@
-# GitLearn 0.4 Windows and Udemy preview
+# OutClass 0.4.2 Windows and Udemy preview
+
+Previously GitLearn. The 0.4.2 release adds the OutClass identity and a new static homepage with GSAP scroll storytelling. The desktop app and unpacked extension carry the new name; existing files, history, pairing, and saved-data locations remain compatible. The GitHub repository retains its GitLearn URL. The existing GitLearn 0.4.1 Chrome submission remains pending review. Practical-learning functionality and its bounded v1 scope are unchanged by the rename.
 
 Updated October 10, 2026. This is the current delivery scope and architecture. The full specification and earlier architecture/implementation plan retain the longer product roadmap; they do not describe every feature as already delivered.
 
