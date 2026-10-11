@@ -202,7 +202,7 @@ fetch(
       document.getElementById(`${id}-download`).href = url.href;
       if (id === "windows")
         document.getElementById("windows-status").textContent =
-          `Windows x64 · ${release.productName || "GitLearn"} v${release.version} · ${asset.size || "Preview installer"} · Unsigned preview`;
+          `Windows x64 · ${release.productName || "OutClass"} v${release.version} · ${asset.size || "Preview installer"} · Unsigned preview`;
     }
     if (release.chromeStoreUrl) {
       const url = new URL(release.chromeStoreUrl);
