@@ -2,12 +2,14 @@
 
 ## 0.3 implementation checks
 
-Checked on Windows, October 10, 2026. The first daily-workspace stage is implemented; release packaging validation is in progress.
+Checked on Windows, October 10, 2026. The first daily-workspace stage is implemented and its packaged Windows runtime has passed validation. Public asset verification remains pending at this checkpoint.
 
 - TypeScript and production builds passed. The full backend suite passed 66 cases; a subsequent focused six-case run includes the additional moved-folder recovery case, bringing covered backend cases to 67.
 - Six affected browser workflows passed on isolated ports without touching the learner's running app. The new flow exercised one project across two lessons, an actual error, hint attachment, a saved fix, reviewed checkpoints, restart, moved-folder recovery, and an isolated second course. Existing editor, setup, GitHub gating, and theme flows passed. The unchanged extension pairing/import/replay flow retains its 0.2 validation below; the 0.3 extension version is a packaging update.
 - One live OpenAI check used only a tiny synthetic lesson and program. A real ReferenceError produced a course-cited hint, the corrected saved program ran successfully, and a reviewed checkpoint was saved. No learner files or paid-course material were read.
-- The source Electron runtime passed first-run setup, encrypted sample-key persistence, extraction of its included extension, a bound course project, local JavaScript execution, and restoration of the file, run output, and note across a full app restart. Readiness checks passed. This expanded scenario completed in twenty seconds. Packaged checks and public asset verification remain pending at this checkpoint.
+- The source Electron runtime and actual packaged `GitLearn.exe` passed first-run setup, encrypted sample-key persistence, extraction of the included extension, a bound course project, local JavaScript execution, and restoration of the file, run output, and note across a full app restart. Readiness checks passed. The source scenario completed in twenty seconds and the packaged scenario in twenty-three seconds. Both used temporary profiles and a sample key without OpenAI requests.
+- Both static-site scenarios passed desktop, phone, keyboard navigation, privacy, reduced-motion, and no-JavaScript checks. The site made no requests to workspace APIs. Packaged site copy includes the updated run-evidence privacy disclosure.
+- Configured-key and environment-file scans passed for the staged source, public site, frontend, extension, desktop ASAR, and external extension resources. The packaged app and included extension both report version 0.3.0. Installer and extension ZIP checksums have been generated; public asset verification remains pending.
 
 ## 0.2.0 preview verification
 
