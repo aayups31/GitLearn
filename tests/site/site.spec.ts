@@ -13,11 +13,11 @@ test("public site explains the desktop product, adapts to phones, and has honest
   );
   await expect(page.locator("#windows-download")).toHaveAttribute(
     "href",
-    /\/releases\/download\/v[\d.]+\/(?:GitLearn|OutClass)-Setup-[\d.]+\.exe$/,
+    /\/aayups31\/OutClass\/releases\/download\/v[\d.]+\/(?:GitLearn|OutClass)-Setup-[\d.]+\.exe$/,
   );
   await expect(page.locator("#extension-download")).toHaveAttribute(
     "href",
-    /\/releases\/download\/v[\d.]+\/(?:GitLearn|OutClass)-Chrome-[\d.]+\.zip$/,
+    /\/aayups31\/OutClass\/releases\/download\/v[\d.]+\/(?:GitLearn|OutClass)-Chrome-[\d.]+\.zip$/,
   );
   await page.getByRole("tab", { name: "Ask the course", exact: true }).click();
   await expect(page.getByRole("tabpanel")).toContainText("Imported transcript");
@@ -85,7 +85,7 @@ test("public landing is complete without JavaScript", async ({ browser }) => {
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.locator("#windows-download")).toHaveAttribute(
     "href",
-    /github.com\/aayups31\/GitLearn\/releases\/download\/v[\d.]+\/(?:GitLearn|OutClass)-Setup-[\d.]+\.exe$/,
+    /github.com\/aayups31\/OutClass\/releases\/download\/v[\d.]+\/(?:GitLearn|OutClass)-Setup-[\d.]+\.exe$/,
   );
   await page.locator("#windows-download").scrollIntoViewIfNeeded();
   await expect(page.locator("#windows-download")).toBeVisible();

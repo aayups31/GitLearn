@@ -4,9 +4,11 @@ Previously GitLearn. Break free from tutorial hell. OutClass the lesson.
 
 A local learning workspace that turns Udemy lessons into your own code, practical attempts, sourced guidance, and reviewed work.
 
+[Next release priorities](docs/next-release.md): validate real Udemy use, improve relevant during-course practice, verify transfer with changed requirements, and guide a small project into responsible contribution work.
+
 ## Start
 
-**Windows desktop preview:** download the installer from [GitHub Releases](https://github.com/aayups31/GitLearn/releases), open OutClass, and follow its first-run setup. Choose one parent learning folder; OutClass creates practice and history folders for each course automatically. JavaScript's runtime is bundled. Git for Windows is required for checkpoints; Python is optional for Python lessons. VS Code and GitHub remain optional.
+**Windows desktop preview:** download the installer from [GitHub Releases](https://github.com/aayups31/OutClass/releases), open OutClass, and follow its first-run setup. Choose one parent learning folder; OutClass creates practice and history folders for each course automatically. JavaScript's runtime is bundled. Git for Windows is required for checkpoints; Python is optional for Python lessons. VS Code and GitHub remain optional.
 
 The [public website and setup guide](https://git-learn-black.vercel.app/) are live on Vercel. The actual editor, courses, RAG assistant, and setup live in the Windows desktop app. See [desktop architecture and packaging](docs/desktop-release.md) and [Chrome store release](docs/chrome-web-store.md). The GitLearn 0.4.1 extension is submitted for Chrome Web Store review; use Load unpacked until approval and verified public availability.
 

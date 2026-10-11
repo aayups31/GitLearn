@@ -1,5 +1,13 @@
 # OutClass preview verification
 
+## October 11: repository and Chrome listing rename
+
+- GitHub renamed the existing repository to `aayups31/OutClass`; its repository ID and Git history match the original. The local origin, site download links and allowlist, release tooling, and publisher metadata use the new URL.
+- Both public 0.4.2 assets return HTTP 200 through the renamed repository. GitHub's asset digests, byte sizes, and the downloaded checksum file match the tested artifacts below. No installer or extension bytes were replaced during the repository rename.
+- All three homepage cases passed in 11.3 seconds after updating the new repository URL assertions, including the fallback without JavaScript and accessible/reversible scroll motion. An initial retry had no preview server; the final run used the test configuration's own server. The stale no-JavaScript assertion was updated to OutClass.
+- Google accepted the OutClass 0.4.2 package into the existing Chrome item `iaokfcjeghdefpgcgbcomiehhogbkbcp`. At the owner's request, the original review was canceled, the listing name/description, icon, screenshot, support URL and reviewer instructions were updated, and the same item was resubmitted. A fresh dashboard reload confirmed **OutClass — Udemy learning companion / Pending review**, with automatic publication selected after approval. The original three approved privacy certifications and permission scope were preserved. This is not store approval or public availability.
+- The listing screenshot is reproducible from the actual shipped popup with illustrative, non-private course context using `scripts/store-screenshot.mjs`.
+
 ## 0.4.2 OutClass identity and homepage
 
 Verified on Windows, October 10, 2026. GitLearn is now OutClass. The existing GitHub repository, application ID, saved profile and learning-data locations, pairing protocol, and checkpoint trailers stay compatible. No learner folders were moved.
@@ -15,7 +23,7 @@ Verified on Windows, October 10, 2026. GitLearn is now OutClass. The existing Gi
 | OutClass-Setup-0.4.2.exe  | 116,109,922 | `31b5fbe1d3cfac33a952dc70296abe7644da3896ead6cb0242758842bed356d6` |
 | OutClass-Chrome-0.4.2.zip |     134,881 | `55fc77c000468bda4338d513c81da7429bb7ae2cf554c7bc573eb7ccea8ca752` |
 
-The existing GitLearn 0.4.1 Chrome submission remains separate from these OutClass downloads. No second item or store approval is implied. Six curated JavaScript/Python practice briefs, real learner beta sessions, signed distribution, and broader platform/curriculum coverage retain the scope limits below.
+The initial GitLearn 0.4.1 Chrome submission was subsequently replaced by the same item's OutClass 0.4.2 submission, as recorded above. No second item or store approval is implied. Six curated JavaScript/Python practice briefs, real learner beta sessions, signed distribution, and broader platform/curriculum coverage retain the scope limits below.
 
 ## 0.4.1 Windows project-command patch
 
@@ -26,7 +34,7 @@ Verified on Windows, October 10, 2026. Restored the credential-free Windows syst
 - The affected practical-learning browser scenario passed: during-course suggestion, learner-written checks, hints, reflection, fresh review, console, and project scaffold. Both static-site scenarios passed. The previous complete nine-scenario browser run remains recorded below.
 - The final packaged desktop scenario passed in 23.8 seconds, including a Windows external-tool command as well as encrypted-key persistence/removal, bundled JavaScript, restored files, practical checks, scaffolding, and stopping its tracked command on close.
 - Production build, packaged version/privacy checks, and configured-key/environment-file exclusion scans passed.
-- The [0.4.1 GitHub release](https://github.com/aayups31/GitLearn/releases/tag/v0.4.1) is public. Both download URLs returned HTTP 200; asset sizes, GitHub SHA-256 digests, and the downloaded checksum file match the local tested artifacts.
+- The [0.4.1 GitHub release](https://github.com/aayups31/OutClass/releases/tag/v0.4.1) is public. Both download URLs returned HTTP 200; asset sizes, GitHub SHA-256 digests, and the downloaded checksum file match the local tested artifacts.
 - The public site at https://git-learn-black.vercel.app/ was verified with the setup guide, privacy page, and 0.4.1 release links. The live privacy page includes the extension data categories and Limited Use disclosure. Vercel automatically deployed the `main` checkpoint `526f73c` successfully.
 - Chrome accepted the 0.4.1 package and confirmed submission on October 10, 2026. Item `iaokfcjeghdefpgcgbcomiehhogbkbcp` is **Pending review**, with automatic publication selected after approval. Two-step verification, verified publisher contact, and the three explicitly approved privacy certifications are complete. The landing page keeps its pending-store state until a public listing is verified.
 
@@ -61,7 +69,7 @@ At the 0.4.0 checkpoint, Chrome upload was rejected because the publisher's Goog
 
 ## 0.3 implementation checks
 
-Checked on Windows, October 10, 2026. The first daily-workspace stage is implemented, its packaged Windows runtime has passed validation, and the [0.3.0 preview downloads](https://github.com/aayups31/GitLearn/releases/tag/v0.3.0) are published and verified.
+Checked on Windows, October 10, 2026. The first daily-workspace stage is implemented, its packaged Windows runtime has passed validation, and the [0.3.0 preview downloads](https://github.com/aayups31/OutClass/releases/tag/v0.3.0) are published and verified.
 
 - TypeScript and production builds passed. The full backend suite passed 66 cases; a subsequent focused six-case run includes the additional moved-folder recovery case, bringing covered backend cases to 67.
 - Six affected browser workflows passed on isolated ports without touching the learner's running app. The new flow exercised one project across two lessons, an actual error, hint attachment, a saved fix, reviewed checkpoints, restart, moved-folder recovery, and an isolated second course. Existing editor, setup, GitHub gating, and theme flows passed. The unchanged extension pairing/import/replay flow retains its 0.2 validation below; the 0.3 extension version is a packaging update.

@@ -1,32 +1,34 @@
 # Chrome Web Store release
 
-Version 0.4.1 was submitted on October 10, 2026. The developer dashboard confirms **Pending review** for item `iaokfcjeghdefpgcgbcomiehhogbkbcp`. The publisher enabled Google two-step verification, verified the public contact email, and explicitly approved all three privacy certifications. The description, Education/English category, icon, screenshot, homepage/support URLs, permission justifications, data categories, privacy-policy URL, and reviewer instructions are saved. Distribution is free and public, with automatic publication selected after approval. Submission is complete; Google approval and public availability remain pending. Official steps: https://developer.chrome.com/docs/webstore/publish.
+OutClass 0.4.2 was submitted on October 11, 2026. The developer dashboard confirms **Pending review** for the existing item `iaokfcjeghdefpgcgbcomiehhogbkbcp`, with automatic publication after approval. The owner requested the rename and explicitly approved replacement of the two old listing images and resubmission. The original GitLearn 0.4.1 review was canceled to unlock the item; no second item was created. Google approval and public availability remain pending. Official steps: https://developer.chrome.com/docs/webstore/publish.
+
+The OutClass title comes from the accepted 0.4.2 package. Its description, icon, 1280x800 screenshot rendered from the actual popup with illustrative course context, renamed GitHub support URL, and reviewer instructions are saved. The Education/English category, free/public distribution, verified publisher contact, and unchanged permission/data handling remain in place. The three previously approved privacy certifications were preserved; they were not rechecked or expanded during this update.
 
 ## Upload package
 
-The product was renamed OutClass after this submission. The 0.4.2 Windows app and unpacked extension keep the same pairing and permission scope. The privacy page identifies the rename. The existing reviewed item remains GitLearn 0.4.1 until its next store update; do not create a second item or claim OutClass is approved.
+The 0.4.2 Windows app and extension keep the same pairing and permission scope. The privacy page identifies the rename. The accepted package is `dist/releases/OutClass-Chrome-0.4.2.zip`; its SHA-256 is recorded in [release validation](release-validation.md). Do not create a second item or claim OutClass is approved.
 
-Build and run `npm run package:extension` to produce `dist/releases/OutClass-Chrome-0.4.2.zip`. Use this package for the next update to the existing item after its current review is resolved. The submitted GitLearn 0.4.1 package remains available in its GitHub release. Packages contain the MV3 manifest, built background/content/popup scripts, popup assets, and icons. They contain no API key, source environment, server, local data, or Node modules.
+Build and run `npm run package:extension` to produce the extension ZIP. Future changes update this same item after the current review is resolved. The older GitLearn 0.4.1 package remains available in its historical GitHub release. Packages contain the MV3 manifest, built background/content/popup scripts, popup assets, and icons. They contain no API key, source environment, server, local data, or Node modules.
 
 ## Suggested listing
 
-Name: GitLearn - Udemy learning companion
+Name: OutClass - Udemy learning companion
 
 Short description: Connect your Udemy lessons with your own local code, notes, and Git checkpoints.
 
 Detailed description:
 
-GitLearn connects your Udemy course to a local learning workspace on Windows. Follow a lesson, practice in the built-in editor or your existing local code folder, and save reviewed code and notes as Git checkpoints. GitHub is optional.
+OutClass connects your Udemy course to a local learning workspace on Windows. Follow a lesson, practice in the built-in editor or your existing local code folder, and save reviewed code and notes as Git checkpoints. GitHub is optional.
 
-The extension keeps accessible course titles, lecture structure, current lesson, and completion indicators in context. It pairs with the GitLearn app using a one-time connection code. Pending course updates wait locally until the app reconnects.
+The extension keeps accessible course titles, lecture structure, current lesson, and completion indicators in context. It pairs with the OutClass app using a one-time connection code. Pending course updates wait locally until the app reconnects.
 
-For course-specific AI help, open the lesson's transcript panel and explicitly choose Import visible transcript. The transcript is added to your local course library. AI requires your own OpenAI API key in the desktop app; the extension never receives that key. GitLearn does not download videos or automatically import lecture text.
+For course-specific AI help, open the lesson's transcript panel and explicitly choose Import visible transcript. The transcript is added to your local course library. AI requires your own OpenAI API key in the desktop app; the extension never receives that key. OutClass does not download videos or automatically import lecture text.
 
-Install the companion first, then open its setup guide and pair the extension. GitLearn is independent of Udemy and is not affiliated with or endorsed by Udemy.
+Install the companion first, then open its setup guide and pair the extension. OutClass is independent of Udemy and is not affiliated with or endorsed by Udemy.
 
 ## Permissions and disclosures
 
-Single purpose: bring the user's accessible Udemy lesson context and explicitly imported visible transcript into the paired local GitLearn learning workspace.
+Single purpose: bring the user's accessible Udemy lesson context and explicitly imported visible transcript into the paired local OutClass learning workspace.
 
 - storage: retain the pairing credential, latest course context, and pending local updates.
 - alarms: retry pending local updates when the companion reconnects.
@@ -44,12 +46,12 @@ Complete account verification, listing category/language, privacy practices, the
 
 ## Reviewer walkthrough
 
-1. Use Windows x64 with Git for Windows installed. Download the current companion from the public homepage or GitHub Releases, install it, and open OutClass (previously GitLearn). This preview installer is unsigned. The submitted GitLearn extension also pairs with this companion; its protocol and permissions are unchanged.
-2. Follow first-run setup and select an empty parent learning folder. Skip optional OpenAI and GitHub connection. There is no GitLearn account, username, or password.
+1. Use Windows x64 with Git for Windows installed. Download the current companion from the public homepage or GitHub Releases, install it, and open OutClass (previously OutClass). This preview installer is unsigned. The submitted OutClass extension also pairs with this companion; its protocol and permissions are unchanged.
+2. Follow first-run setup and select an empty parent learning folder. Skip optional OpenAI and GitHub connection. There is no OutClass account, username, or password.
 3. Keep the companion open. In Setup, find its connection code. Open the extension popup, enter that code, and connect. The popup should show the connected companion.
 4. Open a Udemy course page accessible to you. Course titles and available lesson metadata appear in the popup and companion. Paid course purchases and OpenAI access are not required for pairing or accessible metadata; authenticated lecture/transcript access follows the reviewer's own Udemy permissions.
-5. On an accessible lesson with a transcript, open Udemy's transcript panel, then choose Import visible transcript in the extension. Inspect the imported source under that course in GitLearn. Closed/unavailable transcripts produce an explanation rather than a download.
-6. Close the companion and visit another accessible lesson. The popup reports pending local updates. Reopen GitLearn and retry; queued context is delivered. The extension never uploads this context to a developer server.
+5. On an accessible lesson with a transcript, open Udemy's transcript panel, then choose Import visible transcript in the extension. Inspect the imported source under that course in OutClass. Closed/unavailable transcripts produce an explanation rather than a download.
+6. Close the companion and visit another accessible lesson. The popup reports pending local updates. Reopen OutClass and retry; queued context is delivered. The extension never uploads this context to a developer server.
 7. Open my workspace focuses the already running desktop app. The extension credential can submit course context/imported text and read minimal connection status; it cannot edit files, run code, invoke AI, or change repositories.
 
 After approval, copy the real Chrome Web Store item URL into `src/site/assets/release.json`, rebuild, and publish the updated site. Until then, both site and app explain Load unpacked accurately.

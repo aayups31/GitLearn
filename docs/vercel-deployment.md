@@ -1,6 +1,6 @@
 # Deploy the public site on Vercel
 
-The public site is deployed at https://git-learn-black.vercel.app/. Vercel project `git-learn` is connected to https://github.com/aayups31/GitLearn and deploys `main`. The committed vercel.json sets:
+The public site is deployed at https://git-learn-black.vercel.app/. Vercel project `git-learn` is connected to https://github.com/aayups31/OutClass and deploys `main`. The committed vercel.json sets:
 
 - Framework: Other / no framework.
 - Install command: empty; the static website needs no npm dependencies.

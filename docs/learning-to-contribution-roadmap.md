@@ -1,4 +1,4 @@
-# GitLearn: from tutorials to independent work
+# OutClass: from tutorials to independent work
 
 Updated October 10, 2026. Stage A shipped in 0.3. The 0.4 preview adds a bounded working slice of B–F: project commands and starters, six curated practical briefs, recorded checks and help use, reviews and personal search, checked issue discovery, and a separate contribution workspace with local PR drafts. This does not mark every broader stage complete. [Current build](current-build.md) records delivered behavior. This roadmap takes priority over the older platform-expansion order in [implementation-plan.md](implementation-plan.md). [Learning architecture](learning-architecture.md) defines the supporting boundaries.
 
@@ -8,7 +8,7 @@ Remaining depth includes learner goals and time budgets, validated generated/tra
 
 ## Product outcome
 
-GitLearn should help a learner use a tutorial, understand an implementation, practice without the example, build a complete project, and contribute responsibly to a real repository. The product should answer three practical questions: where do I continue, what should I try myself, and what evidence shows I can do it?
+OutClass should help a learner use a tutorial, understand an implementation, practice without the example, build a complete project, and contribute responsibly to a real repository. The product should answer three practical questions: where do I continue, what should I try myself, and what evidence shows I can do it?
 
 ```mermaid
 flowchart LR
@@ -58,11 +58,11 @@ Every exercise has a specific objective, prerequisites, source references, start
 
 Record attempts separately, including code revision, actual test results, hints used, solution revealed, and the learner's explanation. Give concrete feedback about the failed behavior and a useful next step. Preserve earlier attempts for comparison.
 
-Offer a later variation without the original example. An unassisted attempt means no GitLearn hints or solution were used in that attempt; the app cannot prove whether outside help was used. Passed tests demonstrate the tested behavior, not universal mastery. If execution is unsupported, show Needs verification instead of success.
+Offer a later variation without the original example. An unassisted attempt means no OutClass hints or solution were used in that attempt; the app cannot prove whether outside help was used. Passed tests demonstrate the tested behavior, not universal mastery. If execution is unsupported, show Needs verification instead of success.
 
 Acceptance: a changed requirement requires applying the concept; failing code does not pass; revealed solutions are recorded; attempts survive restart; tests cover behavior rather than copying implementation; the learner can explain the change and revisit it later.
 
-The tutoring design draws on [Khan Academy's published approach](https://blog.khanacademy.org/khan-academys-7-step-approach-to-prompt-engineering-for-khanmigo/), including feedback and self-explanation. [Karpicke and Blunt's retrieval-practice study](https://pubmed.ncbi.nlm.nih.gov/21252317/) supports practicing recall in conceptual learning. Its experiments used science texts; the coding-task design here is a hypothesis to evaluate with GitLearn learners, not a demonstrated effect of this product.
+The tutoring design draws on [Khan Academy's published approach](https://blog.khanacademy.org/khan-academys-7-step-approach-to-prompt-engineering-for-khanmigo/), including feedback and self-explanation. [Karpicke and Blunt's retrieval-practice study](https://pubmed.ncbi.nlm.nih.gov/21252317/) supports practicing recall in conceptual learning. Its experiments used science texts; the coding-task design here is a hypothesis to evaluate with OutClass learners, not a demonstrated effect of this product.
 
 ## 4. Course projects and independent projects
 
@@ -82,7 +82,7 @@ Acceptance: a supported app starts after guided setup, dependencies remain scope
 
 Use a small skill vocabulary with versioned objectives. Associate skills with lesson sources, tasks, attempts, and project evidence. Preserve uncertainty and allow learners to correct associations; avoid an elaborate concept graph in the first release.
 
-Keep watched/completed lesson status separate from practice evidence. Useful states include encountered, practiced with help, completed in an unassisted GitLearn attempt, and due for review. Each state links to the task and date that supports it. Do not infer proficiency from chat volume, watch time, or an arbitrary confidence percentage.
+Keep watched/completed lesson status separate from practice evidence. Useful states include encountered, practiced with help, completed in an unassisted OutClass attempt, and due for review. Each state links to the task and date that supports it. Do not infer proficiency from chat volume, watch time, or an arbitrary confidence percentage.
 
 Remember explicitly recorded difficulties and actual failed attempts. A memory answer can say, for example, that a prior project used the same async pattern, with a link to the exact saved file or checkpoint. Cross-course retrieval is a separate Search my learning action; ordinary course chat remains scoped to its course.
 
@@ -121,11 +121,11 @@ Allow refresh, save, dismiss, and pasting a repository/issue URL. Recheck the se
 
 Acceptance: recommendations link to real currently checked issues; a selected issue that closes is handled; requirements and policies have sources; a synthetic fixture covers the full contribution journey; upstream/existing source Git state is preserved; no comment, fork, push, or PR is created by discovery or chat; all public drafts are reviewable before submission.
 
-GitHub's guidance emphasizes project rules, approachable issues, branches, review, and maintainer feedback. Its API documentation supplies the request/caching constraints. Sources: [contribution workflow](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-open-source), [good first issue labels](https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/encouraging-helpful-contributions-to-your-project-with-labels), [API rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api). Matching and readiness rules above are GitLearn product decisions, not GitHub guarantees.
+GitHub's guidance emphasizes project rules, approachable issues, branches, review, and maintainer feedback. Its API documentation supplies the request/caching constraints. Sources: [contribution workflow](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-open-source), [good first issue labels](https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/encouraging-helpful-contributions-to-your-project-with-labels), [API rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api). Matching and readiness rules above are OutClass product decisions, not GitHub guarantees.
 
 ## 7. Product experience and public adoption
 
-Retain the blue GitLearn identity and quiet desktop workspace. Navigation becomes Today, Courses, Projects, Practice, and Live work as those features ship. The center holds the current task or code; the right panel offers Tutor and Sources. Reviews, plans, and results stay beside the work they describe. Empty states explain one useful action; unfinished roadmap features do not appear as inert navigation items.
+Retain the blue OutClass identity and quiet desktop workspace. Navigation becomes Today, Courses, Projects, Practice, and Live work as those features ship. The center holds the current task or code; the right panel offers Tutor and Sources. Reviews, plans, and results stay beside the work they describe. Empty states explain one useful action; unfinished roadmap features do not appear as inert navigation items.
 
 Use visible progress and small contextual actions. Avoid mandatory quizzes, guilt-based streaks, constant chat interruptions, and large dashboards of unsupported scores. Preserve keyboard navigation, readable contrast, light/dark themes, and the ability to collapse assistance.
 
@@ -147,7 +147,7 @@ The 0.3 implementation completes Stage A's local foundation: course project bind
 
 Complete a narrow end-to-end stage before adding more surfaces. Public release preparation can proceed alongside the daily-workspace stages. Platform expansion remains planned, including coding problems, interactive courses, YouTube, documents, and notebooks; choose the next adapter from beta evidence. Do not assign dates until representative project/runtime and contribution feasibility checks pass.
 
-Start evaluation with a small voluntary beta on actual Udemy courses. Measure time to first successful run, successful session resume, saved work recovery, independent task attempts, comparable task performance, useful return sessions, and contribution drafts that satisfy the selected repository's requirements. Record AI cost and source availability, not just chat activity. Use short interviews to identify where learners still need to leave GitLearn.
+Start evaluation with a small voluntary beta on actual Udemy courses. Measure time to first successful run, successful session resume, saved work recovery, independent task attempts, comparable task performance, useful return sessions, and contribution drafts that satisfy the selected repository's requirements. Record AI cost and source availability, not just chat activity. Use short interviews to identify where learners still need to leave OutClass.
 
 ### First implementation slice
 
@@ -164,4 +164,4 @@ Only the records and interfaces used by this slice are introduced. Exercise gene
 
 ## 9. Coding agents: deferred exploration
 
-Keep coding-agent integration as an explicitly deferred idea. Do not implement provider login, an agent marketplace, autonomous editing, or automatic public actions in these stages. A later investigation must establish each provider's supported authentication/integration, subscription versus API entitlement, permissions, cost visibility, action review, and how assistance is recorded in learning evidence. Existing GitLearn tutoring does not depend on this future integration.
+Keep coding-agent integration as an explicitly deferred idea. Do not implement provider login, an agent marketplace, autonomous editing, or automatic public actions in these stages. A later investigation must establish each provider's supported authentication/integration, subscription versus API entitlement, permissions, cost visibility, action review, and how assistance is recorded in learning evidence. Existing OutClass tutoring does not depend on this future integration.

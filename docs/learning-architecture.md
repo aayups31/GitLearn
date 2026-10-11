@@ -9,7 +9,7 @@ Updated October 10, 2026. Architecture for [the learning-to-contribution roadmap
 ```mermaid
 flowchart TB
   Extension[Udemy extension] -->|Restricted paired context| Companion[Local companion]
-  Desktop[GitLearn desktop workspace] -->|Authenticated local API| Companion
+  Desktop[OutClass desktop workspace] -->|Authenticated local API| Companion
   Companion --> Learning[Projects, tasks, attempts, evidence, resume]
   Companion --> Runtime[Scoped local runner and terminal processes]
   Companion --> Retrieval[Course, project, history retrieval]

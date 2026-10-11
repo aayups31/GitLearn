@@ -196,7 +196,7 @@ fetch(
       if (
         url.protocol !== "https:" ||
         url.hostname !== "github.com" ||
-        !url.pathname.startsWith("/aayups31/GitLearn/releases/download/")
+        !url.pathname.startsWith("/aayups31/OutClass/releases/download/")
       )
         continue;
       document.getElementById(`${id}-download`).href = url.href;

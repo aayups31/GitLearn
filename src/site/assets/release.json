@@ -2,11 +2,11 @@
   "version": "0.4.2",
   "productName": "OutClass",
   "windows": {
-    "url": "https://github.com/aayups31/GitLearn/releases/download/v0.4.2/OutClass-Setup-0.4.2.exe",
+    "url": "https://github.com/aayups31/OutClass/releases/download/v0.4.2/OutClass-Setup-0.4.2.exe",
     "size": "111 MB"
   },
   "extension": {
-    "url": "https://github.com/aayups31/GitLearn/releases/download/v0.4.2/OutClass-Chrome-0.4.2.zip",
+    "url": "https://github.com/aayups31/OutClass/releases/download/v0.4.2/OutClass-Chrome-0.4.2.zip",
     "size": "134 KB"
   },
   "chromeStoreUrl": null

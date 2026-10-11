@@ -51,7 +51,7 @@ if (args[0] === "status") {
     [
       "repo",
       "view",
-      "aayups31/GitLearn",
+      "aayups31/OutClass",
       "--json",
       "nameWithOwner,visibility,url",
     ],
@@ -73,7 +73,7 @@ if (args[0] === "status") {
       `v${version}`,
       ...assets,
       "--repo",
-      "aayups31/GitLearn",
+      "aayups31/OutClass",
       "--target",
       "main",
       "--title",
@@ -85,7 +85,7 @@ if (args[0] === "status") {
     env,
   );
   console.log(
-    `Published preview release: https://github.com/aayups31/GitLearn/releases/tag/v${version}`,
+    `Published preview release: https://github.com/aayups31/OutClass/releases/tag/v${version}`,
   );
 } else if (args[0] === "replace-installer") {
   const { version } = JSON.parse(await readFile("package.json", "utf8"));
@@ -98,7 +98,7 @@ if (args[0] === "status") {
       `dist/releases/OutClass-Setup-${version}.exe`,
       "dist/releases/SHA256SUMS.txt",
       "--repo",
-      "aayups31/GitLearn",
+      "aayups31/OutClass",
       "--clobber",
     ],
     env,
@@ -115,7 +115,7 @@ if (args[0] === "status") {
           "view",
           `v${version}`,
           "--repo",
-          "aayups31/GitLearn",
+          "aayups31/OutClass",
           "--json",
           "url,assets,isPrerelease",
         ],
