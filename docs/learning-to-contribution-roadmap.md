@@ -42,6 +42,12 @@ Acceptance: a representative JavaScript and Python error produces a relevant exp
 
 ## 3. Practice that transfers beyond the example
 
+### Practical work during the course
+
+Do not wait for course completion. A small, optional suggestion can appear after a relevant saved lesson, at a section transition, or after a demonstrated practice skill. Each suggestion explains the observed trigger, required prerequisites, expected effort, and useful outcome. A first successful run can introduce a small transfer task; broader projects follow demonstrated attempts. Open source exploration can begin with documentation or reproduction before larger code changes are appropriate. Partial curriculum and missing transcripts never become invented readiness signals.
+
+The learner can start, defer, dismiss, or choose another task. Suggestions do not pause a video or block course access. Cooldowns and one active task prevent repeated interruptions. During practical work the assistant acts as a teacher: inspect the goal and actual attempt, ask a diagnostic question, offer a progressive hint, discuss tradeoffs, and help the learner interpret real tests. It cannot edit, complete the task, or publish work. Recheck practical opportunities as evidence develops rather than waiting for the final lesson.
+
 After a lesson, suggest one small task: predict output, explain a decision, repair a bug, change a requirement, or implement a related feature. The learner may try, defer, skip, or choose another task. The course remains accessible throughout.
 
 Every exercise has a specific objective, prerequisites, source references, starter provenance, expected behavior, a rubric, and a verification method. Start with curated JavaScript/Python templates and reviewed test cases. Generated variations use validated schemas and bounded source material. A model-generated test alone is insufficient evidence that an exercise is sound; reject contradictory or unverifiable tasks and offer a curated alternative.
