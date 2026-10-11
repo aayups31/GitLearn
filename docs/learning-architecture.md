@@ -2,7 +2,7 @@
 
 Stage A is implemented in the 0.3 preview using the existing SQLite key/value store: course project bindings, resume anchors, and up to twenty bounded runs per course. The editor restores saved file positions, exposes hint/explanation controls, and reattaches moved folders. Run evidence records the entry-file hash before execution and compares it afterward and before AI use; this does not fingerprint all imported modules or prove a proposed fix was tested. Future records below are introduced only when their stages are built.
 
-Updated October 10, 2026. Proposed architecture for [the learning-to-contribution roadmap](learning-to-contribution-roadmap.md). No new feature in this document is represented as delivered. Build on the [current desktop architecture](desktop-release.md): one TypeScript application, an isolated Electron window, a local companion, SQLite, existing Git checkpoints, course retrieval, and a restricted Chrome extension. The Vercel site remains marketing and downloads.
+Updated October 10, 2026. Architecture for [the learning-to-contribution roadmap](learning-to-contribution-roadmap.md). Stage A's delivered behavior is described above; the later-stage modules and records below remain proposed. Build on the [current desktop architecture](desktop-release.md): one TypeScript application, an isolated Electron window, a local companion, SQLite, existing Git checkpoints, course retrieval, and a restricted Chrome extension. The Vercel site remains marketing and downloads.
 
 ## Runtime ownership
 

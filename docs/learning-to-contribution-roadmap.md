@@ -1,6 +1,6 @@
 # GitLearn: from tutorials to independent work
 
-Updated October 10, 2026. This is the implementation-ready roadmap requested after the Windows 0.2 preview. These features are planned, not shipped. [Current build](current-build.md) remains the delivery record. This roadmap takes priority over the older platform-expansion order in [implementation-plan.md](implementation-plan.md). [Learning architecture](learning-architecture.md) defines the supporting data and module boundaries.
+Updated October 10, 2026. This is the implementation-ready roadmap requested after the Windows 0.2 preview. Stage A is delivered in the 0.3 preview; the later stages remain planned. [Current build](current-build.md) remains the delivery record. This roadmap takes priority over the older platform-expansion order in [implementation-plan.md](implementation-plan.md). [Learning architecture](learning-architecture.md) defines the supporting data and module boundaries.
 
 ## Product outcome
 

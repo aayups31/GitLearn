@@ -2,14 +2,19 @@
 
 ## 0.3 implementation checks
 
-Checked on Windows, October 10, 2026. The first daily-workspace stage is implemented and its packaged Windows runtime has passed validation. Public asset verification remains pending at this checkpoint.
+Checked on Windows, October 10, 2026. The first daily-workspace stage is implemented, its packaged Windows runtime has passed validation, and the [0.3.0 preview downloads](https://github.com/aayups31/GitLearn/releases/tag/v0.3.0) are published and verified.
 
 - TypeScript and production builds passed. The full backend suite passed 66 cases; a subsequent focused six-case run includes the additional moved-folder recovery case, bringing covered backend cases to 67.
 - Six affected browser workflows passed on isolated ports without touching the learner's running app. The new flow exercised one project across two lessons, an actual error, hint attachment, a saved fix, reviewed checkpoints, restart, moved-folder recovery, and an isolated second course. Existing editor, setup, GitHub gating, and theme flows passed. The unchanged extension pairing/import/replay flow retains its 0.2 validation below; the 0.3 extension version is a packaging update.
 - One live OpenAI check used only a tiny synthetic lesson and program. A real ReferenceError produced a course-cited hint, the corrected saved program ran successfully, and a reviewed checkpoint was saved. No learner files or paid-course material were read.
 - The source Electron runtime and actual packaged `GitLearn.exe` passed first-run setup, encrypted sample-key persistence, extraction of the included extension, a bound course project, local JavaScript execution, and restoration of the file, run output, and note across a full app restart. Readiness checks passed. The source scenario completed in twenty seconds and the packaged scenario in twenty-three seconds. Both used temporary profiles and a sample key without OpenAI requests.
 - Both static-site scenarios passed desktop, phone, keyboard navigation, privacy, reduced-motion, and no-JavaScript checks. The site made no requests to workspace APIs. Packaged site copy includes the updated run-evidence privacy disclosure.
-- Configured-key and environment-file scans passed for the staged source, public site, frontend, extension, desktop ASAR, and external extension resources. The packaged app and included extension both report version 0.3.0. Installer and extension ZIP checksums have been generated; public asset verification remains pending.
+- Configured-key and environment-file scans passed for the staged source, public site, frontend, extension, desktop ASAR, and external extension resources. The packaged app and included extension both report version 0.3.0. Published download requests returned HTTP 200 with the expected sizes; GitHub's SHA-256 asset digests and the downloaded checksum file match the tested local assets.
+
+| Public asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| GitLearn-Setup-0.3.0.exe | 115,946,942 | `97b35354ae3174ed3a113cadfc534944c4283748a5ac6b297eae16d42a6b2290` |
+| GitLearn-Chrome-0.3.0.zip | 137,008 | `54bc402e754f87e9c29aea77e5e636f91d5b0c7dcc78783022857f4b01dd8d82` |
 
 ## 0.2.0 preview verification
 
