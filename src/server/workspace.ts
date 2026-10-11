@@ -107,7 +107,7 @@ export class Workspace {
           () => "",
         ),
       );
-    const files: { path: string; size: number }[] = [];
+    const files: { path: string; size: number; version: string }[] = [];
     let skipped = 0;
     const walk = async (relative: string, depth: number) => {
       if (depth > 12) return;
@@ -131,54 +131,34 @@ export class Workspace {
           const { target } = await this.location(id, name);
           const info = await lstat(target);
           if (info.isDirectory()) await walk(name, depth + 1);
-          else if (
-            info.isFile() &&
-            info.size <= 512000 &&
-            !(await readFile(target)).includes(0)
-          )
-            files.push({ path: name, size: info.size });
-          else skipped++;
+          else if (info.isFile() && info.size <= 512000) {
+            const bytes = await readFile(target);
+            if (!bytes.includes(0))
+              files.push({ path: name, size: info.size, version: hash(bytes) });
+            else skipped++;
+          } else skipped++;
         } catch {
           skipped++;
         }
       }
     };
     await walk("", 0);
+    files.sort((a, b) => a.path.localeCompare(b.path));
+    const versions = Object.fromEntries(files.map((f) => [f.path, f.version]));
     return {
       sessionId: id,
       workspace: session.workspace,
-      files: files.sort((a, b) => a.path.localeCompare(b.path)),
+      files,
       skipped,
       anchor: this.app.store.get<ResumeAnchor>(`resume:${session.courseId}`),
-      lastRun: evidence ? (await this.runs(id))[0] : undefined,
+      lastRun: evidence ? (await this.runs(id, versions))[0] : undefined,
     };
   }
-  async versions(id: string) {
+  async versions(id: string): Promise<Record<string, string>> {
     const listing = await this.list(id, false);
-    const versions: Record<string, string> = {};
-    for (const file of listing.files)
-      versions[file.path] = (await this.read(id, file.path)).version;
-    return versions;
-  }
-  async assertFresh(id: string, runId?: string) {
-    const latest = (await this.runs(id))[0];
-    if (!latest) return undefined;
-    if (latest.stale)
-      throw new UserError(
-        "Test your changes first. Save and run the current code before asking for another hint.",
-        409,
-      );
-    if (runId && latest.id !== runId)
-      throw new UserError(
-        "A newer run is available. Attach its result before asking about this error.",
-        409,
-      );
-    if (this.isRunning(id))
-      throw new UserError(
-        "Wait for your local run to finish before asking for another hint.",
-        409,
-      );
-    return latest;
+    return Object.fromEntries(
+      listing.files.map((file) => [file.path, file.version]),
+    );
   }
   runStatus(id: string) {
     this.session(id);
@@ -222,7 +202,11 @@ export class Workspace {
     this.app.store.put(`resume:${session.courseId}`, anchor);
     return anchor;
   }
-  async runContext(id: string, runId: string): Promise<RunContext> {
+  async runContext(
+    id: string,
+    runId: string,
+    currentVersions?: Record<string, string>,
+  ): Promise<RunContext> {
     const session = this.session(id);
     const runs =
       this.app.store.get<RunEvidence[]>(`runs:${session.courseId}`) || [];
@@ -234,29 +218,30 @@ export class Workspace {
         "That run does not belong to this course workspace.",
         404,
       );
-    const current = await this.read(id, record.path).catch(() => null);
-    const versions = record.workspaceVersions
-      ? await this.versions(id)
-      : undefined;
+    const versions = currentVersions || (await this.versions(id));
     return {
       ...record,
       stale:
         record.changedDuringRun ||
-        current?.version !== record.fileVersion ||
-        (!!versions &&
+        versions[record.path] !== record.fileVersion ||
+        (!!record.workspaceVersions &&
           JSON.stringify(versions) !==
             JSON.stringify(record.workspaceVersions)),
     };
   }
-  async runs(id: string) {
+  async runs(
+    id: string,
+    currentVersions?: Record<string, string>,
+  ): Promise<RunContext[]> {
     const session = this.session(id);
     const records =
       this.app.store.get<RunEvidence[]>(`runs:${session.courseId}`) || [];
+    const versions = currentVersions || (await this.versions(id));
     return Promise.all(
       records
         .filter((run) => run.workspace === session.workspace)
         .slice(0, 10)
-        .map((run) => this.runContext(id, run.id)),
+        .map((run) => this.runContext(id, run.id, versions)),
     );
   }
   async pythonRuntime(workspace?: string) {

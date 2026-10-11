@@ -153,5 +153,21 @@ test("personal direction, evidence milestones, ledger downloads and changed-requ
     "Checks passed",
   );
   expect(store.get<any[]>("practice:tasks")![0].transferOf).toBeTruthy();
+  await page.getByRole("button", { name: "New file", exact: true }).click();
+  await page.getByLabel("New file path").fill("interactive.mjs");
+  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await editor.fill(
+    "process.stdout.write('Name? ');process.stdin.once('data',s=>{console.log('Hello '+s.toString().trim());process.exit(0);});",
+  );
+  await page.getByRole("button", { name: "Run", exact: true }).click();
+  await expect(page.getByLabel("Program output")).toContainText("Name?");
+  await page
+    .getByLabel("Program input · one line · 10s run limit")
+    .fill("Maya");
+  await page.getByRole("button", { name: "Send line", exact: true }).click();
+  await expect(page.getByLabel("Program output")).toContainText("Hello Maya");
+  await expect(
+    page.getByLabel("Program input · one line · 10s run limit"),
+  ).toHaveCount(0);
   expect(errors).toEqual([]);
 });

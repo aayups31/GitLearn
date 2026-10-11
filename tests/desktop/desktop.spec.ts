@@ -47,7 +47,9 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
       "extension",
       version,
     );
-    const extensionManifest = JSON.parse(await readFile(path.join(extensionDirectory, "manifest.json"), "utf8"));
+    const extensionManifest = JSON.parse(
+      await readFile(path.join(extensionDirectory, "manifest.json"), "utf8"),
+    );
     expect(extensionManifest.version).toBe(version);
     expect(extensionManifest.name).toBe("OutClass — Udemy learning companion");
     expect(
@@ -284,6 +286,24 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
         taskId: task.id,
         sessionId,
       });
+      const direction = await api("learning-direction", {
+        courseId: "desktop-fixture",
+        goal: "Build a local spending tracker",
+        experience: "new",
+        minutes: 25,
+      });
+      const transfer = await api("practice-start", {
+        courseId: "desktop-fixture",
+        exerciseId: "javascript-validation-transfer",
+        transferOf: task.id,
+      });
+      const changedRequirement = await api("practice-check", {
+        taskId: transfer.id,
+        sessionId,
+      });
+      const ledger = await api(
+        "learning-ledger?courseId=desktop-fixture&format=html",
+      );
       const scaffold = await api("project-scaffold", {
         sessionId,
         kind: "react",
@@ -292,9 +312,20 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
         sessionId,
         command: 'node -e "console.log(process.pid); setInterval(()=>{},1000)"',
       });
-      return { checked, scaffold, command, sessionId };
+      return {
+        checked,
+        direction,
+        changedRequirement,
+        ledger,
+        scaffold,
+        command,
+        sessionId,
+      };
     });
     expect(practical.checked.status).toBe("completed");
+    expect(practical.direction.direction.goal).toContain("spending tracker");
+    expect(practical.changedRequirement.attempts[0].passed).toBe(false);
+    expect(practical.ledger.content).toContain("OutClass Learning Ledger");
     expect(practical.scaffold.entry).toContain("main.jsx");
     let childPid = 0;
     await expect

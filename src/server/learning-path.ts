@@ -197,7 +197,7 @@ export class LearningPath {
         409,
       );
     return latest && runs.some((r) => r.id === latest.id)
-      ? this.workspace.runContext(session.id, latest.id)
+      ? this.workspace.runContext(session.id, latest.id, versions)
       : undefined;
   }
   async rememberHelp(id: string) {
