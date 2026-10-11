@@ -1,6 +1,6 @@
-# Chrome Web Store preparation
+# Chrome Web Store release
 
-The 0.4.1 ZIP was accepted and draft item `iaokfcjeghdefpgcgbcomiehhogbkbcp` was created on October 10, 2026 after the publisher enabled Google two-step verification. The description, Education/English category, icon, screenshot, homepage/support URLs, permission justifications, data categories, privacy-policy URL, and reviewer instructions are saved. Distribution is free and public. Chrome's remaining submission gates are the three publisher privacy certifications and a verified public publisher contact email. Store approval is separate from uploading the package. Official steps: https://developer.chrome.com/docs/webstore/publish.
+Version 0.4.1 was submitted on October 10, 2026. The developer dashboard confirms **Pending review** for item `iaokfcjeghdefpgcgbcomiehhogbkbcp`. The publisher enabled Google two-step verification, verified the public contact email, and explicitly approved all three privacy certifications. The description, Education/English category, icon, screenshot, homepage/support URLs, permission justifications, data categories, privacy-policy URL, and reviewer instructions are saved. Distribution is free and public, with automatic publication selected after approval. Submission is complete; Google approval and public availability remain pending. Official steps: https://developer.chrome.com/docs/webstore/publish.
 
 ## Upload package
 
@@ -34,7 +34,7 @@ Single purpose: bring the user's accessible Udemy lesson context and explicitly 
 
 Review the dashboard's current privacy form against actual handling. Course-page URLs/context fall within website content or browsing activity; imported transcript text is website content. Disclose local processing and optional OpenAI/GitHub processing in the companion. Never select a no-data declaration that contradicts these behaviors. Public homepage: https://git-learn-black.vercel.app/. Public privacy policy: https://git-learn-black.vercel.app/privacy.
 
-The draft declares authentication information (local pairing code/token), web history (Udemy course-page URLs/context), user activity (current lesson/completion context), and website content (course metadata and explicitly imported transcript text). There is no general browser history permission or Udemy account access. Chrome requires disclosure even for local handling: https://developer.chrome.com/docs/webstore/program-policies/user-data-faq. The publisher must confirm the three limited-use certifications before submission.
+The submitted listing declares authentication information (local pairing code/token), web history (Udemy course-page URLs/context), user activity (current lesson/completion context), and website content (course metadata and explicitly imported transcript text). There is no general browser history permission or Udemy account access. Chrome requires disclosure even for local handling: https://developer.chrome.com/docs/webstore/program-policies/user-data-faq. The publisher approved the three limited-use certifications at submission time.
 
 The 128px icon is in extension/static/icons/icon-128.png. A ready 1280x800 listing screenshot is in docs/store-assets/extension-1280x800.png. It uses the actual tested popup with an example course and no private learner data. The optional promotional tile is 440x280. Describe what is visible; do not imply automatic video access or support beyond Udemy.
 

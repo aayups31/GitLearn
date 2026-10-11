@@ -10,14 +10,15 @@ Verified on Windows, October 10, 2026. Restored the credential-free Windows syst
 - The final packaged desktop scenario passed in 23.8 seconds, including a Windows external-tool command as well as encrypted-key persistence/removal, bundled JavaScript, restored files, practical checks, scaffolding, and stopping its tracked command on close.
 - Production build, packaged version/privacy checks, and configured-key/environment-file exclusion scans passed.
 - The [0.4.1 GitHub release](https://github.com/aayups31/GitLearn/releases/tag/v0.4.1) is public. Both download URLs returned HTTP 200; asset sizes, GitHub SHA-256 digests, and the downloaded checksum file match the local tested artifacts.
-- The public site at https://git-learn-black.vercel.app/ was verified with the setup guide, privacy page, and release links. Vercel automatically deployed the `main` checkpoint `526f73c` successfully.
+- The public site at https://git-learn-black.vercel.app/ was verified with the setup guide, privacy page, and 0.4.1 release links. The live privacy page includes the extension data categories and Limited Use disclosure. Vercel automatically deployed the `main` checkpoint `526f73c` successfully.
+- Chrome accepted the 0.4.1 package and confirmed submission on October 10, 2026. Item `iaokfcjeghdefpgcgbcomiehhogbkbcp` is **Pending review**, with automatic publication selected after approval. Two-step verification, verified publisher contact, and the three explicitly approved privacy certifications are complete. The landing page keeps its pending-store state until a public listing is verified.
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
 | GitLearn-Setup-0.4.1.exe | 115,970,859 | `2466120e9c6848ee31b5096cd350522d96927a583f8d3255af675800e057b0a1` |
 | GitLearn-Chrome-0.4.1.zip | 137,008 | `76a70a107535d9d839c42b59079c0d4fd26266335d6608817eaf7c956dce797e` |
 
-The installer remains unsigned. Chrome account verification/store review and real Udemy learner beta sessions are separate release gates. The six curated JavaScript/Python briefs do not claim broad curriculum coverage or certify industry readiness; remaining roadmap depth is described below and in the learning roadmap.
+The installer remains unsigned. Google store approval and real Udemy learner beta sessions are separate release gates. The six curated JavaScript/Python briefs do not claim broad curriculum coverage or certify industry readiness; remaining roadmap depth is described below and in the learning roadmap.
 
 ## 0.4 practical-learning and contribution preview
 
@@ -39,7 +40,7 @@ Final artifacts:
 | GitLearn-Setup-0.4.0.exe | 115,970,588 | `61811facd844c657a52e6c180ad3715da18f26165e12c2bbe56074e91679f28c` |
 | GitLearn-Chrome-0.4.0.zip | 137,008 | `e91792e81ead0fec4ac557e2424f0bdfcd0ac86864ea916af5902c1f7446b873` |
 
-Chrome upload was rejected by the dashboard because the publisher's Google account needs two-step verification. The ZIP is prepared; account verification and store review remain external release gates. Real learner beta sessions on Udemy, signed Windows distribution, broader platforms, generated transfer tasks, and the remaining roadmap depth are not claimed complete by these automated checks.
+At the 0.4.0 checkpoint, Chrome upload was rejected because the publisher's Google account needed two-step verification. That account gate was subsequently resolved and 0.4.1 was submitted as recorded above. Real learner beta sessions on Udemy, signed Windows distribution, broader platforms, generated transfer tasks, and the remaining roadmap depth are not claimed complete by these automated checks.
 
 ## 0.3 implementation checks
 
