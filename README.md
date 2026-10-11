@@ -6,7 +6,7 @@ A local learning workspace that turns Udemy lessons into your own code, practica
 
 **Windows desktop preview:** download the installer from [GitHub Releases](https://github.com/aayups31/GitLearn/releases), open GitLearn, and follow its first-run setup. Choose one parent learning folder; GitLearn creates practice and history folders for each course automatically. JavaScript's runtime is bundled. Git for Windows is required for checkpoints; Python is optional for Python lessons. VS Code and GitHub remain optional.
 
-The public website is now the independently deployable static `dist/site` build. The actual editor, courses, RAG assistant, and setup live in the Windows desktop app. See [desktop architecture and packaging](docs/desktop-release.md) and [Chrome store preparation](docs/chrome-web-store.md). Keep GitLearn for the first release; the Chrome listing is still pending.
+The [public website and setup guide](https://git-learn-black.vercel.app/) are live on Vercel. The actual editor, courses, RAG assistant, and setup live in the Windows desktop app. See [desktop architecture and packaging](docs/desktop-release.md) and [Chrome store preparation](docs/chrome-web-store.md). The Chrome listing is being prepared; use Load unpacked until approval.
 
 On this Windows machine, double-click **Start GitLearn.cmd**. It starts the companion in the background and opens the app at [http://127.0.0.1:47831](http://127.0.0.1:47831).
 
