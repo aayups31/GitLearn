@@ -1,5 +1,27 @@
 # GitLearn preview verification
 
+## 0.4 practical-learning and contribution preview
+
+Verified on Windows, October 10, 2026. Implementation checkpoint: `dba7e54` on `main`.
+
+- Full backend suite: 80 cases in 13 files passed; a subsequent focused four-case runtime run also passed the quoted Node-command fix. Real temporary repositories cover a separate contribution clone/branch, preserved upstream history, actual tests, local PR draft, and resumed contribution identity.
+- All nine browser scenarios passed in 2.1 minutes, including practice suggested before course completion, failed and passing learner-written checks, hint use, reflection search, a fresh review file, project commands/scaffolds, checked-issue UI, course isolation/recovery, editor conflicts, HTML preview, GitHub setup gates, and theme persistence.
+- The real built extension was copied to a disposable test folder with only its loopback address redirected to the isolated test companion. Pairing, explicit transcript import, restricted extension authority, offline queueing, and replay passed. The learner's active port was not used for pairing or mutation.
+- Both static-site scenarios passed, including eight-step setup, mobile overflow, keyboard interactions, no workspace API calls, and operation without JavaScript. Workspace and live-work screenshots were visually reviewed.
+- Source desktop scenario passed in 33.2 seconds. The final packaged executable passed in 29.3 seconds, covering encrypted key persistence/removal, renderer isolation, included extension version, saved files, bundled JavaScript, restore after restart, real practice checks, project scaffolding, and killing a tracked project command on app close.
+- A live OpenAI request used synthetic course material and a real failed task. It returned one cited source and withheld a requested named full implementation. This is an observed response, not a guarantee about all model responses.
+- Read-only live GitHub discovery returned four checked open/unassigned issues and eight contributor-guide sources. No account token, private learning record, clone, fork, comment, or PR was sent in this check.
+- TypeScript/production builds, packaged version/privacy checks, configured-key scans, and environment-file exclusion checks passed. No developer key is included. The installer remains unsigned.
+
+Final artifacts:
+
+| Artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| GitLearn-Setup-0.4.0.exe | 115,970,588 | `61811facd844c657a52e6c180ad3715da18f26165e12c2bbe56074e91679f28c` |
+| GitLearn-Chrome-0.4.0.zip | 137,008 | `e91792e81ead0fec4ac557e2424f0bdfcd0ac86864ea916af5902c1f7446b873` |
+
+Chrome upload was rejected by the dashboard because the publisher's Google account needs two-step verification. The ZIP is prepared; account verification and store review remain external release gates. Real learner beta sessions on Udemy, signed Windows distribution, broader platforms, generated transfer tasks, and the remaining roadmap depth are not claimed complete by these automated checks.
+
 ## 0.3 implementation checks
 
 Checked on Windows, October 10, 2026. The first daily-workspace stage is implemented, its packaged Windows runtime has passed validation, and the [0.3.0 preview downloads](https://github.com/aayups31/GitLearn/releases/tag/v0.3.0) are published and verified.
