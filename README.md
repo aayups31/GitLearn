@@ -10,7 +10,7 @@ A local learning workspace that turns Udemy lessons into your own code, practica
 
 **Windows desktop preview:** download the installer from [GitHub Releases](https://github.com/aayups31/OutClass/releases), open OutClass, and follow its first-run setup. Choose one parent learning folder; OutClass creates practice and history folders for each course automatically. JavaScript's runtime is bundled. Git for Windows is required for checkpoints; Python is optional for Python lessons. VS Code and GitHub remain optional.
 
-The [public website and setup guide](https://git-learn-black.vercel.app/) are live on Vercel. The actual editor, courses, RAG assistant, and setup live in the Windows desktop app. See [desktop architecture and packaging](docs/desktop-release.md) and [Chrome store release](docs/chrome-web-store.md). The GitLearn 0.4.1 extension is submitted for Chrome Web Store review; use Load unpacked until approval and verified public availability.
+The [public website and setup guide](https://git-learn-black.vercel.app/) are live on Vercel. The actual editor, courses, RAG assistant, and setup live in the Windows desktop app. See [desktop architecture and packaging](docs/desktop-release.md) and [Chrome store release](docs/chrome-web-store.md). The OutClass 0.4.2 store item remains pending review. Use the current preview ZIP with Load unpacked for 0.5.0 features until an updated store package is approved.
 
 On this Windows machine, double-click **Start OutClass.cmd**. It starts the companion in the background and opens the app at [http://127.0.0.1:47831](http://127.0.0.1:47831).
 
@@ -123,3 +123,7 @@ See [current build and architecture](docs/current-build.md), the [longer-term ar
 ## Next: from tutorials to independent work
 
 The [active product roadmap](docs/learning-to-contribution-roadmap.md) defines contextual debugging, persistent course projects, practice tasks, evidence-backed learning memory, short reviews, and guided open source contributions. The [learning and contribution architecture](docs/learning-architecture.md) specifies local data, retrieval scopes, runtime boundaries, matching, and verification. The 0.3 preview implements the first daily-workspace stage: persistent course projects, Continue, recorded-run error help, and setup diagnostics. Practical project environments, independent practice, learning memory/reviews, and guided open source discovery/contribution follow in the roadmap. Coding-agent integration is deliberately deferred.
+
+## Active learning in 0.5
+
+Use **Learn by doing → My direction** to set a goal and session budget, keep an independent project, attach evidence to milestones, and export a readable learning ledger. Completed tasks unlock changed-requirement challenges. The assistant enforces saved-code/run freshness; local scripts accept bounded line input. Fresh Udemy observations attach video positions to reviewed checkpoints. [Implementation scope and boundaries](docs/active-learning-release.md).

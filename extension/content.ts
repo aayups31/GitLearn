@@ -1,4 +1,28 @@
 import type { Observation } from "../src/shared";
+export function seekUdemyAnchor(document: Document, href: string) {
+  const url = new URL(href);
+  if (
+    url.protocol !== "https:" ||
+    !/^(?:[a-z0-9-]+\.)*udemy\.com$/.test(url.hostname) ||
+    !/\/course\/[^/]+\/learn\/lecture\/\d+/.test(url.pathname) ||
+    !url.searchParams.has("outclassTime")
+  )
+    return false;
+  const seconds = Number(url.searchParams.get("outclassTime")),
+    video = document.querySelector("video");
+  if (
+    !Number.isFinite(seconds) ||
+    seconds < 0 ||
+    seconds > 86400 ||
+    !video ||
+    !Number.isFinite(video.duration) ||
+    video.duration <= 0
+  )
+    return false;
+  video.pause();
+  video.currentTime = Math.min(seconds, video.duration);
+  return true;
+}
 
 export function extractTranscript(document: Document) {
   const panel = document.querySelector(
@@ -178,10 +202,7 @@ if (
   ) {
     let tries = 0;
     const seek = setInterval(() => {
-      const video = document.querySelector("video");
-      if (video && Number.isFinite(video.duration) && video.duration > 0) {
-        video.pause();
-        video.currentTime = Math.min(seconds, video.duration);
+      if (seekUdemyAnchor(document, location.href)) {
         clearInterval(seek);
       } else if (++tries >= 60) clearInterval(seek);
     }, 500);

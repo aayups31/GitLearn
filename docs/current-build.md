@@ -1,4 +1,6 @@
-# OutClass 0.4.2 Windows and Udemy preview
+# OutClass 0.5.0 Windows and Udemy preview
+
+The active-learning preview adds personal directions, changed-requirement tasks, project milestones, guarded hints, bounded input, video-linked checkpoints, impact review and Learning Ledgers. See [implemented scope](active-learning-release.md) and [0.5.0 release notes](releases/0.5.0.md). The following 0.4 descriptions provide the compatible foundation.
 
 Previously GitLearn. The 0.4.2 release adds the OutClass identity and a new static homepage with GSAP scroll storytelling. Existing files, history, pairing, and saved-data locations remain compatible. The existing GitHub repository is now [aayups31/OutClass](https://github.com/aayups31/OutClass). On October 11, the same Chrome item was updated and resubmitted as OutClass 0.4.2; Google confirms Pending review. Practical-learning functionality and its bounded v1 scope are unchanged by the rename. [The next-release priorities](next-release.md) describe the proposed follow-up.
 
@@ -106,3 +108,7 @@ A separate live synthetic check passed semantic embeddings, a cited course answe
 Live authenticated Udemy layouts still need validation on the user's actual course. The adapter reports only accessible partial curriculum and includes manual fallback. Learner GitHub sign-in/private-repository creation still needs a live in-app check; publishing GitLearn's source and release assets does not verify that separate learner workflow. A week of real learning remains the product usefulness check from the specification. Chrome Store submission and Vercel account import remain separate release steps.
 
 See the root [README](../README.md) for the shortest setup flow.
+
+## 0.5.0 active-learning preview
+
+The new release implements personal directions, four changed-requirement tasks, six independent-project milestones, enforced stale-code guards, bounded interactive script input, checkpoint video links, change-impact review and observed regression alerts, plus HTML/Markdown Learning Ledgers. See [the implementation and its limits](active-learning-release.md) and [release notes](releases/0.5.0.md). Earlier 0.4 descriptions above remain historical; the Chrome store review currently concerns the 0.4.2 package, while 0.5.0 is supplied as an unpacked ZIP.

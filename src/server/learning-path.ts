@@ -360,7 +360,14 @@ export class LearningPath {
     const current = course.lessons.find((l) => l.id === course.currentLessonId);
     const topic =
       `${current?.title || ""} ${current?.section || ""}`.toLowerCase();
-    const language = /python/i.test(course.title) ? "python" : "javascript";
+    const runs = this.app.store.get<RunEvidence[]>(`runs:${id}`) || [];
+    const language =
+      /python/i.test(course.title) || runs.some((r) => r.path.endsWith(".py"))
+        ? "python"
+        : /javascript|typescript|react/i.test(course.title) ||
+            runs.some((r) => /\.[cm]?js$/.test(r.path))
+          ? "javascript"
+          : undefined;
     const tasks = this.practice.tasks().filter((t) => t.courseId === id);
     const candidates = this.practice
       .dashboard(id)
@@ -379,8 +386,16 @@ export class LearningPath {
       projectBound: course.workspaceMode === "project",
       milestones: milestones.map((m) => ({
         ...m,
+        brief: `${direction ? `For “${direction.goal}”: ` : ""}${m.brief}`,
+        sessions: Math.ceil(m.minutes / (direction?.minutes || 30)),
         record: records.find((r) => r.id === m.id),
       })),
+      guidance:
+        direction?.experience === "experienced"
+          ? "Start from a constraint you have not handled before. Explain the design tradeoff and verify it with a counterexample."
+          : direction?.experience === "some"
+            ? "Build one behavior without replaying the lesson. Compare your expected result with the actual run."
+            : "Start with one input and predict the output. Make one small change, run it, and explain what happened.",
       evidence: evidence.slice(0, 80),
       next: milestones.find((m) => !records.some((r) => r.id === m.id))?.id,
       recommendation: recommended
@@ -524,12 +539,16 @@ export class LearningPath {
             "'": "&#39;",
           })[c]!,
       );
+    const markdownTitle = (s: string) =>
+      s
+        .replace(/[\r\n]/g, " ")
+        .replace(/[\\`*_{}\[\]()<>#!|&]/g, (c) => `\\${c}`);
     const document =
       format === "markdown"
-        ? `# OutClass Learning Ledger\n\n${course.title}\n\n${disclosure}\n\n${blocks
+        ? `# OutClass Learning Ledger\n\n${markdownTitle(course.title)}\n\n${disclosure}\n\n${blocks
             .map(
               (b) =>
-                `## ${b.title.replace(/[\r\n]/g, " ")}\n\n${b.text
+                `## ${markdownTitle(b.title)}\n\n${b.text
                   .split("\n")
                   .map((line) => `    ${line}`)
                   .join("\n")}\n`,

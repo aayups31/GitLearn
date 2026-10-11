@@ -181,6 +181,7 @@ export function PersonalPath({
           </p>
         </div>
       )}
+      <p className="path-guidance">{data?.guidance}</p>
       <div className="path-project-heading">
         <div>
           <h2>Your independent project</h2>
