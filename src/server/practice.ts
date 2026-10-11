@@ -241,6 +241,8 @@ export interface Attempt {
   checks: { label: string; passed: boolean }[];
   output: string;
   hints: number;
+  source: string;
+  sourceTruncated: boolean;
 }
 export interface PracticeTask {
   id: string;
@@ -286,6 +288,41 @@ export class Practice {
   tasks() {
     return this.app.store.get<PracticeTask[]>("practice:tasks") || [];
   }
+  search(query: string) {
+    const words =
+      query
+        .toLowerCase()
+        .match(/[a-z0-9]{2,}/g)
+        ?.slice(0, 8) || [];
+    if (!words.length) return [];
+    return this.tasks()
+      .filter((task) =>
+        words.some((word) =>
+          (
+            this.exercise(task.exerciseId).title +
+            " " +
+            this.exercise(task.exerciseId).skill +
+            " " +
+            task.reflection +
+            " " +
+            task.attempts[0]?.output
+          )
+            .toLowerCase()
+            .includes(word),
+        ),
+      )
+      .slice(0, 20)
+      .map((task) => ({
+        taskId: task.id,
+        courseId: task.courseId,
+        courseTitle:
+          this.app.store.state().courses.find((c) => c.id === task.courseId)
+            ?.title || "Course",
+        title: this.exercise(task.exerciseId).title,
+        reflection: task.reflection,
+        attempt: task.attempts[0],
+      }));
+  }
   task(id: string) {
     const task = this.tasks().find((item) => item.id === id);
     if (!task) throw new UserError("That practical task was not found.", 404);
@@ -310,7 +347,7 @@ export class Practice {
       : state.courses;
     const tasks = this.tasks();
     const reviews = tasks
-      .filter((t) => t.status === "completed")
+      .filter((t) => t.status === "completed" && !t.reviewOf)
       .map((task) => {
         const evidence = task.attempts.find((a) => a.passed && !a.stale)!;
         const repeats = tasks.filter(
@@ -345,7 +382,12 @@ export class Practice {
           `runs:${course.id}`,
         ) || [];
       const successful = tasks.filter(
-        (t) => t.courseId === course.id && t.status === "completed",
+        (t) =>
+          t.courseId === course.id && t.status === "completed" && !t.reviewOf,
+      );
+      const successfulRun = runs.find(
+        (r) =>
+          r.exitCode === 0 && !r.timedOut && !r.stopped && !r.changedDuringRun,
       );
       const lesson = course.lessons.find(
         (l) =>
@@ -361,7 +403,14 @@ export class Practice {
       ]
         .join(" ")
         .toLowerCase();
-      const language = /python/.test(titles) ? "python" : "javascript";
+      const language =
+        successfulRun?.path.endsWith(".py") || /python/.test(titles)
+          ? "python"
+          : /\.(?:[cm]?js|jsx|tsx?)$/.test(successfulRun?.path || "") ||
+              /javascript|typescript|react|\bjs\b/.test(titles)
+            ? "javascript"
+            : undefined;
+      if (!language) return [];
       const eligible = exercises.filter(
         (e) =>
           e.language === language &&
@@ -381,24 +430,20 @@ export class Practice {
             e.topics.some((topic) => titles.includes(topic)),
         ) ||
         eligible.find((e) => e.kind === "practice");
-      if (
-        !spec ||
-        (!checkpoints.length &&
-          !runs.some(
-            (r) =>
-              r.exitCode === 0 &&
-              !r.timedOut &&
-              !r.stopped &&
-              !r.changedDuringRun,
-          ))
-      )
-        return [];
+      if (!spec || (!checkpoints.length && !successfulRun)) return [];
       const reason =
         spec.kind === "project"
           ? "You completed two practical tasks. Combine those skills in a small project before moving further through the course."
           : checkpoints.length
             ? `You saved work from “${checkpoints[0].lessonTitle}”. Try applying a related programming skill before the next lesson.`
             : "You ran saved code successfully. This is a useful moment to try a small task of your own.";
+      const previousLesson = course.lessons.filter(
+        (l) => l.title === checkpoints[0]?.lessonTitle,
+      );
+      const atBoundary =
+        lesson &&
+        previousLesson.length === 1 &&
+        previousLesson[0].section !== lesson.section;
       const key = `${course.id}:${spec.id}`;
       const deferred =
         this.app.store.get<Record<string, number>>("practice:deferred") || {};
@@ -408,9 +453,11 @@ export class Practice {
           key,
           courseId: course.id,
           exerciseId: spec.id,
-          reason,
+          reason: atBoundary
+            ? `You moved from “${previousLesson[0].section}” to “${lesson.section}”. Apply the earlier ideas before adding more. ${reason}`
+            : reason,
           lessonId: lesson?.id,
-          evidence: checkpoints[0]?.id || runs[0]?.id,
+          evidence: checkpoints[0]?.id || successfulRun?.id,
           courseTitle: course.title,
         },
       ];
@@ -419,6 +466,30 @@ export class Practice {
       exercises: exercises.map(({ starter, hints, ...spec }) => spec),
       tasks: courseId ? tasks.filter((t) => t.courseId === courseId) : tasks,
       opportunities,
+      liveOpportunities: courses.flatMap((course) => {
+        const completed = tasks.filter(
+          (t) =>
+            t.courseId === course.id && t.status === "completed" && !t.reviewOf,
+        );
+        const key = `${course.id}:live`;
+        if (
+          !completed.length ||
+          (this.app.store.get<Record<string, number>>("practice:deferred")?.[
+            key
+          ] || 0) > Date.now()
+        )
+          return [];
+        return [
+          {
+            courseId: course.id,
+            key,
+            courseTitle: course.title,
+            evidence: completed[0].id,
+            reason:
+              "You completed practical work. Explore a small real issue now: read its requirements, reproduce behavior, or improve documentation before taking on a larger code change.",
+          },
+        ];
+      }),
       reviews: reviews.filter((r) => !courseId || r.courseId === courseId),
       reviewEnabled:
         this.app.store.get<boolean>("practice:reviewsEnabled") !== false,
@@ -432,7 +503,7 @@ export class Practice {
           taskId: t.id,
           skill: this.exercise(t.exerciseId).skill,
           evidence: t.attempts.find((a) => a.passed && !a.stale)!.id,
-          assistance: t.hints
+          assistance: t.attempts.find((a) => a.passed && !a.stale)!.hints
             ? "Practiced with GitLearn help"
             : "Passed without GitLearn hints in this attempt",
         })),
@@ -468,7 +539,8 @@ export class Practice {
       if (
         original.courseId !== courseId ||
         original.exerciseId !== exerciseId ||
-        original.status !== "completed"
+        original.status !== "completed" ||
+        original.reviewOf
       )
         throw new UserError("Choose a completed task to revisit.");
     }
@@ -483,7 +555,8 @@ export class Practice {
       const anchor = this.app.store.get<import("../shared.js").ResumeAnchor>(
         `resume:${courseId}`,
       );
-      if (anchor) await this.app.continueCourse(courseId);
+      if (anchor && !anchor.contributionId)
+        await this.app.continueCourse(courseId);
       else {
         const lesson =
           course.lessons.find((l) => l.id === course.currentLessonId) ||
@@ -494,11 +567,11 @@ export class Practice {
     }
     const session = this.app.configured().session!;
     const id = randomUUID(),
-      file = `practice/${id}/solution.${spec.language === "python" ? "py" : "mjs"}`;
+      file = `practice/${spec.id}-${id.slice(0, 6)}/solution.${spec.language === "python" ? "py" : "mjs"}`;
     await this.workspace.save(session.id, file, spec.starter, null);
     await this.workspace.save(
       session.id,
-      `practice/${id}/BRIEF.md`,
+      `${file.slice(0, file.lastIndexOf("/"))}/BRIEF.md`,
       `# ${spec.title}\n\n${spec.brief}\n\n${spec.requirements.map((r) => `- ${r}`).join("\n")}\n\nCurated GitLearn exercise v1. Associated lesson: ${session.lessonTitle}. This is transfer practice, not a claim about the instructor's exact assignment.\n`,
       null,
     );
@@ -572,6 +645,8 @@ export class Practice {
       reflection: task.reflection,
       latestAttempt: task.attempts[0],
       hintsRequested: task.hints,
+      path: task.path,
+      reviewOf: task.reviewOf,
       teacherPolicy:
         "Guide this attempt with a diagnostic question and one progressive hint. Do not provide the implementation or complete the task, even if asked. Explain concepts with a different small example. The learner writes and tests the solution.",
     };
@@ -693,6 +768,14 @@ export class Practice {
       } catch {
         output = "Sensitive output excluded.";
       }
+      const latest = this.task(id);
+      let source = file.content.slice(0, 16000);
+      try {
+        assertClean(source, "practice source");
+        if (this.app.apiKey && source.includes(this.app.apiKey)) throw Error();
+      } catch {
+        source = "Sensitive content excluded from learning history.";
+      }
       const attempt: Attempt = {
         id: randomUUID(),
         at: new Date().toISOString(),
@@ -701,10 +784,11 @@ export class Practice {
         passed: !stale && result.code === 0 && checks.every((c) => c.passed),
         checks,
         output,
-        hints: task.hints,
+        hints: latest.hints,
+        source,
+        sourceTruncated: file.content.length > 16000,
       };
       // Read the latest record so a concurrent hint cannot be lost.
-      const latest = this.task(id);
       latest.attempts = [attempt, ...latest.attempts].slice(0, 50);
       if (attempt.passed) latest.status = "completed";
       this.persist(latest);

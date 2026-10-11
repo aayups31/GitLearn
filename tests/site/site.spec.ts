@@ -27,7 +27,7 @@ test("public site explains the desktop product, adapts to phones, and has honest
   await expect(page.getByRole("tabpanel")).toContainText("Your working code");
   await page.getByRole("link", { name: "How it works", exact: true }).click();
   await expect(page).toHaveURL(/#guide$/);
-  await expect(page.locator(".guide-list li")).toHaveCount(6);
+  await expect(page.locator(".guide-list li")).toHaveCount(8);
   await page
     .getByText("Do I need a GitHub repository?", { exact: true })
     .click();

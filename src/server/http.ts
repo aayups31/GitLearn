@@ -33,10 +33,11 @@ export function createApp(
   const practice = new Practice(application, workspace);
   const runtime = new ProjectRuntime(application, workspace);
   const live = new LiveWork(application, workspace, runtime, practice);
-  app.locals.stopPrograms = () => {
+  app.locals.stopPrograms = async () => {
+    app.locals.closing = true;
     live.stopAll();
     runtime.stopAll();
-    workspace.stopAll();
+    await workspace.stopAll();
   };
   const library = new CourseLibrary(application);
   app.disable("x-powered-by");
@@ -46,6 +47,12 @@ export function createApp(
   ]);
   const pairAttempts = new Map<string, { count: number; at: number }>();
   app.use((req, res, next) => {
+    if (app.locals.closing) {
+      res
+        .status(503)
+        .json({ error: "GitLearn is closing. Reopen the app to continue." });
+      return;
+    }
     const host = req.headers.host;
     if (!host || ![`127.0.0.1:${port}`, `localhost:${port}`].includes(host)) {
       res.status(403).json({ error: "Invalid host." });
@@ -79,7 +86,7 @@ export function createApp(
   });
   app.use(express.json({ limit: "1mb" }));
   app.get("/api/health", (_req, res) =>
-    res.json({ ok: true, name: "GitLearn", version: "0.3.0" }),
+    res.json({ ok: true, name: "GitLearn", version: "0.4.0" }),
   );
   app.get("/preview/:token", (req, res) => {
     res.setHeader("X-Frame-Options", "SAMEORIGIN");
@@ -200,6 +207,9 @@ export function createApp(
       ),
     ),
   );
+  app.get("/api/learning-search", (req, res) =>
+    res.json({ results: practice.search(text.parse(req.query.q)) }),
+  );
   app.post("/api/practice-start", async (req, res) => {
     const input = z
       .object({
@@ -266,9 +276,18 @@ export function createApp(
       .parse(req.body);
     res.json(await runtime.start(input.sessionId, input.command));
   });
-  app.post("/api/project-scaffold", async (req,res)=>{
-    const input=z.object({sessionId:z.string().uuid(),kind:z.enum(["react","python"])}).parse(req.body);
-    res.json(await application.serial(()=>runtime.scaffold(input.sessionId,input.kind)));
+  app.post("/api/project-scaffold", async (req, res) => {
+    const input = z
+      .object({
+        sessionId: z.string().uuid(),
+        kind: z.enum(["react", "python"]),
+      })
+      .parse(req.body);
+    res.json(
+      await application.serial(() =>
+        runtime.scaffold(input.sessionId, input.kind),
+      ),
+    );
   });
   app.post("/api/project-input", (req, res) => {
     const input = z
@@ -286,6 +305,7 @@ export function createApp(
     res.json(
       await live.discover(
         z.enum(["JavaScript", "Python", "TypeScript"]).parse(req.body.language),
+        req.body.courseId ? text.parse(req.body.courseId) : undefined,
       ),
     ),
   );
@@ -321,6 +341,9 @@ export function createApp(
   });
   app.post("/api/live-draft", async (req, res) =>
     res.json(await live.draft(z.string().uuid().parse(req.body.id))),
+  );
+  app.post("/api/live-refresh", async (req, res) =>
+    res.json(await live.refresh(z.string().uuid().parse(req.body.id))),
   );
   app.get("/api/workspace-files", async (req, res) =>
     res.json(await workspace.list(text.min(1).parse(req.query.sessionId))),

@@ -43,12 +43,14 @@
       <p>
         Course data, session notes, imported text, search indexes, embedding
         vectors, chat history, course project bindings, resume positions, and
-        bounded local run evidence are stored in GitLearn’s SQLite
-        database. Your working code and reviewed checkpoints live in the
-        learning folders you choose. You can remove imported sources in the app.
-        Your course folders and app data are retained when you uninstall so your
-        learning is not discarded; you can delete them yourself after exporting
-        anything you need.
+        bounded local run evidence, practical task attempts and saved source
+        snapshots, reflections, review schedules, project command records, and
+        contribution briefs are stored in GitLearn’s SQLite database. Your
+        working code and reviewed checkpoints live in the learning folders you
+        choose. You can remove imported sources in the app. Your course folders
+        and app data are retained when you uninstall so your learning is not
+        discarded; you can delete them yourself after exporting anything you
+        need.
       </p>
       <h2>OpenAI</h2>
       <p>
@@ -60,10 +62,15 @@
       <p>
         When enabled, code help can send your question, selected code, relevant
         local code or notes, and bounded chat context to OpenAI. Course mode
-        sends your question and relevant imported course passages.
-        When you explicitly attach a recorded run or choose error help, its
-        saved entry-file source and bounded output are included. Semantic
-        indexing sends uncached source passages for embeddings when you
+        sends your question and relevant imported course passages. When you
+        explicitly attach a recorded run or choose error help, its saved
+        entry-file source and bounded output are included. During a practical
+        task, Code help also includes its brief, checks, reflection, and
+        recorded help use. During contribution work it includes the selected
+        public issue, contributor instructions, your notes, and bounded recorded
+        command results. Personal learning search across courses is a local,
+        explicit search; it does not automatically add other courses to chat.
+        Semantic indexing sends uncached source passages for embeddings when you
         explicitly refresh the index; question retrieval may send the question
         for an embedding. AI commit messages use a small scanned diff when
         separately enabled. The app scans sources for recognizable secrets
@@ -88,7 +95,13 @@
         account and a repository you choose. Reviewed code and notes are
         uploaded only when you configure a remote and sync. Repository access
         and uploaded contents are governed by your GitHub account and repository
-        permissions.
+        permissions. Live work makes read-only GitHub requests for public issue,
+        repository, contributor-guide, and discussion data. These requests
+        reveal your selected language or repository and ordinary connection
+        information to GitHub. Choosing a brief creates a local record; cloning
+        creates a separate local branch and folder. GitLearn prepares a local
+        pull request draft and does not publish comments, forks, or pull
+        requests for you.
       </p>
       <h2>Public website and downloads</h2>
       <p>

@@ -7,7 +7,7 @@ test("the local app opens the independently built product and setup guide", asyn
   await page.getByRole("link", { name: "Product & guide" }).click();
   await expect(page).toHaveURL(/\/welcome\/$/);
   await expect(page).toHaveTitle("GitLearn · Go beyond the lesson");
-  await expect(page.locator(".guide-list li")).toHaveCount(6);
+  await expect(page.locator(".guide-list li")).toHaveCount(8);
   await expect(page.locator("#extension-status")).toContainText(
     "listing pending",
   );

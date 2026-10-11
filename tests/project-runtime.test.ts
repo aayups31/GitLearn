@@ -30,7 +30,7 @@ beforeEach(async () => {
 });
 afterEach(async () => {
   runtime.stopAll();
-  workspace.stopAll();
+  await workspace.stopAll();
   await new Promise((r) => setTimeout(r, 700));
   store.close();
   await rm(folder, { recursive: true, force: true });
@@ -53,6 +53,10 @@ it("runs actual project tests, reports exit status, and excludes companion crede
   expect(runtime.status(id)[0].exitCode).toBe(0);
   expect(runtime.status(id)[0].output).toContain("environment");
   expect(record.courseId).toBe("js");
+  await runtime.start(id, 'node -e "console.log(1); console.log(2)"');
+  await waitFor(() => runtime.status(id)[0].state !== "running");
+  expect(runtime.status(id)[0].exitCode).toBe(0);
+  expect(runtime.status(id)[0].output.replace(/\r/g, "")).toBe("1\n2\n");
 });
 it("accepts interactive line input and stops a long-running process", async () => {
   await writeFile(
@@ -76,4 +80,23 @@ it("marks an old running record interrupted rather than pretending a process res
   new ProjectRuntime(new Application(store), workspace);
   expect(runtime.records()[0].state).toBe("interrupted");
   expect(runtime.records()[0].output).toBe("saved output");
+});
+it("creates independent project scaffolding without overwriting existing learner code", async () => {
+  const before = await workspace.save(
+    id,
+    "my-work.js",
+    "console.log('mine');",
+    null,
+  );
+  const first = await runtime.scaffold(id, "react"),
+    second = await runtime.scaffold(id, "python");
+  expect(first.directory).not.toBe(second.directory);
+  expect(first.install).toContain("npm --prefix");
+  expect((await workspace.read(id, before.path)).content).toBe(before.content);
+  expect((await workspace.read(id, first.entry)).content).toContain(
+    "Your brief",
+  );
+  expect((await workspace.read(id, second.entry)).content).toContain(
+    "your project brief",
+  );
 });

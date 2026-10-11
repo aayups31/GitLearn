@@ -123,6 +123,13 @@ export function SetupDiagnostics({
     ? [
         ["JavaScript", true, `Node ${result.nodeVersion} · ready locally`],
         [
+          "Web projects",
+          result.webToolchainAvailable,
+          result.webToolchainAvailable
+            ? "Installed Node.js detected · npm/Vite projects can use the project console"
+            : "Install Node.js with npm for web projects. Short JavaScript runs work now.",
+        ],
+        [
           "Python",
           result.pythonAvailable,
           result.pythonAvailable

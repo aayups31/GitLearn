@@ -226,6 +226,22 @@ it("pairs an extension with a one-use code and limits its authority", async () =
     "editor-anchor",
     "diagnostics",
     "workspace-runs",
+    "practice-start",
+    "practice-check",
+    "practice-update",
+    "practice-hint",
+    "practice",
+    "project-command",
+    "project-scaffold",
+    "project-input",
+    "project-stop",
+    "project-commands",
+    "live-search",
+    "live-select",
+    "live-clone",
+    "live-open",
+    "live-draft",
+    "learning-export",
   ]) {
     expect(
       (

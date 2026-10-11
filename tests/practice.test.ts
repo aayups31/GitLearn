@@ -28,7 +28,7 @@ beforeEach(async () => {
     });
 });
 afterEach(async () => {
-  workspace.stopAll();
+  await workspace.stopAll();
   store.close();
   await rm(folder, { recursive: true, force: true });
 });
@@ -76,9 +76,39 @@ it("fails an unfinished task, records hint use, verifies saved behavior, and sur
   expect(practice.dashboard().reviews[0].evidenceId).toBe(
     complete.attempts[0].id,
   );
+  expect(complete.attempts[0].source).toContain(
+    "export function discountedPrice",
+  );
+  practice.update(
+    task.id,
+    "reflection",
+    "Validation happens before arithmetic.",
+  );
+  expect(practice.search("validation")[0].reflection).toContain(
+    "before arithmetic",
+  );
+  expect(practice.search("validation")[0].attempt!.fileVersion).toBe(
+    complete.attempts[0].fileVersion,
+  );
+  expect(practice.dashboard("js").liveOpportunities).toHaveLength(1);
+  practice.defer("js:live", 1);
+  expect(practice.dashboard("js").liveOpportunities).toEqual([]);
   const review = await practice.start("js", "javascript-validation", task.id);
   expect(review.path).not.toBe(task.path);
   expect(review.hints).toBe(0);
+  const reviewFile = await workspace.read(id, review.path);
+  await workspace.save(
+    id,
+    review.path,
+    complete.attempts[0].source,
+    reviewFile.version,
+  );
+  await practice.check(review.id, id);
+  expect(practice.dashboard("js").reviews).toHaveLength(1);
+  expect(practice.dashboard("js").reviews[0].taskId).toBe(task.id);
+  await expect(
+    practice.start("js", "javascript-validation", review.id),
+  ).rejects.toThrow("completed task");
 });
 it("verifies Python behavior and protects another course from task evidence", async () => {
   const task = await practice.start("python", "python-collections");

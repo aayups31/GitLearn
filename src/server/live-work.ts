@@ -6,8 +6,15 @@ import type { Workspace } from "./workspace.js";
 import type { ProjectRuntime } from "./project-runtime.js";
 import type { Practice } from "./practice.js";
 import { runtimeEnvironment } from "./practice.js";
-import { assertClean, excluded, child as insideFile, UserError } from "./safety.js";
+import {
+  assertClean,
+  excluded,
+  child as insideFile,
+  UserError,
+} from "./safety.js";
 import { readFile, lstat } from "node:fs/promises";
+import { realpath } from "node:fs/promises";
+import { inside } from "./safety.js";
 
 export interface Candidate {
   repo: string;
@@ -25,6 +32,13 @@ export interface Candidate {
   signals: string[];
   cautions: string[];
   sources: { title: string; url: string; text: string; revision: string }[];
+  discussion?: { author: string; text: string; url: string; at: string }[];
+  fit?: {
+    reason: string;
+    evidence: { skill: string; taskId: string }[];
+    preparation: string[];
+    score: number;
+  };
 }
 export interface Contribution {
   id: string;
@@ -66,8 +80,10 @@ export function repository(value: string) {
 }
 export class LiveWork {
   private busy = false;
-  private processes = new Set<()=>void>();
-  stopAll() { for(const stop of this.processes) stop(); }
+  private processes = new Set<() => void>();
+  stopAll() {
+    for (const stop of this.processes) stop();
+  }
   constructor(
     private app: Application,
     private workspace: Workspace,
@@ -94,7 +110,7 @@ export class LiveWork {
   }
   async request(route: string, fresh = false): Promise<any> {
     if (
-      !/^\/(repos\/[\w.-]+\/[\w.-]+(?:\/[\w./-]+)?|search\/issues\?[^\s]+)$/.test(
+      !/^\/(repos\/[\w.-]+\/[\w.-]+(?:\/[\w./-]+)?(?:\?per_page=\d+)?|search\/issues\?[^\s]+)$/.test(
         route,
       )
     )
@@ -279,7 +295,61 @@ export class LiveWork {
       }>("live:lastSearch"),
     };
   }
-  async discover(language: "JavaScript" | "Python" | "TypeScript") {
+  match(candidate: Candidate, courseId?: string) {
+    const work = this.practice
+      .tasks()
+      .filter(
+        (t) =>
+          t.status === "completed" && (!courseId || t.courseId === courseId),
+      );
+    const keywords = [
+      [/validat|input|error|exception/i, "Functions and validation"],
+      [
+        /array|list|filter|collection|iterator/i,
+        "Collections and transformation",
+      ],
+      [/report|aggregate|schema|data model/i, "Project data modeling"],
+    ] as const;
+    const text = candidate.title + " " + candidate.body;
+    const evidence = work
+      .filter((t) =>
+        keywords.some(
+          ([pattern, skill]) =>
+            pattern.test(text) &&
+            this.practice.exercise(t.exerciseId).skill === skill,
+        ),
+      )
+      .map((t) => ({
+        skill: this.practice.exercise(t.exerciseId).skill,
+        taskId: t.id,
+      }));
+    const preparation = [
+      "Read the issue discussion and check for existing implementation PRs.",
+      "Inspect setup requirements and run baseline tests before changing code.",
+      "Confirm the repository's contributor and AI-assistance rules.",
+    ];
+    candidate.fit = {
+      reason: evidence.length
+        ? "The issue mentions concepts you practiced in recorded attempts. This is a keyword match; scope and difficulty still need review."
+        : "The chosen language matches; no specific demonstrated skill match was found. Begin with reading, reproduction, or documentation.",
+      evidence,
+      preparation,
+      score:
+        evidence.length * 2 +
+        (candidate.sources.some((s) => s.title.includes("CONTRIBUTING"))
+          ? 1
+          : 0) +
+        (candidate.license !== "Unverified" &&
+        candidate.license !== "NOASSERTION"
+          ? 1
+          : 0),
+    };
+    return candidate;
+  }
+  async discover(
+    language: "JavaScript" | "Python" | "TypeScript",
+    courseId?: string,
+  ) {
     if (this.busy)
       throw new UserError("Wait for the current opportunity search.", 409);
     this.busy = true;
@@ -298,18 +368,24 @@ export class LiveWork {
             false,
           );
           if (!candidate.archived && !candidate.closed && !candidate.assigned)
-            candidates.push(candidate);
+            candidates.push(this.match(candidate, courseId));
         } catch (error) {
           if (error instanceof UserError && error.status === 429) break;
         }
       }
       const completed = this.practice
         .tasks()
-        .filter((t) => t.status === "completed");
+        .filter(
+          (t) =>
+            t.status === "completed" && (!courseId || t.courseId === courseId),
+        );
       const rationale = completed.length
         ? `Matched ${language} repositories to your chosen stack. You have ${completed.length} completed practical attempts; inspect each issue's prerequisites before choosing.`
         : `Explore ${language} work early. Begin with understanding, reproduction, documentation, or tests; code-change readiness has not been established yet.`;
-      this.app.store.put("live:shortlist", candidates);
+      this.app.store.put(
+        "live:shortlist",
+        candidates.sort((a, b) => (b.fit?.score || 0) - (a.fit?.score || 0)),
+      );
       this.app.store.put("live:lastSearch", {
         at: new Date().toISOString(),
         language,
@@ -329,7 +405,10 @@ export class LiveWork {
       throw new UserError(
         "Paste a GitHub issue URL or include its issue number.",
       );
-    const candidate = await this.inspect(parsed.repo, issue);
+    const candidate = this.match(
+      await this.inspect(parsed.repo, issue),
+      courseId,
+    );
     if (candidate.closed || candidate.archived || candidate.assigned)
       throw new UserError(
         "Choose an open, unassigned issue in an active repository.",
@@ -355,6 +434,13 @@ export class LiveWork {
     return record;
   }
   async git(args: string[], cwd: string) {
+    args = [
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      `core.hooksPath=${process.platform === "win32" ? "NUL" : "/dev/null"}`,
+      ...args,
+    ];
     return new Promise<string>((resolve, reject) => {
       const child = spawn("git", args, {
         cwd,
@@ -425,9 +511,9 @@ export class LiveWork {
         "Save a checkpoint or end your current session before opening contribution work.",
         409,
       );
-    const candidate = await this.inspect(
-      record.candidate.repo,
-      record.candidate.number,
+    const candidate = this.match(
+      await this.inspect(record.candidate.repo, record.candidate.number),
+      record.courseId,
     );
     if (candidate.closed || candidate.archived || candidate.assigned)
       throw new UserError(
@@ -462,10 +548,40 @@ export class LiveWork {
     await this.git(["checkout", "-b", branch], root);
     record.root = root;
     record.branch = branch;
-    record.baseSha = (await this.git(["rev-parse","HEAD"],root)).trim();
+    record.baseSha = (await this.git(["rev-parse", "HEAD"], root)).trim();
     record.candidate = candidate;
     this.persist(record);
     return this.open(id);
+  }
+  async refresh(id: string) {
+    const record = this.record(id);
+    const candidate = this.match(
+      await this.inspect(record.candidate.repo, record.candidate.number),
+      record.courseId,
+    );
+    const comments = await this.request(
+      `/repos/${candidate.repo}/issues/${candidate.number}/comments?per_page=100`,
+      true,
+    );
+    candidate.discussion = Array.isArray(comments)
+      ? comments.slice(-5).map((c) => {
+          let text = String(c.body || "").slice(0, 4000);
+          try {
+            assertClean(text, "issue discussion");
+          } catch {
+            text = "Sensitive-looking content excluded.";
+          }
+          return {
+            author: String(c.user?.login || "Contributor"),
+            text,
+            url: c.html_url,
+            at: c.created_at,
+          };
+        })
+      : [];
+    record.candidate = candidate;
+    this.persist(record);
+    return record;
   }
   async open(id: string) {
     const record = this.record(id);
@@ -535,15 +651,44 @@ export class LiveWork {
         "The issue is no longer open. Reconsider the scope before preparing a PR.",
         409,
       );
-    const base = record.baseSha && /^[a-f0-9]{40,64}$/.test(record.baseSha) ? record.baseSha : "HEAD";
-    const diff = await this.git(["diff", base, "--"], record.root);
-    const untracked = (await this.git(["ls-files","--others","--exclude-standard"],record.root)).trim().split(/\r?\n/).filter(Boolean);
-    for(const name of untracked) {
-      if(excluded(name)) throw new UserError("Excluded or sensitive files are untracked. Keep them out of your contribution before preparing a draft.");
-      const target=insideFile(record.root,name), info=await lstat(target);
-      if(info.isSymbolicLink()||info.size>512000) throw new UserError("Review linked or large untracked files locally before preparing a draft.");
-      const content=await readFile(target,"utf8");assertClean(content,`contribution ${name}`);
-      if(this.app.apiKey && content.includes(this.app.apiKey)) throw new UserError("Remove the credential from the contribution before preparing a draft.");
+    const base =
+      record.baseSha && /^[a-f0-9]{40,64}$/.test(record.baseSha)
+        ? record.baseSha
+        : "HEAD";
+    const diff = await this.git(
+      ["diff", "--no-ext-diff", "--no-textconv", base, "--"],
+      record.root,
+    );
+    const untracked = (
+      await this.git(
+        ["ls-files", "--others", "--exclude-standard"],
+        record.root,
+      )
+    )
+      .trim()
+      .split(/\r?\n/)
+      .filter(Boolean);
+    for (const name of untracked) {
+      if (excluded(name))
+        throw new UserError(
+          "Excluded or sensitive files are untracked. Keep them out of your contribution before preparing a draft.",
+        );
+      const target = insideFile(record.root, name),
+        info = await lstat(target);
+      if (!inside(record.root, await realpath(target)))
+        throw new UserError(
+          "An untracked file points outside this contribution folder.",
+        );
+      if (info.isSymbolicLink() || info.size > 512000)
+        throw new UserError(
+          "Review linked or large untracked files locally before preparing a draft.",
+        );
+      const content = await readFile(target, "utf8");
+      assertClean(content, `contribution ${name}`);
+      if (this.app.apiKey && content.includes(this.app.apiKey))
+        throw new UserError(
+          "Remove the credential from the contribution before preparing a draft.",
+        );
     }
     assertClean(diff, "contribution diff");
     if (this.app.apiKey && diff.includes(this.app.apiKey))
@@ -554,10 +699,18 @@ export class LiveWork {
       .records()
       .filter((r) => r.workspace === record.root && r.state === "finished")
       .slice(0, 6);
-    const text = `## Problem\n\nRelated issue: ${candidate.url}\n${candidate.title}\n\n## My change\n\n${record.notes || "Describe your change and why it addresses the issue."}\n\n## Validation\n\n${commands.length ? commands.map((c) => `- ${c.command.replace(/\r?\n/g, " ")} — recorded exit ${c.exitCode}, ${c.finishedAt}`).join("\n") : "No completed commands were recorded. Run the repository's relevant checks and report their actual results."}\n\n## Review\n\n${diff.trim() ? `An uncommitted diff was inspected (${diff.split("\n").length} lines). Review the complete local diff before submission.` : "No uncommitted diff was found. Review any committed changes against the upstream branch."}\nCheck contributor instructions, linked PRs, tests, limitations, and any required AI-assistance disclosure. This local draft is not a published pull request.\n`;
-    record.draft = text + (untracked.length ? `\nNew untracked files requiring review: ${untracked.join(", ")}\n` : "");
+    const text = `## Problem\n\nRelated issue: ${candidate.url}\n${candidate.title}\n\n## My change\n\n${record.notes || "Describe your change and why it addresses the issue."}\n\n## Validation\n\n${commands.length ? commands.map((c) => `- ${c.command.replace(/\r?\n/g, " ")} — recorded exit ${c.exitCode}, ${c.finishedAt}`).join("\n") : "No completed commands were recorded. Run the repository's relevant checks and report their actual results."}\n\n## Review\n\n${diff.trim() ? `Changes against the starting revision were inspected (${diff.split("\n").length} lines). Review the complete local diff before submission.` : "No tracked changes against the starting revision were found. Review new files and the full local diff."}\nCheck contributor instructions, linked PRs, tests, limitations, and any required AI-assistance disclosure. This local draft is not a published pull request.\n`;
+    record.draft =
+      text +
+      (untracked.length
+        ? `\nNew untracked files requiring review: ${untracked.join(", ")}\n`
+        : "");
     record.candidate = candidate;
     this.persist(record);
-    return { text:record.draft, diff: diff.slice(0, 24000), truncated: diff.length > 24000 };
+    return {
+      text: record.draft,
+      diff: diff.slice(0, 24000),
+      truncated: diff.length > 24000,
+    };
   }
 }

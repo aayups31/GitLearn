@@ -200,6 +200,7 @@ test("local studio edits, runs, preserves external edits, imports course materia
   await page.getByRole("button", { name: "New file", exact: true }).click();
   await page.getByLabel("New file path").fill("index.html");
   await page.getByRole("button", { name: "Create", exact: true }).click();
+  await expect(editor).toContainText("My lesson");
   await editor.fill(
     "<!doctype html><h1>Preview loading</h1><script>document.querySelector('h1').textContent='Local preview works';</script>",
   );

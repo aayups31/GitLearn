@@ -33,7 +33,10 @@ export class Workspace {
     return this.jobs.has(id);
   }
   track(id: string, job: ChildProcess) {
-    if (this.jobs.has(id)) { job.kill(); throw new UserError("A program is already running.", 409); }
+    if (this.jobs.has(id)) {
+      job.kill();
+      throw new UserError("A program is already running.", 409);
+    }
     this.stopped.delete(id);
     this.jobs.set(id, job);
   }
@@ -221,6 +224,7 @@ export class Workspace {
       ]);
     return {
       nodeVersion: process.versions.node,
+      webToolchainAvailable: await git.available("node"),
       pythonAvailable,
       pythonRuntime,
       gitAvailable,
@@ -286,8 +290,10 @@ export class Workspace {
       }
     }
   }
-  stopAll() {
+  async stopAll() {
     for (const id of this.jobs.keys()) this.stop(id);
+    for (let i = 0; this.jobs.size && i < 80; i++)
+      await new Promise((resolve) => setTimeout(resolve, 25));
   }
   async preview(id: string, relative: string) {
     if (!/\.html?$/i.test(relative))

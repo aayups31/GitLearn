@@ -47,11 +47,13 @@ export function PracticePrompt({
   courseId,
   changed,
   onOpen,
+  onLive,
 }: {
   api: Api;
   courseId?: string;
   changed?: unknown;
   onOpen: () => void;
+  onLive?: () => void;
 }) {
   const [data, setData] = useState<Dashboard>();
   useEffect(() => {
@@ -69,6 +71,34 @@ export function PracticePrompt({
   }, [courseId, changed]);
   const suggestion = data?.opportunities[0],
     exercise = data?.exercises.find((e) => e.id === suggestion?.exerciseId);
+  const liveSuggestion = data?.liveOpportunities[0];
+  if ((!suggestion || !exercise) && liveSuggestion && onLive)
+    return (
+      <section className="practice-prompt">
+        <Github size={18} />
+        <div>
+          <small>A useful moment for real work</small>
+          <h3>Explore your first contribution.</h3>
+          <p>{liveSuggestion.reason}</p>
+        </div>
+        <div className="prompt-actions">
+          <button className="button primary" onClick={onLive}>
+            Explore live work <ArrowRight size={14} />
+          </button>
+          <button
+            className="text-button"
+            onClick={() =>
+              void api("practice-defer", {
+                key: liveSuggestion.key,
+                days: 1,
+              }).then(() => setData(undefined))
+            }
+          >
+            Later
+          </button>
+        </div>
+      </section>
+    );
   if (!suggestion || !exercise) return null;
   return (
     <section
@@ -89,6 +119,11 @@ export function PracticePrompt({
         <button className="button primary" onClick={onOpen}>
           Explore task <ArrowRight size={14} />
         </button>
+        {liveSuggestion && onLive && (
+          <button className="text-button" onClick={onLive}>
+            Or explore live work
+          </button>
+        )}
         <button
           className="text-button"
           onClick={() =>
@@ -122,6 +157,8 @@ export function LearningHub({
     [selected, setSelected] = useState<PracticeTask>(),
     [reflection, setReflection] = useState("");
   const action = useAction();
+  const [memoryQuery, setMemoryQuery] = useState(""),
+    [memory, setMemory] = useState<ReturnType<Practice["search"]>>([]);
   const load = async () => setData(await api<Dashboard>("practice"));
   useEffect(() => {
     void load().catch(() => {});
@@ -251,32 +288,79 @@ export function LearningHub({
             the checked behavior; outside assistance and broader proficiency are
             not measured.
           </p>
-          {data?.reviews
-            .filter((r) => r.courseId === courseId)
-            .map((review) => {
-              const task = data.tasks.find((t) => t.id === review.taskId)!;
-              return (
-                <div className="learning-row" key={review.taskId}>
-                  <Clock3 size={18} />
-                  <div>
-                    <h3>{review.title}</h3>
-                    <p>
-                      {Date.parse(review.dueAt) <= Date.now()
-                        ? "Ready for a short review"
-                        : `Next review ${new Date(review.dueAt).toLocaleDateString()}`}{" "}
-                      · recorded attempt {review.evidenceId.slice(0, 8)}
-                    </p>
+          <form
+            className="issue-input"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void action.run(async () => {
+                const r = await api<{
+                  results: ReturnType<Practice["search"]>;
+                }>(`learning-search?q=${encodeURIComponent(memoryQuery)}`);
+                setMemory(r.results);
+              });
+            }}
+          >
+            <input
+              aria-label="Search my learning"
+              value={memoryQuery}
+              onChange={(e) => setMemoryQuery(e.target.value)}
+              placeholder="Search your past attempts, explanations, and skills across courses"
+            />
+            <button>Search my learning</button>
+          </form>
+          {memory.map((item) => (
+            <details className="memory-result" key={item.taskId}>
+              <summary>
+                {item.title} · {item.courseTitle}
+              </summary>
+              <p>{item.reflection || "No reflection recorded."}</p>
+              {item.attempt && (
+                <>
+                  <small>
+                    {new Date(item.attempt.at).toLocaleString()} ·{" "}
+                    {item.attempt.passed
+                      ? "Recorded checks passed"
+                      : "Needs more work"}{" "}
+                    · entry hash {item.attempt.fileVersion.slice(0, 12)}
+                  </small>
+                  <pre>
+                    {item.attempt.source ||
+                      "Saved source is unavailable for this older attempt."}
+                  </pre>
+                  {item.attempt.sourceTruncated && (
+                    <small>Source excerpt truncated.</small>
+                  )}
+                </>
+              )}
+            </details>
+          ))}
+          {data?.reviewEnabled &&
+            data.reviews
+              .filter((r) => r.courseId === courseId)
+              .map((review) => {
+                const task = data.tasks.find((t) => t.id === review.taskId)!;
+                return (
+                  <div className="learning-row" key={review.taskId}>
+                    <Clock3 size={18} />
+                    <div>
+                      <h3>{review.title}</h3>
+                      <p>
+                        {Date.parse(review.dueAt) <= Date.now()
+                          ? "Ready for a short review"
+                          : `Next review ${new Date(review.dueAt).toLocaleDateString()}`}{" "}
+                        · recorded attempt {review.evidenceId.slice(0, 8)}
+                      </p>
+                    </div>
+                    <button
+                      className="text-button"
+                      disabled={action.busy}
+                      onClick={() => start(task.exerciseId, task.id)}
+                    >
+                      Try again <ArrowRight size={14} />
+                    </button>
                   </div>
-                  <button
-                    className="text-button"
-                    disabled={action.busy}
-                    onClick={() => start(task.exerciseId, task.id)}
-                  >
-                    Try again <ArrowRight size={14} />
-                  </button>
-                </div>
-              );
-            })}
+                );
+              })}
           {!data?.reviews.some((r) => r.courseId === courseId) && (
             <div className="learning-empty">
               <Clock3 size={25} />
@@ -286,6 +370,12 @@ export function LearningHub({
                 record.
               </p>
             </div>
+          )}
+          {data && !data.reviewEnabled && (
+            <p className="learning-caption">
+              Review suggestions are paused. Your learning records remain
+              available.
+            </p>
           )}
           {data?.skills
             .filter((s) => s.courseId === courseId)
@@ -611,7 +701,11 @@ export function ProjectConsole({
     [input, setInput] = useState(""),
     [port, setPort] = useState("5173");
   const action = useAction();
-  const [scaffold,setScaffold]=useState<{directory:string;install:string;start:string}>();
+  const [scaffold, setScaffold] = useState<{
+    directory: string;
+    install: string;
+    start: string;
+  }>();
   const load = async () => {
     const r = await api<{ commands: CommandRecord[] }>(
       `project-commands?sessionId=${sessionId}`,
@@ -656,7 +750,26 @@ export function ProjectConsole({
           programs need an external terminal.
         </p>
         <div className="command-presets">
-          {["react","python"].map(kind=><button key={kind} disabled={action.busy||!!running} onClick={()=>action.run(async()=>{const result=await api<{directory:string;install:string;start:string}>("project-scaffold",{sessionId,kind});setScaffold(result);setCommand(result.install);await onFilesChanged();})}>Create {kind === "react" ? "React app" : "Python project"}</button>)}
+          {["react", "python"].map((kind) => (
+            <button
+              key={kind}
+              disabled={action.busy || !!running}
+              onClick={() =>
+                action.run(async () => {
+                  const result = await api<{
+                    directory: string;
+                    install: string;
+                    start: string;
+                  }>("project-scaffold", { sessionId, kind });
+                  setScaffold(result);
+                  setCommand(result.install);
+                  await onFilesChanged();
+                })
+              }
+            >
+              Create {kind === "react" ? "React app" : "Python project"}
+            </button>
+          ))}
           {["node --test", "python -m venv .venv"].map((c) => (
             <button key={c} onClick={() => setCommand(c)}>
               {c}
@@ -669,7 +782,19 @@ export function ProjectConsole({
             Start dev server
           </button>
         </div>
-        {scaffold&&<p role="status">Created {scaffold.directory}. <button onClick={()=>setCommand(scaffold.install)}>Prepare environment</button> · <button onClick={()=>setCommand(scaffold.start)}>Start project</button>. Web apps require an installed Node.js/npm toolchain.</p>}
+        {scaffold && (
+          <p role="status">
+            Created {scaffold.directory}.{" "}
+            <button onClick={() => setCommand(scaffold.install)}>
+              Prepare environment
+            </button>{" "}
+            ·{" "}
+            <button onClick={() => setCommand(scaffold.start)}>
+              Start project
+            </button>
+            . Web apps require an installed Node.js/npm toolchain.
+          </p>
+        )}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -840,7 +965,7 @@ export function LiveWorkHub({
           disabled={action.busy}
           onClick={() =>
             action.run(async () => {
-              setData(await api("live-search", { language }));
+              setData(await api("live-search", { language, courseId }));
             })
           }
         >
@@ -916,6 +1041,17 @@ export function LiveWorkHub({
                 </a>
               </h3>
               <p>{c.signals.join(" · ")}</p>
+              {c.fit && (
+                <>
+                  <p>{c.fit.reason}</p>
+                  {!!c.fit.evidence.length && (
+                    <small>
+                      Related attempts:{" "}
+                      {c.fit.evidence.map((e) => e.skill).join(", ")}
+                    </small>
+                  )}
+                </>
+              )}
               <button
                 className="text-button"
                 disabled={action.busy || !courseId}
@@ -944,6 +1080,26 @@ export function LiveWorkHub({
                 {selected.candidate.repo} · issue #{selected.candidate.number}
               </small>
               <h2>{selected.candidate.title}</h2>
+              <small>
+                {selected.candidate.closed
+                  ? "Closed"
+                  : selected.candidate.archived
+                    ? "Repository archived"
+                    : "Open when checked"}{" "}
+                · {new Date(selected.candidate.checkedAt).toLocaleString()}
+              </small>
+              <button
+                className="text-button"
+                disabled={action.busy}
+                onClick={() =>
+                  action.run(async () => {
+                    setSelected(await api("live-refresh", { id: selected.id }));
+                    await load();
+                  })
+                }
+              >
+                Recheck issue & discussion <RefreshCw size={12} />
+              </button>
               <p className="issue-body">{selected.candidate.body}</p>
               <a href={selected.candidate.url} target="_blank" rel="noreferrer">
                 Read the full issue <ArrowUpRight size={13} />
@@ -966,6 +1122,22 @@ export function LiveWorkHub({
               <div className="learning-section-label">
                 Your contribution path
               </div>
+              {!!selected.candidate.discussion?.length && (
+                <details className="contributor-source">
+                  <summary>
+                    Discussion excerpts from the checked first 100 comments
+                  </summary>
+                  {selected.candidate.discussion.map((comment) => (
+                    <div key={comment.url}>
+                      <a href={comment.url} target="_blank" rel="noreferrer">
+                        {comment.author} ·{" "}
+                        {new Date(comment.at).toLocaleDateString()}
+                      </a>
+                      <p>{comment.text}</p>
+                    </div>
+                  ))}
+                </details>
+              )}
               {[
                 ["read", "Read requirements & contribution rules"],
                 ["baseline", "Set up and run baseline checks"],

@@ -13,6 +13,7 @@ import { CourseLibrary, chunks } from "../src/server/library";
 import { Store } from "../src/server/store";
 import { Application } from "../src/server/application";
 import { Workspace } from "../src/server/workspace";
+import { Practice } from "../src/server/practice";
 let directory: string, store: Store, app: Application, library: CourseLibrary;
 beforeEach(async () => {
   parse.mockReset();
@@ -231,6 +232,35 @@ it("bounds long transcript chunks and preserves source line positions", () => {
   expect(result.every((item) => item.text.length <= 1800)).toBe(true);
   expect(result[0].startLine).toBe(1);
   expect(result[result.length - 1].endLine).toBe(3);
+});
+it("keeps practical teaching diagnostic and prevents returning the task implementation", async () => {
+  const workspace = new Workspace(app),
+    practice = new Practice(app, workspace);
+  await practice.start("agents", "javascript-validation");
+  parse.mockResolvedValue({
+    output_parsed: {
+      answer:
+        "```js\nexport function discountedPrice(p,d) { return p*(1-d/100); }\n```",
+      citations: [],
+    },
+  });
+  const answer = await library.ask(
+    "agents",
+    "Write the whole solution for me",
+    "help",
+    undefined,
+    undefined,
+    "explain",
+    { practice: practice.context("agents") },
+  );
+  expect(answer.text).not.toContain("export function");
+  expect(answer.text).toContain("Which input");
+  const request = parse.mock.calls[0][0];
+  expect(request.instructions).toContain(
+    "Never provide the learner's complete",
+  );
+  expect(request.input.at(-1).content).toContain("Functions and validation");
+  expect(request.tools).toBeUndefined();
 });
 it("grounds hint-first error help in an actual run and labels evidence stale after a saved edit", async () => {
   await app.start("agents", "1");

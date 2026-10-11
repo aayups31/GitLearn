@@ -767,6 +767,7 @@ export function Studio({
                   courseId={course.id}
                   changed={lastRun?.id}
                   onOpen={onPractice}
+                  onLive={onLive}
                 />
                 <TaskGuide
                   api={api}
@@ -898,7 +899,14 @@ export function Studio({
                     onClick={() => safe("open", () => openFile(item.path))}
                   >
                     <FileCode2 size={12} />
-                    <span>{item.path}</span>
+                    <span>
+                      {item.path.split("/").pop()}
+                      {item.path.includes("/") && (
+                        <small>
+                          {item.path.slice(0, item.path.lastIndexOf("/"))}
+                        </small>
+                      )}
+                    </span>
                     {drafts[item.path] &&
                       drafts[item.path].content !== drafts[item.path].saved && (
                         <i />
@@ -1525,6 +1533,11 @@ export function Studio({
                       <option value="explain">Explain with an example</option>
                     </select>
                   </label>
+                  <small className="teacher-context-note">
+                    Code help includes an active task's brief, checks and
+                    reflection, or the selected issue, contributor sources and
+                    recorded commands. You write the implementation.
+                  </small>
                   {lastRun && (
                     <label>
                       <input

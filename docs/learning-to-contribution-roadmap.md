@@ -1,6 +1,10 @@
 # GitLearn: from tutorials to independent work
 
-Updated October 10, 2026. This is the implementation-ready roadmap requested after the Windows 0.2 preview. Stage A is delivered in the 0.3 preview; the later stages remain planned. [Current build](current-build.md) remains the delivery record. This roadmap takes priority over the older platform-expansion order in [implementation-plan.md](implementation-plan.md). [Learning architecture](learning-architecture.md) defines the supporting data and module boundaries.
+Updated October 10, 2026. Stage A shipped in 0.3. The 0.4 preview adds a bounded working slice of B–F: project commands and starters, six curated practical briefs, recorded checks and help use, reviews and personal search, checked issue discovery, and a separate contribution workspace with local PR drafts. This does not mark every broader stage complete. [Current build](current-build.md) records delivered behavior. This roadmap takes priority over the older platform-expansion order in [implementation-plan.md](implementation-plan.md). [Learning architecture](learning-architecture.md) defines the supporting boundaries.
+
+The current opportunities engine uses saved checkpoints, successful runs, observed lesson/section context, supported languages, and completed practical tasks. It can suggest reading and reproduction work in a real repository before a course ends. It does not infer mastery from watched videos, force a pause, or automatically perform the work. Learners can defer opportunities.
+
+Remaining depth includes learner goals and time budgets, validated generated/transfer exercise variants, richer independent project rubrics, multi-file evidence attribution, a full interactive terminal, maintainer feedback synchronization beyond checked public comments, and broader platforms/operating systems. Coding-agent integrations remain deferred. Real Udemy beta observations and public distribution are release gates, not results inferred from automated fixtures.
 
 ## Product outcome
 

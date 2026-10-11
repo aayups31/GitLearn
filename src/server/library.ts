@@ -23,6 +23,7 @@ export interface ChatMessage {
   sources?: Evidence[];
   mode?: string;
   at: string;
+  contextId?: string;
 }
 type Chunk = {
   id: string;
@@ -512,12 +513,22 @@ export class CourseLibrary {
     );
     this.busy.add(courseId);
     try {
-      const sources = await this.retrieve(
+      const contextId = learningContext?.practice?.taskId || learningContext?.contribution?.issue.url;
+      let sources = await this.retrieve(
         courseId,
         question,
         state.session?.courseId === courseId ? state.session.lessonId : "",
         mode === "course",
       );
+      if (learningContext?.practice?.reviewOf)
+        sources = sources.filter(
+          (s) =>
+            !(
+              s.kind === "code" &&
+              s.title.includes("practice/") &&
+              !s.title.includes(learningContext.practice!.path)
+            ),
+        );
       let text = "",
         responseMode = "grounded",
         cited = sources.map((source, i) => ({ ...source, number: i + 1 }));
@@ -531,6 +542,7 @@ export class CourseLibrary {
           citations: z.array(z.number().int()),
         });
         const history = this.history(courseId)
+          .filter((item) => !contextId || item.contextId === contextId)
           .slice(-6)
           .map((item) => ({
             role: item.role,
@@ -634,12 +646,14 @@ export class CourseLibrary {
           id: randomUUID(),
           role: "user" as const,
           text: question,
+          contextId,
           at: new Date().toISOString(),
         },
         {
           id: randomUUID(),
           role: "assistant" as const,
           text,
+          contextId,
           sources: cited,
           mode: responseMode,
           at: new Date().toISOString(),

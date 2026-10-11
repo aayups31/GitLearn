@@ -87,6 +87,7 @@ export interface RunContext extends RunEvidence {
 }
 export interface Diagnostics {
   nodeVersion: string;
+  webToolchainAvailable: boolean;
   pythonAvailable: boolean;
   pythonRuntime: string;
   gitAvailable: boolean;

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { Store } from "../src/server/store";
@@ -8,6 +8,7 @@ import { Workspace } from "../src/server/workspace";
 import { ProjectRuntime } from "../src/server/project-runtime";
 import { Practice } from "../src/server/practice";
 import { LiveWork, repository } from "../src/server/live-work";
+import { git, head, initialize } from "../src/server/git";
 let folder: string,
   store: Store,
   app: Application,
@@ -124,4 +125,63 @@ it("honors GitHub backoff and preserves the saved list", async () => {
   await expect(limited.request("/repos/another/repo", true)).rejects.toThrow(
     "Retry after",
   );
+});
+it("opens a dedicated contribution branch, preserves upstream history, records real checks, and prepares only a local draft", async () => {
+  const upstream = path.join(folder, "upstream");
+  await mkdir(upstream);
+  await initialize(upstream);
+  await writeFile(path.join(upstream, "module.mjs"), "export const value=1;\n");
+  await git(upstream, ["add", "--", "module.mjs"]);
+  await git(upstream, ["commit", "-m", "Baseline"]);
+  const baseline = await head(upstream),
+    originalGit = live.git.bind(live);
+  vi.spyOn(live, "git").mockImplementation((args, cwd) => {
+    if (args.includes("clone")) {
+      expect(args).toContain("https://github.com/example/project.git");
+      const destination = args.at(-1)!;
+      return originalGit(
+        ["clone", "--no-recurse-submodules", "--", upstream, destination],
+        cwd,
+      );
+    }
+    return originalGit(args, cwd);
+  });
+  const selected = await live.select(
+    "js",
+    "https://github.com/example/project/issues/4",
+  );
+  await live.clone(selected.id);
+  const record = live.record(selected.id),
+    session = store.state().session!;
+  expect(record.root).toContain("contributions");
+  expect(record.baseSha).toBe(baseline);
+  expect(session.contributionId).toBe(record.id);
+  expect((await git(record.root!, ["branch", "--show-current"])).trim()).toBe(
+    "gitlearn/issue-4",
+  );
+  await expect(app.preview()).rejects.toThrow("does not copy");
+  const file = await workspace.read(session.id, "module.mjs");
+  await workspace.save(
+    session.id,
+    "module.mjs",
+    "export const value=2;\n",
+    file.version,
+  );
+  await workspace.save(
+    session.id,
+    "test.mjs",
+    "import {test} from 'node:test'; import assert from 'node:assert/strict'; import {value} from './module.mjs'; test('value',()=>assert.equal(value,2));\n",
+    null,
+  );
+  await runtime.start(session.id, "node --test test.mjs");
+  for (let i = 0; i < 60 && workspace.isRunning(session.id); i++)
+    await new Promise((r) => setTimeout(r, 100));
+  const draft = await live.draft(record.id);
+  expect(draft.diff).toContain("+export const value=2");
+  expect(draft.text).toContain("recorded exit 0");
+  expect(draft.text).toContain("test.mjs");
+  expect(await head(upstream)).toBe(baseline);
+  await app.sessionAction("discard");
+  await app.continueCourse("js");
+  expect(store.state().session!.contributionId).toBe(record.id);
 });

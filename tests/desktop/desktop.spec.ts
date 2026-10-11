@@ -216,6 +216,87 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
         .then(() => true)
         .catch(() => false),
     ).toBe(false);
+    const practical = await reopened.evaluate(async () => {
+      const { token } = await (
+        await fetch("/api/bootstrap", { method: "POST" })
+      ).json();
+      const api = async (route: string, body?: unknown) => {
+        const response = await fetch("/api/" + route, {
+          method: body ? "POST" : "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          ...(body ? { body: JSON.stringify(body) } : {}),
+        });
+        const value = await response.json();
+        if (!response.ok) throw Error(value.error);
+        return value;
+      };
+      const state = await api("state"),
+        sessionId = state.session.id;
+      const task = await api("practice-start", {
+        courseId: "desktop-fixture",
+        exerciseId: "javascript-validation",
+      });
+      const file = await api(
+        `workspace-file?sessionId=${sessionId}&path=${encodeURIComponent(task.path)}`,
+      );
+      await api("workspace-file", {
+        sessionId,
+        path: task.path,
+        version: file.version,
+        content:
+          "export function discountedPrice(p,d){if(p<0||d<0||d>100)throw Error('invalid');return Math.round(p*(1-d/100)*100)/100;}",
+      });
+      const checked = await api("practice-check", {
+        taskId: task.id,
+        sessionId,
+      });
+      const scaffold = await api("project-scaffold", {
+        sessionId,
+        kind: "react",
+      });
+      const command = await api("project-command", {
+        sessionId,
+        command: 'node -e "console.log(process.pid); setInterval(()=>{},1000)"',
+      });
+      return { checked, scaffold, command, sessionId };
+    });
+    expect(practical.checked.status).toBe("completed");
+    expect(practical.scaffold.entry).toContain("main.jsx");
+    let childPid = 0;
+    await expect
+      .poll(async () => {
+        const { commands } = await reopened.evaluate(async (sessionId) => {
+          const { token } = await (
+            await fetch("/api/bootstrap", { method: "POST" })
+          ).json();
+          return (
+            await fetch(`/api/project-commands?sessionId=${sessionId}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+          ).json();
+        }, practical.sessionId);
+        childPid = Number(
+          commands
+            .find((c: any) => c.id === practical.command.id)
+            ?.output.match(/^\d+\r?$/m)?.[0],
+        );
+        return childPid;
+      })
+      .toBeGreaterThan(0);
+    await desktop.close();
+    await expect
+      .poll(() => {
+        try {
+          process.kill(childPid, 0);
+          return true;
+        } catch {
+          return false;
+        }
+      })
+      .toBe(false);
     expect(errors).toEqual([]);
   } finally {
     await desktop.close().catch(() => {});

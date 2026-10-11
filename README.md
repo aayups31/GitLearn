@@ -1,6 +1,6 @@
 # GitLearn
 
-A local learning workspace that connects a Udemy lesson to your code, sourced AI help, notes, and Git history.
+A local learning workspace that turns Udemy lessons into your own code, practical attempts, sourced guidance, and reviewed work.
 
 ## Start
 
@@ -38,6 +38,18 @@ The learning-history repository is managed by the companion. Avoid editing or st
 **Continue building** in Overview restores the course, lesson, coding folder, saved file position, and last session note after a restart or checkpoint. The recap uses actual saved activity. If a folder moved, choose its current location to reattach it without moving files or changing its Git history. A missing last file falls back to available files.
 
 After a failed run, select **Give me a hint** or **Explain this error**. The assistant receives the recorded saved entry file and bounded actual output, with current code attached when selected. Changed code is marked stale; rerun to check a proposed fix. **Hint first** helps you reason before asking for an explanation. Run history stays local unless explicitly attached to an enabled AI request. Settings includes **Device readiness** for JavaScript, Python, Git, folders, AI, and browser pairing.
+
+## Build before the course ends
+
+After a successful saved run or checkpoint, GitLearn can suggest a related task while you are still taking the course. It explains the timing using recorded activity, recognizes section transitions, and lets you defer the suggestion. Python files lead to Python practice; unsupported languages receive no invented automatic exercise.
+
+**Learn by doing** includes six curated JavaScript/Python briefs covering validation, collections, and a small activity-report project. You write the implementation. **Check my work** runs real behavior checks against saved code. Progressive hints and optional course-aware teaching help you reason; neither changes files or runs commands for you. Each attempt records saved source, checks, help use, and your reflection. These are specific learning records, not a mastery score.
+
+**Reviews** offer fresh-file retries on a 1/3/7/14-day schedule, with an opt-out and no background notifications. **Search my learning** explicitly searches your recorded attempts and reflections across courses. Export downloads the local learning record as JSON. Current retries repeat the curated brief; generated transfer variants remain planned.
+
+In the editor's **Project console**, explicitly run package installation, tests, development servers, or line-input programs and stop them when finished. Create a React/Vite or Python starter without overwriting course files; fill in the project yourself. React projects require installed Node/npm. Python projects can use a local virtual environment. Commands run with your computer's permissions and do not inherit the companion's credential environment. The console is not a full PTY, debugger, or language server.
+
+**Live work** finds checked public GitHub issues in your chosen stack and explains keyword matches to recorded practice. Reading, reproduction, documentation, and tests can begin during a course; a beginner label does not certify difficulty. Inspect the issue and contributor instructions, select a local brief, then explicitly clone into a separate `contributions/` folder and branch. The assistant guides requirements, baseline checks, reproduction, your changes, and review. Track notes, actual command results, source revisions, and public discussion; prepare a local PR draft from changes against the starting revision. Publication, forks, commits in the contribution repository, and maintainer messages stay under your control. This contribution workspace never copies an upstream repository into your learning archive.
 
 ## Connect Chrome once
 

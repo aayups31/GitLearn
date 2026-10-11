@@ -1,5 +1,13 @@
 import { test, expect, chromium } from "@playwright/test";
-import { mkdir, writeFile, mkdtemp, readFile } from "node:fs/promises";
+import {
+  mkdir,
+  writeFile,
+  mkdtemp,
+  readFile,
+  cp,
+  readdir,
+  rm,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -200,11 +208,24 @@ test("first-time setup → Udemy lesson → source code → reviewed local check
 
 test("loads and pairs the actual unpacked extension, captures an accessible Udemy fixture, and replays pending events", async ({
   request,
+  baseURL,
 }) => {
   const profile = await mkdtemp(
     path.join(tmpdir(), "gitlearn-extension-profile-"),
   );
-  const extension = path.resolve("dist/extension");
+  // Only transport addresses change in this disposable copy; never contact a learner's running companion.
+  const extension = path.join(profile, "extension");
+  await cp(path.resolve("dist/extension"), extension, { recursive: true });
+  const testOrigin = new URL(baseURL!).origin;
+  for (const file of await readdir(extension)) {
+    if (!/\.(js|json|html)$/.test(file)) continue;
+    const filename = path.join(extension, file);
+    const content = await readFile(filename, "utf8");
+    await writeFile(
+      filename,
+      content.replaceAll("http://127.0.0.1:47831", testOrigin),
+    );
+  }
   const context = await chromium.launchPersistentContext(profile, {
     headless: true,
     channel: "chromium",
@@ -219,18 +240,19 @@ test("loads and pairs the actual unpacked extension, captures an accessible Udem
     const id = new URL(worker.url()).hostname;
     expect(
       await worker.evaluate(
-        async () =>
-          (await fetch("http://127.0.0.1:47831/api/bootstrap")).status,
+        async (origin) => (await fetch(`${origin}/api/bootstrap`)).status,
+        testOrigin,
       ),
     ).toBe(403);
     expect(
       await worker.evaluate(
-        async () =>
+        async (origin) =>
           (
-            await fetch("http://127.0.0.1:47831/api/bootstrap", {
+            await fetch(`${origin}/api/bootstrap`, {
               method: "POST",
             })
           ).status,
+        testOrigin,
       ),
     ).toBe(403);
     const popup = await context.newPage();
@@ -238,7 +260,7 @@ test("loads and pairs the actual unpacked extension, captures an accessible Udem
     await popup.goto(`chrome-extension://${id}/popup.html`);
     const bootstrap = await (
       await request.post("/api/bootstrap", {
-        headers: { Origin: "http://127.0.0.1:47831" },
+        headers: { Origin: testOrigin },
       })
     ).json();
     const code = await (
@@ -359,6 +381,7 @@ test("loads and pairs the actual unpacked extension, captures an accessible Udem
       .toBe("First function revisited");
   } finally {
     await context.close();
+    await rm(profile, { recursive: true, force: true });
   }
 });
 

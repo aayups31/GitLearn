@@ -4,7 +4,7 @@ Your developer registration is ready; the dashboard has no extension listing yet
 
 ## Upload package
 
-Build and run `npm run package:extension`. Upload `dist/releases/GitLearn-Chrome-0.3.0.zip` when creating a new item in the developer dashboard. It contains the MV3 manifest, built background/content/popup scripts, popup assets, and icons. It contains no API key, source environment, server, local data, or Node modules.
+Build and run `npm run package:extension`. Upload `dist/releases/GitLearn-Chrome-0.4.0.zip` when creating a new item in the developer dashboard. It contains the MV3 manifest, built background/content/popup scripts, popup assets, and icons. It contains no API key, source environment, server, local data, or Node modules.
 
 ## Suggested listing
 

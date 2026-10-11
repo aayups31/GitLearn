@@ -37,13 +37,13 @@ parentPort!.once("message", async ({ data }) => {
     store.close();
     process.exit(1);
   });
-  parentPort!.on("message", ({ data: message }) => {
+  parentPort!.on("message", async ({ data: message }) => {
     if (message.type === "key") {
       application.apiKey = message.key || undefined;
       parentPort!.postMessage({ type: "key-saved", id: message.id });
     }
     if (message.type === "shutdown") {
-      web.locals.stopPrograms();
+      await web.locals.stopPrograms();
       server.close(() => {
         store.close();
         process.exit(0);

@@ -1,10 +1,17 @@
-# GitLearn 0.3 Windows and Udemy preview
+# GitLearn 0.4 Windows and Udemy preview
 
 Updated October 10, 2026. This is the current delivery scope and architecture. The full specification and earlier architecture/implementation plan retain the longer product roadmap; they do not describe every feature as already delivered.
 
-The [learning-to-contribution roadmap](learning-to-contribution-roadmap.md) and [supporting architecture](learning-architecture.md) define the path from tutorials to independent projects and guided open source work. Stage A's daily workspace is implemented in 0.3; independent tasks, practical project environments, personal reviews, and live contribution workflows remain planned.
+The [learning-to-contribution roadmap](learning-to-contribution-roadmap.md) and [supporting architecture](learning-architecture.md) define the longer path. The 0.4 preview adds a working practical-learning and contribution loop to the daily workspace shipped in 0.3. Broader stage details remain explicitly planned.
 
 ## What works
+
+- **During-course opportunities** use actual successful runs, checkpoints, supported file languages, section transitions, and completed practice. Suggestions explain their evidence and can be deferred; reading, reproduction, or documentation in a real repository can begin before a course ends.
+- **Learn by doing** has six curated JavaScript/Python tasks and small project briefs. Unique starter folders contain no implementation. Saved-code behavior checks record bounded source snapshots, hashes, checks, output, and help use; learner reflections stay separate from verified checks. Entry-file changes during a check invalidate its result.
+- **Teacher guidance** adds the active task brief/checks/reflection or selected contribution issue/guides/notes/actual command records to optional Code help. It asks diagnostic questions and offers progressive hints. Prompts and a named-solution filter discourage complete implementations; this remains model behavior, not a guarantee. AI has no file-edit, command, or Git action tools.
+- **Reviews and personal memory** offer fresh-file retries on 1/3/7/14-day intervals, a review opt-out, explicit cross-course keyword search, and JSON export. Retries currently repeat the curated brief; they do not establish independent skill transfer or industry readiness.
+- **Project console** supports explicit commands, line input, package installation, tests, development servers, recent bounded output, and process-tree Stop. React/Vite and Python scaffolds create new folders without changing existing files. Installed Node/npm is required for web projects; bundled JavaScript remains available for scripts. This is not a full PTY or debugger.
+- **Live work** searches public GitHub issues, checks availability and repository state, snapshots contributor guides, explains keyword matches to course-specific attempts, and preserves a shortlist through rate limits. Selecting creates a local brief; explicit cloning creates a separate folder and branch. Learner checklist reports, actual command results, checked public discussion, and a diff against the initial revision support a local PR draft. It never posts, forks, or publishes for the learner. Contribution code is kept outside the private learning archive.
 
 - One evolving project per course, automatically created beside history or attached to an existing folder. Explicit course bindings have stable identities. Separate lesson folders remain available; upgrades preserve existing folders and checkpoints.
 - **Continue building** restores the last lesson, coding folder, saved file position, session note, and latest available run. The recap uses stored activity and checkpoint messages. Missing files fall back to available files; an explicit Choose folder flow reattaches moved folders while preserving context and source Git history.
@@ -50,6 +57,11 @@ flowchart LR
     Preview --> Git[Separate managed Git history]
     Git -->|Explicit sync, verified private target| GitHub[Private GitHub repository]
     Companion --> DB[Local SQLite sessions, inbox, preview, journal]
+    Companion --> Practice[Curated tasks, real checks, reflections, reviews]
+    Practice --> Opportunities[Evidence-based during-course suggestions]
+    Companion --> Console[Explicit local project commands and scaffolds]
+    Companion --> Live[Public GitHub lookup and separate contribution workspace]
+    Live --> Draft[Local diff and PR draft]
     Extension -->|Explicit visible transcript import| Sources[Course sources]
     UI -->|Paste / file import| Sources
     Sources --> Index[Local FTS5 + cached embeddings]
@@ -79,13 +91,13 @@ Portable files live in the chosen managed Git repository. Operational state live
 | Durable automatic push worker                              | Durable local checkpoints and explicit Sync now retry                                                |
 | AI note cleanup and broad manual learning sources          | Original notes, course-material imports, and course RAG; Udemy focus                                 |
 
-Windows x64 packaging is delivered as an unsigned preview. Edge verification, other learning platforms, multi-device coordination, video transcription, and richer course progress capture remain future work. The editor has no interactive shell, package manager, debugger, or language server. Python execution requires an installed interpreter; HTML preview supports inline assets only. The Git repository is companion-managed: external edits/staging pause saves; direct existing-repository automation and normal Git hooks are outside this build.
+Windows x64 packaging is delivered as an unsigned preview. Edge verification, other learning platforms, multi-device coordination, video transcription, and richer course progress capture remain future work. The project console supports explicit package commands and line input; a full PTY, debugger, and language server remain future work. Python execution requires an installed interpreter; HTML preview supports inline assets only. The Git repository is companion-managed: external edits/staging pause saves; direct existing-repository automation and normal Git hooks are outside this build.
 
 ## Validation and remaining limits
 
 Automated validation uses temporary real Git repositories, HTTP boundary checks, sanitized Udemy DOM fixtures, the actual unpacked Chrome extension, and the full browser workflow. It covers exact reviewed-byte commits, source edits after review, excluded secrets, unrelated staging, branch changes, interrupted-save recovery, event deduplication, pairing, context capture, reconnect replay, and mobile overflow.
 
-Verification covers 67 backend cases, six affected 0.3 browser workflows, two static-site scenarios, the source and packaged Electron runtimes, and successful TypeScript/production builds. The unchanged extension pairing/import/replay flow retains its 0.2 validation; the 0.3 packaging checks are recorded in release-validation.md. Additional checks cover multiple course checkpoints in one archive, GitHub account verification and credential preparation, private repository creation arguments, shared-archive sync state, failed push preservation, retryable Git setup, AI outage fallback, unsafe model output, changed Git remotes, and alternate push destinations. Editor/RAG checks cover disk saves and JavaScript/Python execution, Stop, external-edit conflicts, restricted HTML preview, explicit extension transcript import, source deduplication/removal, course isolation, cached embeddings, missing evidence, cited passages, local history, and checkpoints. Routine tests mock remote APIs.
+The 0.3 baseline covered 67 backend cases, six browser workflows, two static-site scenarios, source and packaged Electron, and production builds. The 0.4 verification and exact artifact hashes are recorded in release-validation.md. The unchanged extension pairing/import/replay flow retains its 0.2 validation; the 0.3 packaging checks are recorded in release-validation.md. Additional checks cover multiple course checkpoints in one archive, GitHub account verification and credential preparation, private repository creation arguments, shared-archive sync state, failed push preservation, retryable Git setup, AI outage fallback, unsafe model output, changed Git remotes, and alternate push destinations. Editor/RAG checks cover disk saves and JavaScript/Python execution, Stop, external-edit conflicts, restricted HTML preview, explicit extension transcript import, source deduplication/removal, course isolation, cached embeddings, missing evidence, cited passages, local history, and checkpoints. Routine tests mock remote APIs.
 
 A separate live synthetic check passed semantic embeddings, a cited course answer, and an AI checkpoint using the supplied local key. No real learner course material or code was accessed. Site, extension, frontend, packaged ASAR, external extension resources, and staged source passed configured-key/environment-file scans. [Release validation](release-validation.md) contains the verification record.
 

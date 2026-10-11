@@ -60,8 +60,8 @@ server.on("error", () => {
   process.exitCode = 1;
 });
 for (const signal of ["SIGINT", "SIGTERM"] as const)
-  process.on(signal, () => {
-    app.locals.stopPrograms();
+  process.on(signal, async () => {
+    await app.locals.stopPrograms();
     server.close(() => {
       store.close();
       process.exit(0);

@@ -33,6 +33,7 @@ const allowedExternal = new Set([
   "github.com",
   "git-scm.com",
   "www.python.org",
+  "nodejs.org",
   "platform.openai.com",
   "chromewebstore.google.com",
   "developer.chrome.com",
@@ -46,7 +47,15 @@ function external(url: string) {
     !target.hash
   )
     return shell.openExternal(target.href);
-  if (target.protocol === "http:" && target.hostname === "127.0.0.1" && Number(target.port)>=1024 && Number(target.port)<=65535 && target.origin!==origin && !target.username && !target.password)
+  if (
+    target.protocol === "http:" &&
+    target.hostname === "127.0.0.1" &&
+    Number(target.port) >= 1024 &&
+    Number(target.port) <= 65535 &&
+    target.origin !== origin &&
+    !target.username &&
+    !target.password
+  )
     return shell.openExternal(target.href);
   if (
     target.protocol !== "https:" ||

@@ -47,24 +47,69 @@ export class ProjectRuntime {
   }
   async scaffold(sessionId: string, kind: "react" | "python") {
     const session = this.workspace.session(sessionId);
-    if (session.contributionId) throw new UserError("Keep upstream setup in its contribution folder. Create your own app in a course project.");
-    const directory = `apps/${kind}-${randomUUID().slice(0,8)}`;
-    const files: Record<string,string> = kind === "react" ? {
-      "package.json": JSON.stringify({ name:"my-learning-project", version:"0.1.0", private:true, type:"module", scripts:{dev:"vite --host 127.0.0.1",build:"vite build"}, dependencies:{react:"19.2.0","react-dom":"19.2.0"}, devDependencies:{vite:"7.2.2"} },null,2)+"\n",
-      "index.html": '<!doctype html>\n<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My learning project</title></head><body><div id="root"></div><script type="module" src="/src/main.jsx"></script></body></html>\n',
-      "src/main.jsx": 'import React from "react";\nimport { createRoot } from "react-dom/client";\nimport "./style.css";\n\nfunction App() {\n  // Your brief and implementation belong here.\n  return <main><h1>My learning project</h1><p>Choose one useful feature and build it yourself.</p></main>;\n}\n\ncreateRoot(document.getElementById("root")).render(<App />);\n',
-      "src/style.css": 'body { margin: 0; font-family: system-ui, sans-serif; }\nmain { max-width: 800px; margin: 60px auto; padding: 24px; }\n',
-      ".gitignore": "node_modules/\ndist/\n.env\n.env.*\n",
-    } : {
-      "main.py": '# Build one useful feature from your project brief.\nif __name__ == "__main__":\n    print("My learning project")\n',
-      "requirements.txt": "# Add only the dependencies your project needs.\n",
-      ".gitignore": ".venv/\n__pycache__/\n.env\n.env.*\n",
-    };
-    files["README.md"] = `# My learning project\n\n## User need\nWrite the problem you want to solve.\n\n## First useful feature\nDescribe one behavior, its inputs, and its acceptance criteria.\n\n## Setup\n${kind === "react" ? `Install Node.js/npm, then run npm --prefix ${directory} install and npm --prefix ${directory} run dev from the course project folder.` : "Create a project environment with python -m venv .venv. Add explicit dependencies before installing requirements."}\n\n## Validation\nWrite the checks you actually ran and their results.\n\n## Tradeoffs and next steps\nExplain a decision and a changed requirement you will try.\n\nGitLearn supplied only infrastructure and this outline; you implement the project.\n`;
-    for (const [relative,content] of Object.entries(files)) await this.workspace.save(sessionId,`${directory}/${relative}`,content,null);
+    if (session.contributionId)
+      throw new UserError(
+        "Keep upstream setup in its contribution folder. Create your own app in a course project.",
+      );
+    const directory = `apps/${kind}-${randomUUID().slice(0, 8)}`;
+    const files: Record<string, string> =
+      kind === "react"
+        ? {
+            "package.json":
+              JSON.stringify(
+                {
+                  name: "my-learning-project",
+                  version: "0.1.0",
+                  private: true,
+                  type: "module",
+                  scripts: {
+                    dev: "vite --host 127.0.0.1",
+                    build: "vite build",
+                  },
+                  dependencies: { react: "19.3.0", "react-dom": "19.3.0" },
+                  devDependencies: { vite: "7.3.6" },
+                },
+                null,
+                2,
+              ) + "\n",
+            "index.html":
+              '<!doctype html>\n<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My learning project</title></head><body><div id="root"></div><script type="module" src="/src/main.jsx"></script></body></html>\n',
+            "src/main.jsx":
+              'import React from "react";\nimport { createRoot } from "react-dom/client";\nimport "./style.css";\n\nfunction App() {\n  // Your brief and implementation belong here.\n  return <main><h1>My learning project</h1><p>Choose one useful feature and build it yourself.</p></main>;\n}\n\ncreateRoot(document.getElementById("root")).render(<App />);\n',
+            "src/style.css":
+              "body { margin: 0; font-family: system-ui, sans-serif; }\nmain { max-width: 800px; margin: 60px auto; padding: 24px; }\n",
+            ".gitignore": "node_modules/\ndist/\n.env\n.env.*\n",
+          }
+        : {
+            "main.py":
+              '# Build one useful feature from your project brief.\nif __name__ == "__main__":\n    print("My learning project")\n',
+            "requirements.txt":
+              "# Add only the dependencies your project needs.\n",
+            ".gitignore": ".venv/\n__pycache__/\n.env\n.env.*\n",
+          };
+    files["README.md"] =
+      `# My learning project\n\n## User need\nWrite the problem you want to solve.\n\n## First useful feature\nDescribe one behavior, its inputs, and its acceptance criteria.\n\n## Setup\n${kind === "react" ? `Install Node.js/npm, then run npm --prefix ${directory} install and npm --prefix ${directory} run dev from the course project folder.` : "Create a project environment with python -m venv .venv. Add explicit dependencies before installing requirements."}\n\n## Validation\nWrite the checks you actually ran and their results.\n\n## Tradeoffs and next steps\nExplain a decision and a changed requirement you will try.\n\nGitLearn supplied only infrastructure and this outline; you implement the project.\n`;
+    for (const [relative, content] of Object.entries(files))
+      await this.workspace.save(
+        sessionId,
+        `${directory}/${relative}`,
+        content,
+        null,
+      );
     const entry = `${directory}/${kind === "react" ? "src/main.jsx" : "main.py"}`;
-    await this.workspace.editorAnchor(sessionId,entry,0);
-    return { directory, entry, install: kind === "react" ? `npm --prefix ${directory} install` : "python -m venv .venv", start: kind === "react" ? `npm --prefix ${directory} run dev` : `python ${entry}` };
+    await this.workspace.editorAnchor(sessionId, entry, 0);
+    return {
+      directory,
+      entry,
+      install:
+        kind === "react"
+          ? `npm --prefix ${directory} install`
+          : "python -m venv .venv",
+      start:
+        kind === "react"
+          ? `npm --prefix ${directory} run dev`
+          : `python ${entry}`,
+    };
   }
   private clean(value: string) {
     try {
@@ -126,7 +171,7 @@ export class ProjectRuntime {
     // Built-in profiles use the bundled runtime; arbitrary project tools use the installed PATH.
     if (
       /^(node|python|python3)\s+/.test(command) &&
-      !/[;&|<>`$]/.test(command)
+      !/[;&|<>`$]/.test(command.replace(/"[^"]*"|'[^']*'/g, ""))
     ) {
       const words = [
         ...command.matchAll(/"([^"]*)"|'([^']*)'|([^\s"']+)/g),
