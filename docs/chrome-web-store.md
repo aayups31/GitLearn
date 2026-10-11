@@ -40,4 +40,14 @@ The 128px icon is in extension/static/icons/icon-128.png. A ready 1280x800 listi
 
 Complete account verification, listing category/language, privacy practices, the public privacy-policy URL, and tester instructions before requesting store review. Explain that reviewers need the Windows companion running, how to pair it, and that no paid course content or API key is required to test metadata pairing. An API key is needed only for optional AI inside the companion.
 
+## Reviewer walkthrough
+
+1. Use Windows x64 with Git for Windows installed. Download the 0.4.1 companion from the public homepage or GitHub Releases, install it, and open GitLearn. This preview installer is unsigned.
+2. Follow first-run setup and select an empty parent learning folder. Skip optional OpenAI and GitHub connection. There is no GitLearn account, username, or password.
+3. Keep the companion open. In Setup, find its connection code. Open the extension popup, enter that code, and connect. The popup should show the connected companion.
+4. Open a Udemy course page accessible to you. Course titles and available lesson metadata appear in the popup and companion. Paid course purchases and OpenAI access are not required for pairing or accessible metadata; authenticated lecture/transcript access follows the reviewer's own Udemy permissions.
+5. On an accessible lesson with a transcript, open Udemy's transcript panel, then choose Import visible transcript in the extension. Inspect the imported source under that course in GitLearn. Closed/unavailable transcripts produce an explanation rather than a download.
+6. Close the companion and visit another accessible lesson. The popup reports pending local updates. Reopen GitLearn and retry; queued context is delivered. The extension never uploads this context to a developer server.
+7. Open my workspace focuses the already running desktop app. The extension credential can submit course context/imported text and read minimal connection status; it cannot edit files, run code, invoke AI, or change repositories.
+
 After approval, copy the real Chrome Web Store item URL into `src/site/assets/release.json`, rebuild, and publish the updated site. Until then, both site and app explain Load unpacked accurately.
