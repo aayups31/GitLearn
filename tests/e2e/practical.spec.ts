@@ -105,7 +105,7 @@ test("a during-course suggestion becomes learner-written work, real checks, hint
     .click();
   await page.getByRole("tab", { name: "Reviews", exact: true }).click();
   await expect(page.locator(".skill-record")).toContainText(
-    "with GitLearn help",
+    "with OutClass help",
   );
   await page.getByLabel("Search my learning").fill("validation");
   await page

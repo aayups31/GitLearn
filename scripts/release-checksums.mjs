@@ -2,8 +2,8 @@ import { readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 const { version } = JSON.parse(await readFile("package.json", "utf8"));
 const names = [
-  `GitLearn-Setup-${version}.exe`,
-  `GitLearn-Chrome-${version}.zip`,
+  `OutClass-Setup-${version}.exe`,
+  `OutClass-Chrome-${version}.zip`,
 ];
 const lines = [];
 for (const name of names)

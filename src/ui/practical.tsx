@@ -563,7 +563,7 @@ export function LearningHub({
                   course and survive a restart.
                 </p>
                 <small>
-                  Curated GitLearn exercises v1 · JavaScript and Python
+                  Curated OutClass exercises v1 · JavaScript and Python
                 </small>
               </>
             )}
@@ -1266,7 +1266,7 @@ export function LiveWorkHub({
               </div>
               <h2>A teacher beside your work.</h2>
               <p>
-                Inspect an issue and its contributor rules. GitLearn guides your
+                Inspect an issue and its contributor rules. OutClass guides your
                 reasoning, setup, reproduction, testing, and review while you
                 own the implementation.
               </p>

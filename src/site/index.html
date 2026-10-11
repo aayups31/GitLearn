@@ -3,12 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="theme-color" content="#101216" />
+    <meta name="theme-color" content="#090c14" />
+    <title>OutClass · Break free from tutorial hell</title>
     <meta
       name="description"
-      content="Turn Udemy lessons into your own working code. GitLearn brings courses, a local editor, sourced AI help, and learning history into one Windows workspace."
+      content="OutClass the lesson. A local learning workspace that turns Udemy tutorials into practice, projects, and real contributions, with an AI teacher that guides your thinking."
     />
-    <title>GitLearn · Go beyond the lesson</title>
     <link rel="icon" href="assets/mark.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="assets/site.css" />
     <link
@@ -18,254 +18,482 @@
       type="font/woff2"
       crossorigin
     />
-    <meta property="og:title" content="GitLearn · Go beyond the lesson" />
-    <meta
-      property="og:description"
-      content="Your courses. Your code. A place to make it your own."
-    />
     <link rel="canonical" href="https://git-learn-black.vercel.app/" />
     <meta property="og:url" content="https://git-learn-black.vercel.app/" />
     <meta
-      property="og:image"
-      content="https://git-learn-black.vercel.app/assets/workspace.png"
+      property="og:title"
+      content="OutClass · Break free from tutorial hell"
     />
+    <meta
+      property="og:description"
+      content="Your next course should end in something you built. OutClass the lesson."
+    />
+    <meta
+      property="og:image"
+      content="https://git-learn-black.vercel.app/assets/outclass-social.png"
+    />
+    <script src="assets/vendor/gsap.min.js" defer></script>
+    <script src="assets/vendor/ScrollTrigger.min.js" defer></script>
     <script src="assets/site.js" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
+    <div class="environment" aria-hidden="true"></div>
     <header class="site-header">
-      <a class="wordmark" href="#" aria-label="GitLearn home"
-        ><img src="assets/mark.svg" width="28" height="28" alt="" />GitLearn</a
+      <a class="wordmark" href="#" aria-label="OutClass home"
+        ><img src="assets/mark.svg" width="30" height="30" alt="" />OutClass</a
       >
       <nav aria-label="Main navigation">
-        <a href="#product">Product</a><a href="#guide">How it works</a
-        ><a href="#faq">FAQ</a>
+        <a href="#why">Why OutClass</a><a href="#product">Workspace</a
+        ><a href="#guide">How it works</a>
       </nav>
       <a href="#download" class="button small"
-        >Download <span aria-hidden="true">↗</span></a
+        >Get OutClass <span aria-hidden="true">↗</span></a
       >
     </header>
     <main id="main" tabindex="-1">
       <section class="hero wrap">
-        <p class="eyebrow">
-          <span class="status-dot" aria-hidden="true"></span> THE WORKSPACE FOR
-          SELF-TAUGHT DEVELOPERS
-        </p>
-        <h1>Go beyond <br />the <span>lesson.</span></h1>
-        <p class="hero-lede">
-          Watch on Udemy. Build in GitLearn.<br />Your courses, code, and
-          sourced AI help in one workspace that lives on your computer.
-        </p>
-        <div class="hero-actions">
-          <a class="button primary" href="#download"
-            >Download GitLearn <span aria-hidden="true">↓</span></a
-          ><a class="plain-link" href="#product"
-            >Explore the workspace <span aria-hidden="true">↗</span></a
+        <div class="hero-copy">
+          <p class="eyebrow hero-enter">
+            <span class="status-dot" aria-hidden="true"></span> BREAK FREE FROM
+            TUTORIAL HELL
+          </p>
+          <h1>
+            <span class="headline-line"
+              ><span class="hero-word">OutClass</span></span
+            ><span class="headline-line"
+              ><span class="hero-word"
+                >the lesson<span class="blue-dot">.</span></span
+              ></span
+            >
+          </h1>
+          <p class="hero-lede hero-enter">
+            Your next course should end in something you built.
+          </p>
+          <p class="hero-description hero-enter">
+            A learning workspace for turning tutorials into real skills. Your
+            courses, code, and AI teacher, together on your computer.
+          </p>
+          <div class="hero-actions hero-enter">
+            <a class="button primary" href="#download"
+              >Start building <span aria-hidden="true">↗</span></a
+            ><a class="plain-link" href="#why"
+              >See the way out <span aria-hidden="true">↓</span></a
+            >
+          </div>
+          <p class="platform-note hero-enter">
+            Windows preview <span>·</span> Udemy first <span>·</span> Local by
+            default
+          </p>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="orbit-glow"></div>
+          <img
+            class="orbit-shell"
+            src="assets/breakout.svg"
+            width="720"
+            height="720"
+            alt=""
+            fetchpriority="high"
+          />
+          <div class="orbit-label label-before">
+            <span>01 / FOLLOW THE LESSON</span><i></i>
+          </div>
+          <div class="orbit-label label-after">
+            <i></i><span>02 / FIND YOUR OWN WAY ↗</span>
+          </div>
+        </div>
+        <div class="hero-bottom">
+          <span>LESS WATCHING IN CIRCLES. MORE MAKING YOUR OWN WAY.</span
+          ><a href="#product" aria-label="Scroll to the workspace"
+            ><span>SCROLL TO EXPLORE</span> ↓</a
           >
         </div>
-        <p class="platform-note">
-          Windows preview · Udemy first · GitHub optional
-        </p>
       </section>
       <section
         id="product"
         class="product-proof wrap"
-        aria-label="GitLearn workspace preview"
+        aria-label="OutClass workspace example"
       >
         <div class="proof-top">
           <span
-            ><span class="status-dot" aria-hidden="true"></span> A LITTLE MORE
-            FOCUS. A LOT MORE MAKING.</span
-          ><span class="proof-version">GITLEARN / WORKSPACE</span>
+            ><i class="status-dot" aria-hidden="true"></i> ONE WORKSPACE. YOUR
+            NEXT CHAPTER.</span
+          ><span>COURSES / CODE / COURSE-AWARE HELP</span>
         </div>
-        <div class="proof-scroll">
-          <img
-            src="assets/workspace.png"
-            width="1440"
-            height="1000"
-            fetchpriority="high"
-            alt="GitLearn example workspace with courses on the left, a working code editor in the center, and course AI help with source citations on the right."
-          />
-        </div>
-        <p class="image-caption">
-          The actual GitLearn interface. Example course and assistant
-          conversation shown.
-        </p>
-      </section>
-      <section class="manifesto wrap">
-        <p class="eyebrow">LEARNING IS IN THE DOING</p>
-        <h2>Start building.<br /><span>Before the course ends.</span></h2>
-        <p>
-          Following along is a start. GitLearn spots useful moments in your
-          saved work to try a task, combine skills in a project, or explore a
-          real contribution. Guidance helps you think through it. You write the
-          code.
-        </p>
-      </section>
-      <section class="workflow wrap" aria-label="GitLearn workflow">
-        <article>
-          <div class="step-meta"><span>01</span><span>CONNECT</span></div>
-          <h3>Watch with context.</h3>
-          <p>
-            The browser extension brings your Udemy course and current lesson
-            into GitLearn. No juggling course names, folders, and scattered
-            tabs.
-          </p>
-          <div class="mini-lesson">
-            <span class="tiny-label">UDEMY / CURRENT LESSON</span
-            ><strong>Building your first agent</strong
-            ><span><i class="status-dot"></i> Connected to your workspace</span>
-          </div>
-        </article>
-        <article>
-          <div class="step-meta"><span>02</span><span>PRACTICE</span></div>
-          <h3>Make it your own.</h3>
-          <p>
-            Take a practical brief, write real files, and run the checks. Use
-            progressive hints when you need them. JavaScript and Python practice
-            help you apply ideas beyond the tutorial example.
-          </p>
-          <pre
-            class="mini-code"
-          ><span class="code-muted">// Try it. Change it. Understand it.</span>
-<span class="code-blue">const</span> lesson = <span class="code-green">"Your next idea"</span>;
-console.log(lesson);<span class="code-cursor" aria-hidden="true">▍</span></pre>
-        </article>
-        <article>
-          <div class="step-meta"><span>03</span><span>KEEP</span></div>
-          <h3>Keep what you learn.</h3>
-          <p>
-            Save notes with a reviewed Git checkpoint. Course by course, build a
-            history of what you made. Connect one private GitHub repository when
-            you’re ready.
-          </p>
-          <div class="mini-history">
-            <span class="commit-line" aria-hidden="true">●<br />│<br />●</span>
-            <div>
-              <strong>Understand the agent loop</strong
-              ><span>Code + notes · Local checkpoint</span
-              ><strong>Build the first tool</strong
-              ><span>Earlier in this course</span>
+        <div class="workspace-frame">
+          <div class="workspace-top">
+            <div class="window-dots" aria-hidden="true">
+              <i></i><i></i><i></i>
             </div>
-          </div>
-        </article>
-      </section>
-      <section class="assistant-section wrap">
-        <div class="assistant-intro">
-          <p class="eyebrow">HELP THAT KNOWS WHAT YOU’RE LEARNING</p>
-          <h2>Less guessing.<br />More understanding.</h2>
-          <p>
-            Ask about your code, or ask the course. GitLearn retrieves relevant
-            passages from your local learning library and shows the sources
-            behind the answer.
-          </p>
-          <p class="footnote">
-            Add transcripts you can see or material you have permission to use.
-            GitLearn doesn’t download course videos. AI requires your own OpenAI
-            API key.
-          </p>
-        </div>
-        <div class="assistant-demo">
-          <div class="demo-label">
-            ASSISTANT <span>Interactive example</span>
-          </div>
-          <div class="demo-tabs" role="tablist" aria-label="Assistant example">
-            <button
-              id="code-tab"
-              role="tab"
-              aria-controls="code-example"
-              aria-selected="true"
+            <span>OutClass / Python foundations</span
+            ><span class="workspace-local"
+              ><i class="status-dot"></i> On your computer</span
             >
-              Code help</button
-            ><button
-              id="course-tab"
-              role="tab"
-              aria-controls="course-example"
-              aria-selected="false"
-              tabindex="-1"
-            >
-              Ask the course
-            </button>
           </div>
-          <div id="code-example" role="tabpanel" aria-labelledby="code-tab">
-            <p class="demo-question">
-              Why does my loop stop after one tool call?
-            </p>
-            <p>
-              Return the tool result to the conversation, then let the model
-              choose the next step. Your function currently returns immediately
-              after the first call.
-            </p>
-            <pre><span class="code-muted"># Keep the conversation going</span>
-messages.append(tool_result)
-<span class="code-blue">continue</span></pre>
-            <div class="demo-source">
-              <span>↳</span>
-              <div>
-                <strong>agent.py</strong
-                ><small>Your working code · lines 24–38</small>
+          <div class="workspace-body">
+            <aside class="preview-sidebar">
+              <div class="preview-brand">
+                <img
+                  src="assets/mark.svg"
+                  width="19"
+                  height="19"
+                  alt=""
+                />OutClass <span>⌄</span>
               </div>
-              <span class="source-pill">SOURCE 01</span>
+              <div class="preview-nav">◫ &nbsp; Overview</div>
+              <div class="preview-nav selected">⌘ &nbsp; Code &amp; learn</div>
+              <div class="preview-nav">↗ &nbsp; Learn by doing</div>
+              <div class="preview-nav">◷ &nbsp; Reviews</div>
+              <div class="preview-nav">⌥ &nbsp; Live work</div>
+              <p class="preview-label">MY COURSES</p>
+              <div class="preview-course"><i></i> Python foundations</div>
+              <div class="preview-course muted"><i></i> Building AI agents</div>
+              <div class="preview-lesson">
+                08 &nbsp; Working with collections
+              </div>
+              <div class="preview-progress"><span></span></div>
+              <small>Your next step is practice.</small>
+              <div class="preview-bottom">
+                ⚙ &nbsp; Settings <span>Local workspace</span>
+              </div>
+            </aside>
+            <div class="preview-editor">
+              <div class="editor-toolbar">
+                <span
+                  >Python foundations
+                  <span class="muted">/</span> activity-report</span
+                ><span>▶ &nbsp; Run</span>
+              </div>
+              <div class="file-tabs">
+                <span>⌁ &nbsp; main.py <i></i></span><span>README.md</span>
+              </div>
+              <div class="code-area">
+                <div class="line-numbers" aria-hidden="true">
+                  1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12
+                </div>
+                <pre><span class="code-muted"># A little less following along.</span>
+<span class="code-muted"># A little more figuring it out.</span>
+
+<span class="code-blue">def</span> <span class="code-yellow">summarize_activity</span>(events):
+    <span class="code-muted"># Your task: group events by user.</span>
+    <span class="code-muted"># Handle empty and invalid input.</span>
+    <span class="code-blue">pass</span>
+
+<span class="code-muted"># Try an example of your own.</span>
+events = [
+    {<span class="code-green">"user"</span>: <span class="code-green">"maya"</span>, <span class="code-green">"minutes"</span>: <span class="code-yellow">20</span>},
+]<span class="code-cursor" aria-hidden="true">▍</span></pre>
+              </div>
+              <div class="preview-terminal">
+                <div>CONSOLE <span>Local Python</span></div>
+                <p>
+                  <span class="code-blue">›</span> Your code. Your experiments.
+                  Your understanding.
+                </p>
+                <p class="code-muted">
+                  Write your implementation, then run the checks.
+                </p>
+              </div>
+              <div class="editor-status">
+                Python <span>UTF-8 &nbsp; · &nbsp; Local files</span>
+              </div>
             </div>
+            <aside class="preview-teacher">
+              <div class="teacher-toolbar">
+                Your learning partner <span>↗</span>
+              </div>
+              <div class="teacher-mode">
+                <span>Code help</span><span>Ask the course</span>
+              </div>
+              <div class="teacher-question">
+                I get the example. How do I start this on my own?
+              </div>
+              <div class="teacher-answer">
+                <img src="assets/mark.svg" width="20" height="20" alt="" />
+                <p>
+                  Start with the smallest case: one user, one event. What should
+                  your result look like?
+                </p>
+                <p>
+                  Then think about what changes when the same user appears
+                  twice. Which structure from your lesson would help?
+                </p>
+                <div class="teacher-citation">
+                  ↳ &nbsp; Working with collections
+                  <small>Imported course passage · Example</small>
+                </div>
+              </div>
+              <div class="teacher-context">
+                IN CONTEXT <span>main.py</span><span>Your practical brief</span>
+              </div>
+              <div class="teacher-input">Ask for a hint… <span>↑</span></div>
+            </aside>
           </div>
-          <div
-            id="course-example"
-            role="tabpanel"
-            aria-labelledby="course-tab"
-            hidden
+        </div>
+        <div class="proof-caption">
+          <p>
+            Courses on the left. Your code in the middle. Guidance when you need
+            it.
+          </p>
+          <span>Illustrative workspace with example content.</span>
+        </div>
+      </section>
+      <section id="why" class="problem wrap">
+        <div class="section-index" data-reveal>
+          <span>01 / THE LOOP</span><span>RECOGNITION ≠ UNDERSTANDING</span>
+        </div>
+        <h2 data-reveal>
+          Another course finished.<br /><span
+            >Still staring at a blank file?</span
           >
-            <p class="demo-question">
-              What makes an agent different from one prompt?
-            </p>
-            <p>
-              An agent repeats a loop: decide, use a tool, read the result, and
-              decide again. The lesson’s example keeps going until the task is
-              complete. <span class="citation">[1]</span>
-            </p>
-            <div class="demo-source">
-              <span>↳</span>
-              <div>
-                <strong>The agent loop</strong
-                ><small>Imported transcript · lines 12–20</small>
-              </div>
-              <span class="source-pill">SOURCE 01</span>
+        </h2>
+        <div class="problem-bottom">
+          <p data-reveal>
+            You understand the instructor. You can copy the code. But take away
+            the video, and starting feels different. Watching more can keep you
+            in the same loop.
+          </p>
+          <div class="loop-words" aria-label="The tutorial loop">
+            <span>Watch</span><i>↗</i><span>Copy</span><i>↘</i
+            ><span>Repeat</span><i>↺</i>
+          </div>
+        </div>
+        <p class="problem-turn" data-reveal>
+          OutClass gives your learning somewhere to go.
+        </p>
+      </section>
+      <section
+        class="escape-section wrap"
+        aria-label="The path beyond tutorials"
+      >
+        <div class="escape-visual">
+          <p class="eyebrow">02 / THE WAY OUT</p>
+          <h2>Close the gap.<br /><span>Open your next chapter.</span></h2>
+          <div class="path-diagram" aria-hidden="true">
+            <div class="path-track"></div>
+            <div class="path-fill"></div>
+            <div class="path-node"><span>01</span><strong>Learn</strong></div>
+            <div class="path-node">
+              <span>02</span><strong>Practice</strong>
             </div>
-            <p class="demo-detail">
-              The real assistant opens each cited passage so you can check the
-              explanation against your course.
+            <div class="path-node"><span>03</span><strong>Build</strong></div>
+            <div class="path-node">
+              <span>04</span><strong>Contribute</strong>
+            </div>
+          </div>
+          <p class="escape-note">
+            Small steps. Real files. Skills you can use without the video.
+          </p>
+        </div>
+        <div class="escape-chapters">
+          <article class="escape-step" data-step="0">
+            <span class="chapter-number">01 / LEARN WITH CONTEXT</span>
+            <h3>Keep the course.<br />Lose the tab juggling.</h3>
+            <p>
+              The extension brings your Udemy lesson into your workspace. Import
+              the visible transcript when you want sourced course help. Your
+              code and learning stay connected.
             </p>
+            <div class="chapter-example">
+              <span class="tiny-label">UDEMY / CURRENT LESSON</span
+              ><strong>Working with collections</strong
+              ><small
+                ><i class="status-dot"></i> Connected to your local
+                workspace</small
+              >
+            </div>
+          </article>
+          <article class="escape-step" data-step="1">
+            <span class="chapter-number">02 / PRACTICE BEFORE THE END</span>
+            <h3>Pause the lesson.<br />Try something of your own.</h3>
+            <p>
+              Useful moments in your saved work become invitations to practice.
+              Take a JavaScript or Python brief, write your solution, and run
+              real checks. Ask for a hint when you need one.
+            </p>
+            <div class="chapter-example">
+              <span class="tiny-label">A GOOD MOMENT TO TRY IT</span
+              ><strong>Turn a collection into an activity report.</strong
+              ><small
+                >Different inputs. Your implementation. Behavior checks.</small
+              >
+            </div>
+          </article>
+          <article class="escape-step" data-step="2">
+            <span class="chapter-number">03 / BUILD SOMETHING THAT LASTS</span>
+            <h3>A course ends.<br />Your project keeps going.</h3>
+            <p>
+              Combine what you have practiced in an evolving local project. Run
+              a development server or tests, keep useful reflections, and
+              revisit skills in fresh review tasks.
+            </p>
+            <div class="chapter-example">
+              <span class="tiny-label">YOUR PROJECT / YOUR COMPUTER</span
+              ><strong>activity-report / src / main.py</strong
+              ><small>Code · Checks · Reflections · Reviewed checkpoints</small>
+            </div>
+          </article>
+          <article class="escape-step" data-step="3">
+            <span class="chapter-number">04 / STEP INTO REAL WORK</span>
+            <h3>You do not need to finish<br />every course to contribute.</h3>
+            <p>
+              Explore checked public issues that match your stack and recorded
+              practice. Read the contributor rules, clone a separate workspace,
+              and investigate with guidance. You make the changes and choose
+              when to submit.
+            </p>
+            <div class="chapter-example">
+              <span class="tiny-label">LIVE WORK / A FIRST CONTRIBUTION</span
+              ><strong>Reproduce. Investigate. Test. Explain.</strong
+              ><small
+                >Public issues · Contributor guides · Local PR draft</small
+              >
+            </div>
+          </article>
+        </div>
+      </section>
+      <section class="teacher-section wrap">
+        <div class="teacher-heading" data-reveal>
+          <p class="eyebrow">03 / GUIDANCE THAT BUILDS INDEPENDENCE</p>
+          <h2>
+            A teacher in your corner.<br /><span
+              >You stay at the keyboard.</span
+            >
+          </h2>
+        </div>
+        <div class="assistant-section">
+          <div class="assistant-intro" data-reveal>
+            <p>
+              The best help leaves you more capable. Ask about your code or your
+              course, work through an error, and get a next step you can reason
+              about.
+            </p>
+            <ul class="teacher-principles">
+              <li><span>↗</span> Hints that help you think.</li>
+              <li><span>↳</span> Course answers with sources you can open.</li>
+              <li><span>⌘</span> Your task and recorded runs in context.</li>
+            </ul>
+            <p class="footnote">
+              Course help uses material you explicitly import. AI is optional
+              and uses your own OpenAI API key. The assistant has no tools to
+              edit or run your code for you.
+            </p>
+          </div>
+          <div class="assistant-demo" data-reveal>
+            <div class="demo-label">
+              OUTCLASS / LEARNING PARTNER <span>Interactive example</span>
+            </div>
+            <div
+              class="demo-tabs"
+              role="tablist"
+              aria-label="Assistant example"
+            >
+              <button
+                id="code-tab"
+                role="tab"
+                aria-controls="code-example"
+                aria-selected="true"
+              >
+                Code help</button
+              ><button
+                id="course-tab"
+                role="tab"
+                aria-controls="course-example"
+                aria-selected="false"
+                tabindex="-1"
+              >
+                Ask the course
+              </button>
+            </div>
+            <div id="code-example" role="tabpanel" aria-labelledby="code-tab">
+              <p class="demo-question">
+                My report loses the earlier events. Where should I look?
+              </p>
+              <p>
+                Look at what happens when a user appears a second time. Are you
+                replacing their total or adding to it?
+              </p>
+              <p>
+                Try two events for one user on paper first. What should the
+                intermediate result be?
+              </p>
+              <div class="demo-source">
+                <span>↳</span>
+                <div>
+                  <strong>main.py</strong
+                  ><small>Your working code · Example context</small>
+                </div>
+                <span class="source-pill">CODE CONTEXT</span>
+              </div>
+            </div>
+            <div
+              id="course-example"
+              role="tabpanel"
+              aria-labelledby="course-tab"
+              hidden
+            >
+              <p class="demo-question">
+                When would I use a dictionary instead of a list?
+              </p>
+              <p>
+                A dictionary helps when each value belongs to a named key. In
+                this lesson, the key identifies a user so you can find and
+                update their total. <span class="citation">[1]</span>
+              </p>
+              <div class="demo-source">
+                <span>↳</span>
+                <div>
+                  <strong>Working with collections</strong
+                  ><small>Imported transcript · Example passage</small>
+                </div>
+                <span class="source-pill">SOURCE 01</span>
+              </div>
+              <p class="demo-detail">
+                In the app, open a citation to read the passage and check the
+                explanation.
+              </p>
+            </div>
           </div>
         </div>
       </section>
-      <section class="local-section wrap">
-        <div class="local-heading">
-          <p class="eyebrow">YOUR COMPUTER. YOUR LEARNING.</p>
-          <h2>One home for<br />every new skill.</h2>
-        </div>
-        <div class="folder-tree" aria-label="Example learning folder structure">
-          <div><span>⌁</span> My Learning</div>
-          <div class="tree-branch">
-            ├ <strong>workspaces</strong><small>Your editable files</small>
-          </div>
-          <div class="tree-leaf">│　├ Python foundations / lessons</div>
-          <div class="tree-leaf">│　└ Building AI agents / lessons</div>
-          <div class="tree-branch">
-            ├ <strong>projects</strong
-            ><small>One evolving project per course</small>
-          </div>
-          <div class="tree-leaf">│　└ Your course / practice + apps</div>
-          <div class="tree-branch">
-            ├ <strong>contributions</strong
-            ><small>Separate real-world repositories</small>
-          </div>
-          <div class="tree-branch">
-            └ <strong>history</strong><small>Reviewed code + notes</small>
-          </div>
-          <div class="tree-leaf">　　└ udemy / courses / lessons</div>
+      <section class="ownership wrap">
+        <div data-reveal>
+          <p class="eyebrow">04 / LEARNING YOU CAN KEEP</p>
+          <h2>
+            Your files.<br />Your progress.<br /><span>Your way forward.</span>
+          </h2>
           <p>
-            <span class="status-dot"></span> Local by default. One optional
-            GitHub repository.
+            Choose one learning folder. Courses organize themselves inside it.
+            Keep using VS Code or build in OutClass. Save reviewed Git
+            checkpoints locally, with optional GitHub backup.
           </p>
+        </div>
+        <div class="ownership-details" data-reveal>
+          <div>
+            <span>01</span>
+            <h3>A home for every course.</h3>
+            <p>
+              Separate practice folders and an evolving project keep each course
+              in context.
+            </p>
+          </div>
+          <div>
+            <span>02</span>
+            <h3>Remember what clicked.</h3>
+            <p>
+              Search your reflections and return to scheduled review tasks,
+              without reopening the same tutorial.
+            </p>
+          </div>
+          <div>
+            <span>03</span>
+            <h3>Work on ordinary files.</h3>
+            <p>
+              Your local folders and contribution repositories stay yours.
+              GitHub and AI are optional.
+            </p>
+          </div>
         </div>
       </section>
       <section id="guide" class="guide wrap">
@@ -281,7 +509,7 @@ messages.append(tool_result)
           <li>
             <span>01</span>
             <div>
-              <h3>Install GitLearn.</h3>
+              <h3>Install the Windows preview.</h3>
               <p>
                 Download the Windows installer below. Install
                 <a
@@ -301,7 +529,7 @@ messages.append(tool_result)
               <h3>Choose your learning folder.</h3>
               <p>
                 Open the app and follow setup. Use a parent folder such as
-                Desktop / My Learning. GitLearn creates history and practice
+                Desktop / My Learning. OutClass creates history and practice
                 folders inside it and organizes each course automatically.
               </p>
             </div>
@@ -335,7 +563,7 @@ messages.append(tool_result)
             <div>
               <h3>Open a lesson. Make something.</h3>
               <p>
-                Visit a Udemy course. In GitLearn, choose the course, start a
+                Visit a Udemy course. In OutClass, choose the course, start a
                 lesson, and choose one project for the whole course. Open Code
                 &amp; learn, edit files, run your code, and keep notes. Your
                 existing coding folder works too. Continue building restores
@@ -392,7 +620,7 @@ messages.append(tool_result)
           <details>
             <summary>Do I need a GitHub repository?</summary>
             <p>
-              No. GitLearn creates local Git history when you choose your
+              No. OutClass creates local Git history when you choose your
               learning folder. Later, you can connect one private repository for
               all your courses. GitHub account connection uses GitHub CLI; setup
               explains what to install.
@@ -402,7 +630,7 @@ messages.append(tool_result)
             <summary>Can I keep using VS Code?</summary>
             <p>
               Yes. Choose an existing local coding folder when you start a
-              lesson, or use GitLearn’s built-in editor. You’re working with
+              lesson, or use OutClass’s built-in editor. You’re working with
               ordinary files on your computer.
             </p>
           </details>
@@ -413,12 +641,12 @@ messages.append(tool_result)
             <p>
               No. Course answers use transcripts and material you explicitly
               import. The extension imports the transcript currently visible on
-              the lesson page. If a source is missing, GitLearn tells you rather
+              the lesson page. If a source is missing, OutClass tells you rather
               than claiming to know the lecture.
             </p>
           </details>
           <details>
-            <summary>What can I run inside GitLearn?</summary>
+            <summary>What can I run inside OutClass?</summary>
             <p>
               JavaScript comes ready to run. Python needs a local Python
               installation or the lesson folder’s virtual environment. A single
@@ -433,7 +661,7 @@ messages.append(tool_result)
               Your files, notes, library, and history live locally. When you
               enable and use AI, selected context goes to OpenAI. GitHub
               receives reviewed checkpoints only when you connect a repository
-              and sync. GitLearn does not run a hosted workspace or collect
+              and sync. OutClass does not run a hosted workspace or collect
               analytics. <a href="privacy.html">Read the privacy details.</a>
             </p>
           </details>
@@ -441,58 +669,74 @@ messages.append(tool_result)
             <summary>Is this the final public release?</summary>
             <p>
               This is a Windows preview. The installer is currently unsigned, so
-              Windows may show a publisher warning. The Chrome store listing is
-              still being prepared. GitLearn is independent of Udemy and is not
-              affiliated with or endorsed by Udemy, Linear, or Anthropic.
+              Windows may show a publisher warning. The GitLearn extension is
+              submitted for Chrome Web Store review. OutClass is independent of
+              Udemy and is not affiliated with or endorsed by Udemy, Linear, or
+              Anthropic.
             </p>
           </details>
         </div>
       </section>
+
       <section id="download" class="download wrap">
-        <div>
-          <p class="eyebrow">YOUR NEXT LESSON DESERVES A WORKSPACE</p>
-          <h2>Make learning<br /><span>your own.</span></h2>
-          <p>Start with the Windows app. Bring your browser along.</p>
+        <div data-reveal>
+          <p class="eyebrow">YOUR NEXT CHAPTER STARTS WITH YOU</p>
+          <h2>Break the loop.<br /><span>Build your own way.</span></h2>
+          <p>OutClass the lesson. Make what comes next.</p>
         </div>
-        <div class="download-options">
+        <div class="download-options" data-reveal>
           <a
             id="windows-download"
             class="button primary"
             href="https://github.com/aayups31/GitLearn/releases/download/v0.4.1/GitLearn-Setup-0.4.1.exe"
-            >Get GitLearn for Windows <span aria-hidden="true">↗</span></a
+            >Download the Windows preview <span aria-hidden="true">↗</span></a
           >
           <p id="windows-status" class="download-note">
-            Windows x64 · v0.4.1 · 111 MB · Unsigned preview
+            Windows x64 · GitLearn v0.4.1 · 111 MB · Unsigned preview
           </p>
           <a
             id="extension-download"
             class="button secondary"
             href="https://github.com/aayups31/GitLearn/releases/download/v0.4.1/GitLearn-Chrome-0.4.1.zip"
-            >Get the Chrome extension <span aria-hidden="true">↗</span></a
+            >Get the browser extension <span aria-hidden="true">↗</span></a
           >
           <p id="extension-status" class="download-note">
-            Chrome Web Store listing pending. Use the upload ZIP or the app’s
-            included extension.
+            GitLearn extension submitted for Chrome review. Use Load unpacked
+            until approval.
+          </p>
+          <p class="rename-note">
+            OutClass is the new name for GitLearn. The current downloads still
+            display GitLearn and use the same local workflow.
           </p>
           <a class="plain-link" href="#guide"
-            >Read the setup steps <span aria-hidden="true">↑</span></a
+            >Follow the setup guide <span aria-hidden="true">↑</span></a
           >
         </div>
       </section>
     </main>
     <footer class="site-footer wrap">
-      <a class="wordmark" href="#"
-        ><img src="assets/mark.svg" width="24" height="24" alt="" />GitLearn</a
-      >
-      <p>Keep what you learn.</p>
-      <div>
-        <a href="privacy.html">Privacy</a
-        ><a
-          href="https://github.com/aayups31/GitLearn"
-          target="_blank"
-          rel="noopener noreferrer"
-          >Source code ↗</a
-        ><span>© 2026 GitLearn</span>
+      <div class="footer-top">
+        <a class="wordmark" href="#"
+          ><img
+            src="assets/mark.svg"
+            width="28"
+            height="28"
+            alt=""
+          />OutClass</a
+        >
+        <p>Break free from tutorial hell.</p>
+        <div>
+          <a href="privacy.html">Privacy</a
+          ><a
+            href="https://github.com/aayups31/GitLearn"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Source code ↗</a
+          ><span>© 2026 OutClass</span>
+        </div>
+      </div>
+      <div class="footer-statement" aria-hidden="true">
+        OutClass<span>↗</span>
       </div>
     </footer>
   </body>

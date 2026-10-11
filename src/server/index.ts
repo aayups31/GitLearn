@@ -51,11 +51,11 @@ if (isDev) {
 }
 const server = app.listen(port, "127.0.0.1", () =>
   console.log(
-    `GitLearn is ready at http://127.0.0.1:${port}. Your files and API key stay in the local companion.`,
+    `OutClass is ready at http://127.0.0.1:${port}. Your files and API key stay in the local companion.`,
   ),
 );
 server.on("error", () => {
-  console.error("GitLearn could not start. The port may already be in use.");
+  console.error("OutClass could not start. The port may already be in use.");
   store.close();
   process.exitCode = 1;
 });

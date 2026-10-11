@@ -14,7 +14,9 @@ import { randomUUID } from "node:crypto";
 import dotenv from "dotenv";
 import type { DesktopEnvironment } from "./bridge";
 
-app.setName("GitLearn");
+app.setName("OutClass");
+// Keep the encrypted key and saved workspace in the existing installation.
+app.setPath("userData", path.join(app.getPath("appData"), "GitLearn"));
 if (process.env.GITLEARN_DESKTOP_USER_DATA)
   app.setPath("userData", process.env.GITLEARN_DESKTOP_USER_DATA);
 const root = app.getAppPath();
@@ -63,7 +65,7 @@ function external(url: string) {
     target.username ||
     target.password
   )
-    throw new Error("That link is not an approved GitLearn resource.");
+    throw new Error("That link is not an approved OutClass resource.");
   return shell.openExternal(target.href);
 }
 async function available(command: string) {
@@ -96,16 +98,16 @@ async function startCompanion() {
     if (health.ok && health.name === "GitLearn") {
       if (health.version !== app.getVersion())
         throw new Error(
-          "Another GitLearn version is running. Save your files and close it, then open this version again.",
+          "Another OutClass version is running. Save your files and close it, then open this version again.",
         );
       return;
     }
-    throw new Error("The GitLearn port is occupied by another application.");
+    throw new Error("The OutClass port is occupied by another application.");
   } catch (error) {
     if (
       error instanceof Error &&
       (error.message.includes("occupied") ||
-        error.message.includes("Another GitLearn version"))
+        error.message.includes("Another OutClass version"))
     )
       throw error;
   }
@@ -116,7 +118,7 @@ async function startCompanion() {
         savedKey = safeStorage.decryptString(encrypted);
       } catch {
         throw new Error(
-          "Your saved API key could not be opened. Remove the key file in GitLearn's app data or restore access to your Windows account.",
+          "Your saved API key could not be opened. Remove the key file in OutClass's app data or restore access to your Windows account.",
         );
       }
     }
@@ -135,7 +137,7 @@ async function startCompanion() {
   companion = utilityProcess.fork(
     path.join(root, "dist/desktop/companion.cjs"),
     [],
-    { serviceName: "GitLearn local companion", stdio: "pipe" },
+    { serviceName: "OutClass local companion", stdio: "pipe" },
   );
   // Neither the API key nor source contents are written to process logs.
   companion.stderr?.on("data", () => {});
@@ -168,8 +170,8 @@ async function startCompanion() {
       reject(new Error("The local workspace stopped unexpectedly."));
       if (!quitting && window)
         dialog.showErrorBox(
-          "GitLearn stopped",
-          "Reopen GitLearn to reconnect to your local workspace.",
+          "OutClass stopped",
+          "Reopen OutClass to reconnect to your local workspace.",
         );
     });
     companion!.postMessage({
@@ -192,7 +194,7 @@ function trusted(event: Electron.IpcMainInvokeEvent) {
     event.senderFrame !== window.webContents.mainFrame ||
     new URL(event.senderFrame.url).origin !== origin
   )
-    throw new Error("Use the GitLearn desktop workspace.");
+    throw new Error("Use the OutClass desktop workspace.");
 }
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
@@ -259,7 +261,7 @@ else {
             acknowledgements.delete(id);
             reject(
               new Error(
-                "The companion did not confirm the change. Reopen GitLearn.",
+                "The companion did not confirm the change. Reopen OutClass.",
               ),
             );
           }, 5000);
@@ -295,7 +297,7 @@ else {
         minHeight: 660,
         show: false,
         backgroundColor: "#101114",
-        title: "GitLearn",
+        title: "OutClass",
         icon: path.join(extensionSource, "icons/icon-256.png"),
         autoHideMenuBar: true,
         webPreferences: {
@@ -327,7 +329,7 @@ else {
             cancelId: 0,
             message: "You have unsaved work",
             detail:
-              "Save your files and wait for notes to finish saving before closing GitLearn.",
+              "Save your files and wait for notes to finish saving before closing OutClass.",
           }) === 1
         )
           event.preventDefault();
@@ -336,8 +338,8 @@ else {
       if (process.env.GITLEARN_HEADLESS_TEST !== "1") window.show();
     } catch (error) {
       dialog.showErrorBox(
-        "GitLearn could not open",
-        error instanceof Error ? error.message : "Please reopen GitLearn.",
+        "OutClass could not open",
+        error instanceof Error ? error.message : "Please reopen OutClass.",
       );
       app.quit();
     }

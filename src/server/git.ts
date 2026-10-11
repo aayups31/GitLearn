@@ -73,7 +73,7 @@ export function run(
       clearTimeout(timer);
       reject(
         new UserError(
-          `${command} is not available. Install it, then restart GitLearn.`,
+          `${command} is not available. Install it, then restart OutClass.`,
           503,
         ),
       );
@@ -148,7 +148,7 @@ export async function initialize(root: string) {
   );
   await writeFile(
     path.join(root, "README.md"),
-    "# My learning history\n\nCode, notes, and checkpoints from the things I learn.\n\nManaged locally by GitLearn.\n",
+    "# My learning history\n\nCode, notes, and checkpoints from the things I learn.\n\nManaged locally by OutClass.\n",
   );
 }
 export async function tree(root: string, base: string, files: FrozenFile[]) {
@@ -252,7 +252,7 @@ export async function commitTree(
   await git(root, [
     "update-ref",
     "-m",
-    "GitLearn checkpoint",
+    "OutClass checkpoint",
     currentBranch,
     sha,
     expected || "0".repeat(40),
@@ -289,7 +289,7 @@ export async function ensureCleanTarget(
     )
   )
     throw new UserError(
-      "Your learning repository has changes made outside GitLearn. Commit or restore them before saving here. Your source coding folder is unaffected.",
+      "Your learning repository has changes made outside OutClass. Commit or restore them before saving here. Your source coding folder is unaffected.",
     );
 }
 export async function tracked(root: string, directory: string) {
@@ -359,7 +359,7 @@ export async function push(root: string, selectedRemote: string) {
     parseRemote(pushUrls[0]) !== selectedRemote
   )
     throw new UserError(
-      "Your Git remote changed outside GitLearn. Reconnect the intended private repository before syncing.",
+      "Your Git remote changed outside OutClass. Reconnect the intended private repository before syncing.",
     );
   if (!(await head(root)))
     throw new UserError("Save your first checkpoint before syncing to GitHub.");

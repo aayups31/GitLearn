@@ -4,7 +4,7 @@ import {
   ArrowLeft,
   Check,
   Folder,
-  GitBranch,
+  ArrowUpRight,
   Link2,
   Sparkles,
   ShieldCheck,
@@ -67,8 +67,8 @@ export function Onboarding({
     <div className="onboarding">
       <aside className="onboarding-aside">
         <div className="onboarding-brand">
-          <GitBranch size={25} />
-          <strong>GitLearn</strong>
+          <ArrowUpRight size={25} />
+          <strong>OutClass</strong>
           <span>01 / YOUR WORKSPACE</span>
         </div>
         <div className="onboarding-story">
@@ -140,7 +140,7 @@ export function Onboarding({
               <div className="eyebrow">YOUR LOCAL HOME</div>
               <h2>One folder. Every course.</h2>
               <p>
-                Choose a parent folder. GitLearn creates separate practice
+                Choose a parent folder. OutClass creates separate practice
                 folders and versioned history inside it, then organizes every
                 course and lesson for you.
               </p>
@@ -193,7 +193,7 @@ export function Onboarding({
                   >
                     Install Git for Windows
                   </a>
-                  , then restart GitLearn. Python is only needed for Python
+                  , then restart OutClass. Python is only needed for Python
                   lessons.
                 </p>
               )}
@@ -314,7 +314,7 @@ export function Onboarding({
                   Select that folder.
                 </li>
                 <li>
-                  Generate a code below, open the GitLearn extension, and enter
+                  Generate a code below, open the OutClass extension, and enter
                   it to connect.
                 </li>
               </ol>
@@ -374,7 +374,7 @@ export function Onboarding({
             </button>
           )}
           <span>
-            GitLearn for Windows · {environment?.version || "Preview"}
+            OutClass for Windows · {environment?.version || "Preview"}
           </span>
         </footer>
       </main>

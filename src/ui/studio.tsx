@@ -727,7 +727,7 @@ export function Studio({
             <h2>Make this lesson yours.</h2>
             <p>
               Start a lesson to open its files here. You can write, run, and
-              checkpoint your work without leaving GitLearn.
+              checkpoint your work without leaving OutClass.
             </p>
             <button
               className="button primary"
@@ -838,11 +838,11 @@ export function Studio({
                         sessionId: session.id,
                         path: fileName,
                         content: /\.py$/i.test(fileName)
-                          ? '# Your next idea starts here.\nprint("Hello, GitLearn")\n'
+                          ? '# Your next idea starts here.\nprint("Hello, OutClass")\n'
                           : /\.js$/i.test(fileName)
-                            ? '// Your next idea starts here.\nconsole.log("Hello, GitLearn");\n'
+                            ? '// Your next idea starts here.\nconsole.log("Hello, OutClass");\n'
                             : /\.html?$/i.test(fileName)
-                              ? '<!doctype html>\n<html lang="en">\n<head><title>My lesson</title></head>\n<body><h1>Hello, GitLearn</h1></body>\n</html>\n'
+                              ? '<!doctype html>\n<html lang="en">\n<head><title>My lesson</title></head>\n<body><h1>Hello, OutClass</h1></body>\n</html>\n'
                               : "",
                         version: null,
                       },
@@ -1431,7 +1431,7 @@ export function Studio({
                   className={`chat-message ${message.role}`}
                 >
                   <div className="message-label">
-                    {message.role === "user" ? "You" : "GitLearn"}
+                    {message.role === "user" ? "You" : "OutClass"}
                     {message.role === "assistant" && (
                       <small>
                         {message.mode === "grounded"

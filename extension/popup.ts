@@ -65,7 +65,7 @@ document.getElementById("transcript")!.addEventListener("click", async () => {
     });
     if (result.error) throw new Error(result.error);
     document.getElementById("transcript-status")!.textContent =
-      "Transcript saved. Open GitLearn → Code & learn → Sources.";
+      "Transcript saved. Open OutClass → Code & learn → Sources.";
   } catch (error) {
     document.getElementById("error")!.textContent =
       error instanceof Error

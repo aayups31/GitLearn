@@ -508,8 +508,8 @@ export class Practice {
           skill: this.exercise(t.exerciseId).skill,
           evidence: t.attempts.find((a) => a.passed && !a.stale)!.id,
           assistance: t.attempts.find((a) => a.passed && !a.stale)!.hints
-            ? "Practiced with GitLearn help"
-            : "Passed without GitLearn hints in this attempt",
+            ? "Practiced with OutClass help"
+            : "Passed without OutClass hints in this attempt",
         })),
     };
   }
@@ -576,7 +576,7 @@ export class Practice {
     await this.workspace.save(
       session.id,
       `${file.slice(0, file.lastIndexOf("/"))}/BRIEF.md`,
-      `# ${spec.title}\n\n${spec.brief}\n\n${spec.requirements.map((r) => `- ${r}`).join("\n")}\n\nCurated GitLearn exercise v1. Associated lesson: ${session.lessonTitle}. This is transfer practice, not a claim about the instructor's exact assignment.\n`,
+      `# ${spec.title}\n\n${spec.brief}\n\n${spec.requirements.map((r) => `- ${r}`).join("\n")}\n\nCurated OutClass exercise v1. Associated lesson: ${session.lessonTitle}. This is transfer practice, not a claim about the instructor's exact assignment.\n`,
       null,
     );
     const task: PracticeTask = {

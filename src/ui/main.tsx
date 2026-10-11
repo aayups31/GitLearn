@@ -143,7 +143,7 @@ function App() {
       })
       .catch(() =>
         setError(
-          "The local companion is not reachable. Open Start GitLearn, then refresh this page.",
+          "The local companion is not reachable. Open Start OutClass, then refresh this page.",
         ),
       );
     const timer = setInterval(() => {
@@ -227,7 +227,7 @@ function App() {
           }}
         >
           <BrandMark />
-          <span className="brand-name">GitLearn</span>
+          <span className="brand-name">OutClass</span>
           <small>Personal workspace</small>
         </a>
         <div className="nav-caption">Workspace</div>
@@ -613,7 +613,7 @@ function App() {
                             }}
                           >
                             <Code2 size={16} />
-                            Open in GitLearn
+                            Open in OutClass
                           </button>
                           <button
                             className="text-button"
@@ -1043,18 +1043,17 @@ function BrandMark() {
   return (
     <svg
       className="brand-mark"
-      viewBox="0 0 32 36"
+      viewBox="0 0 48 48"
       fill="none"
       aria-hidden="true"
     >
       <path
-        d="M8 28V8M8 21c0-6 17-3 17-14"
+        d="M37 24A14 14 0 1 1 24 10M24 24 38 10M29 10h9v9"
         stroke="currentColor"
-        strokeWidth="1.6"
+        strokeWidth="4.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <circle cx="8" cy="6" r="3" fill="currentColor" />
-      <circle cx="8" cy="30" r="3" fill="currentColor" />
-      <circle cx="25" cy="5" r="3" fill="currentColor" />
     </svg>
   );
 }
@@ -1356,7 +1355,7 @@ function Modal({
         >
           <X size={21} />
         </button>
-        <span className="dialog-eyebrow">GITLEARN / WORKSPACE</span>
+        <span className="dialog-eyebrow">OUTCLASS / WORKSPACE</span>
         <h2>{title}</h2>
         {subtitle && <p className="modal-subtitle">{subtitle}</p>}
         {children}
@@ -1685,7 +1684,7 @@ function StartSession({
             </label>
             {!course.project && !existingProject && (
               <p className="hint">
-                GitLearn creates a project folder for this course beside your
+                OutClass creates a project folder for this course beside your
                 learning history.
               </p>
             )}
@@ -1841,7 +1840,7 @@ function Setup({
             </div>
           </label>
           <p className="hint">
-            Choose an empty folder. GitLearn creates the Git history for you.
+            Choose an empty folder. OutClass creates the Git history for you.
           </p>
           <label className="toggle-row">
             <div>
@@ -1946,7 +1945,7 @@ function Setup({
               <code>dist/extension</code> folder.
             </li>
             <li>
-              Pin <strong>GitLearn</strong>. Enter the connection code below in
+              Pin <strong>OutClass</strong>. Enter the connection code below in
               its popup.
             </li>
           </ol>
@@ -2042,7 +2041,7 @@ function Setup({
               <p className="hint">
                 {githubReady
                   ? `Signed in as @${githubAccount!.login}. Ready to connect your archive.`
-                  : "Sign in through GitHub, then choose Check connection. GitLearn never asks for a GitHub token."}
+                  : "Sign in through GitHub, then choose Check connection. OutClass never asks for a GitHub token."}
               </p>
               <button
                 className="button secondary"

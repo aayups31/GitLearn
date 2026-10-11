@@ -229,7 +229,7 @@ describe("Udemy to local history", () => {
     await writeFile(path.join(current.workspace, "main.py"), "print(1)");
     await git(repo, ["add", "--", "README.md"]);
     const staged = await git(repo, ["diff", "--cached"]);
-    await expect(app.preview()).rejects.toThrow("outside GitLearn");
+    await expect(app.preview()).rejects.toThrow("outside OutClass");
     expect(await git(repo, ["diff", "--cached"])).toBe(staged);
   });
   it("requires another review if the managed repository switches branches", async () => {

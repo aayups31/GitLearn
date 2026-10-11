@@ -7,9 +7,9 @@ test("public site explains the desktop product, adapts to phones, and has honest
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("request", (r) => requests.push(r.url()));
   await page.goto("/");
-  await expect(page).toHaveTitle("GitLearn · Go beyond the lesson");
+  await expect(page).toHaveTitle("OutClass · Break free from tutorial hell");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Go beyond the lesson.",
+    /OutClass\s*the lesson\./,
   );
   await expect(page.locator("#windows-download")).toHaveAttribute(
     "href",
@@ -60,13 +60,13 @@ test("public site explains the desktop product, adapts to phones, and has honest
   expect(
     await page
       .locator("body")
-      .evaluate((el) => el.classList.contains("reveal-ready")),
+      .evaluate((el) => el.classList.contains("motion-ready")),
   ).toBe(false);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   expect(
     await page
       .locator("body")
-      .evaluate((el) => el.classList.contains("reveal-ready")),
+      .evaluate((el) => el.classList.contains("motion-ready")),
   ).toBe(true);
   await page.getByRole("link", { name: "Privacy", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
@@ -90,4 +90,41 @@ test("public landing is complete without JavaScript", async ({ browser }) => {
   await page.locator("#windows-download").scrollIntoViewIfNeeded();
   await expect(page.locator("#windows-download")).toBeVisible();
   await context.close();
+});
+
+test("scroll motion reverses, responds to live reduced motion, and survives a blocked animation library", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator("body")).toHaveClass(/motion-ready/);
+  const orbit = page.locator(".orbit-shell");
+  await page.evaluate(() => scrollTo(0, 450));
+  await expect
+    .poll(() => orbit.evaluate((el) => getComputedStyle(el).transform))
+    .not.toBe("matrix(1, 0, 0, 1, 0, 0)");
+  await page.evaluate(() => scrollTo(0, 0));
+  await expect
+    .poll(() => orbit.evaluate((el) => getComputedStyle(el).transform))
+    .toBe("matrix(1, 0, 0, 1, 0, 0)");
+  await page.locator('.escape-step[data-step="2"]').scrollIntoViewIfNeeded();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator("body")).not.toHaveClass(/motion-ready/);
+  await expect
+    .poll(() => orbit.evaluate((el) => getComputedStyle(el).transform))
+    .toBe("none");
+  expect(
+    await page
+      .locator(".path-fill")
+      .evaluate((el) => getComputedStyle(el).transform),
+  ).toBe("matrix(1, 0, 0, 1, 0, 0)");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(page.locator("body")).toHaveClass(/motion-ready/);
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.route("**/assets/vendor/**", (route) => route.abort());
+  await page.reload();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await page.locator("#windows-download").scrollIntoViewIfNeeded();
+  await expect(page.locator("#windows-download")).toBeVisible();
+  expect(errors).toEqual([]);
 });

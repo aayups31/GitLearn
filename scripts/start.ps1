@@ -8,9 +8,9 @@ try {
     if ($health.name -eq 'GitLearn') { if (-not $NoBrowser) { Start-Process $companionUrl }; exit 0 }
 } catch {}
 $runtime = Get-Command node.exe -ErrorAction SilentlyContinue
-if (-not $runtime) { throw 'Install Node.js 24 or newer, then open Start GitLearn again.' }
+if (-not $runtime) { throw 'Install Node.js 24 or newer, then open Start OutClass again.' }
 $runtimeVersion = & $runtime.Source --version
-if ([int]($runtimeVersion.TrimStart('v').Split('.')[0]) -lt 24) { throw 'GitLearn needs Node.js 24 or newer.' }
+if ([int]($runtimeVersion.TrimStart('v').Split('.')[0]) -lt 24) { throw 'OutClass needs Node.js 24 or newer.' }
 if (-not (Test-Path -LiteralPath (Join-Path $projectDirectory 'node_modules'))) {
     & npm.cmd install
     if ($LASTEXITCODE -ne 0) { throw 'Dependency setup failed. Check your internet connection and try again.' }

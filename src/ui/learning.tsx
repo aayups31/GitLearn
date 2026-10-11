@@ -134,13 +134,13 @@ export function SetupDiagnostics({
           result.pythonAvailable,
           result.pythonAvailable
             ? `Ready · ${result.pythonRuntime}`
-            : "Install Python, then restart GitLearn. JavaScript works now.",
+            : "Install Python, then restart OutClass. JavaScript works now.",
         ],
         [
           "Checkpoints",
           result.gitAvailable && result.historyWritable,
           !result.gitAvailable
-            ? "Install Git, then restart GitLearn."
+            ? "Install Git, then restart OutClass."
             : result.historyWritable
               ? "Git and learning folder are ready"
               : "Choose a writable learning folder below",
@@ -182,7 +182,7 @@ export function SetupDiagnostics({
         </span>
         <div>
           <h2>Your device is ready when you are</h2>
-          <p>Check the tools GitLearn uses for local learning.</p>
+          <p>Check the tools OutClass uses for local learning.</p>
         </div>
         <button className="text-button" disabled={checking} onClick={check}>
           <RefreshCw size={14} className={checking ? "spin" : ""} />

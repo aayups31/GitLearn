@@ -12,6 +12,6 @@ child.on("exit", (code) => {
   process.exitCode = code || 0;
 });
 child.on("error", () => {
-  console.error("GitLearn could not start. Run npm run build first.");
+  console.error("OutClass could not start. Run npm run build first.");
   process.exitCode = 1;
 });

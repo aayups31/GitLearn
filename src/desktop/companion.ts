@@ -32,7 +32,7 @@ parentPort!.once("message", async ({ data }) => {
     parentPort!.postMessage({
       type: "error",
       message:
-        "GitLearn's local port is in use. Close the other companion and reopen GitLearn.",
+        "OutClass's local port is in use. Close the other companion and reopen OutClass.",
     });
     store.close();
     process.exit(1);

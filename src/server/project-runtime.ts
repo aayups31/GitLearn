@@ -88,7 +88,7 @@ export class ProjectRuntime {
             ".gitignore": ".venv/\n__pycache__/\n.env\n.env.*\n",
           };
     files["README.md"] =
-      `# My learning project\n\n## User need\nWrite the problem you want to solve.\n\n## First useful feature\nDescribe one behavior, its inputs, and its acceptance criteria.\n\n## Setup\n${kind === "react" ? `Install Node.js/npm, then run npm --prefix ${directory} install and npm --prefix ${directory} run dev from the course project folder.` : "Create a project environment with python -m venv .venv. Add explicit dependencies before installing requirements."}\n\n## Validation\nWrite the checks you actually ran and their results.\n\n## Tradeoffs and next steps\nExplain a decision and a changed requirement you will try.\n\nGitLearn supplied only infrastructure and this outline; you implement the project.\n`;
+      `# My learning project\n\n## User need\nWrite the problem you want to solve.\n\n## First useful feature\nDescribe one behavior, its inputs, and its acceptance criteria.\n\n## Setup\n${kind === "react" ? `Install Node.js/npm, then run npm --prefix ${directory} install and npm --prefix ${directory} run dev from the course project folder.` : "Create a project environment with python -m venv .venv. Add explicit dependencies before installing requirements."}\n\n## Validation\nWrite the checks you actually ran and their results.\n\n## Tradeoffs and next steps\nExplain a decision and a changed requirement you will try.\n\nOutClass supplied only infrastructure and this outline; you implement the project.\n`;
     for (const [relative, content] of Object.entries(files))
       await this.workspace.save(
         sessionId,

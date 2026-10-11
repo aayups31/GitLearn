@@ -405,7 +405,7 @@ export class Workspace {
         reject(
           new UserError(
             extension === ".py"
-              ? "Python was not found. Install Python and restart GitLearn, or run a JavaScript file."
+              ? "Python was not found. Install Python and restart OutClass, or run a JavaScript file."
               : "The local runtime could not start.",
             503,
           ),

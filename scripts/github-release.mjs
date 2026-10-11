@@ -61,8 +61,8 @@ if (args[0] === "status") {
 } else if (args[0] === "publish") {
   const version = JSON.parse(await readFile("package.json", "utf8")).version;
   const assets = [
-    `dist/releases/GitLearn-Setup-${version}.exe`,
-    `dist/releases/GitLearn-Chrome-${version}.zip`,
+    `dist/releases/OutClass-Setup-${version}.exe`,
+    `dist/releases/OutClass-Chrome-${version}.zip`,
     "dist/releases/SHA256SUMS.txt",
   ];
   await command(
@@ -77,7 +77,7 @@ if (args[0] === "status") {
       "--target",
       "main",
       "--title",
-      `GitLearn ${version} · Windows preview`,
+      `OutClass ${version} · Windows preview`,
       "--prerelease",
       "--notes-file",
       `docs/releases/${version}.md`,
@@ -95,7 +95,7 @@ if (args[0] === "status") {
       "release",
       "upload",
       `v${version}`,
-      `dist/releases/GitLearn-Setup-${version}.exe`,
+      `dist/releases/OutClass-Setup-${version}.exe`,
       "dist/releases/SHA256SUMS.txt",
       "--repo",
       "aayups31/GitLearn",

@@ -50,7 +50,7 @@ export function createApp(
     if (app.locals.closing) {
       res
         .status(503)
-        .json({ error: "GitLearn is closing. Reopen the app to continue." });
+        .json({ error: "OutClass is closing. Reopen the app to continue." });
       return;
     }
     const host = req.headers.host;
@@ -86,7 +86,7 @@ export function createApp(
   });
   app.use(express.json({ limit: "1mb" }));
   app.get("/api/health", (_req, res) =>
-    res.json({ ok: true, name: "GitLearn", version: "0.4.1" }),
+    res.json({ ok: true, name: "GitLearn", version: "0.4.2" }),
   );
   app.get("/preview/:token", (req, res) => {
     res.setHeader("X-Frame-Options", "SAMEORIGIN");
@@ -98,7 +98,7 @@ export function createApp(
     res.type("html").send(workspace.previewDocument(req.params.token));
   });
   app.get("/api/bootstrap", (_req, res) =>
-    res.status(403).json({ error: "Connect from the local GitLearn page." }),
+    res.status(403).json({ error: "Connect from the local OutClass page." }),
   );
   app.post("/api/bootstrap", (req, res) => {
     const origin = req.headers.origin;
@@ -110,7 +110,7 @@ export function createApp(
     ) {
       res
         .status(403)
-        .json({ error: "Open the local GitLearn page to connect." });
+        .json({ error: "Open the local OutClass page to connect." });
       return;
     }
     res.setHeader("Cache-Control", "no-store");
@@ -121,7 +121,7 @@ export function createApp(
     if (!/^chrome-extension:\/\/[a-p]{32}$/.test(origin)) {
       res
         .status(403)
-        .json({ error: "Pair from the GitLearn Chrome extension." });
+        .json({ error: "Pair from the OutClass Chrome extension." });
       return;
     }
     const now = Date.now();
@@ -713,7 +713,7 @@ export function createApp(
       "-NoProfile",
       "-STA",
       "-Command",
-      'Add-Type -AssemblyName System.Windows.Forms; $picker = New-Object System.Windows.Forms.FolderBrowserDialog; $picker.Description = "Choose your GitLearn folder"; if ($picker.ShowDialog() -eq "OK") { $picker.SelectedPath }',
+      'Add-Type -AssemblyName System.Windows.Forms; $picker = New-Object System.Windows.Forms.FolderBrowserDialog; $picker.Description = "Choose your OutClass folder"; if ($picker.ShowDialog() -eq "OK") { $picker.SelectedPath }',
     ]);
     res.json({ path: result });
   });

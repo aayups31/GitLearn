@@ -1,14 +1,16 @@
-# GitLearn
+# OutClass
+
+Previously GitLearn. Break free from tutorial hell. OutClass the lesson.
 
 A local learning workspace that turns Udemy lessons into your own code, practical attempts, sourced guidance, and reviewed work.
 
 ## Start
 
-**Windows desktop preview:** download the installer from [GitHub Releases](https://github.com/aayups31/GitLearn/releases), open GitLearn, and follow its first-run setup. Choose one parent learning folder; GitLearn creates practice and history folders for each course automatically. JavaScript's runtime is bundled. Git for Windows is required for checkpoints; Python is optional for Python lessons. VS Code and GitHub remain optional.
+**Windows desktop preview:** download the installer from [GitHub Releases](https://github.com/aayups31/GitLearn/releases), open OutClass, and follow its first-run setup. Choose one parent learning folder; OutClass creates practice and history folders for each course automatically. JavaScript's runtime is bundled. Git for Windows is required for checkpoints; Python is optional for Python lessons. VS Code and GitHub remain optional.
 
-The [public website and setup guide](https://git-learn-black.vercel.app/) are live on Vercel. The actual editor, courses, RAG assistant, and setup live in the Windows desktop app. See [desktop architecture and packaging](docs/desktop-release.md) and [Chrome store release](docs/chrome-web-store.md). Version 0.4.1 is submitted for Chrome Web Store review; use Load unpacked until approval and verified public availability.
+The [public website and setup guide](https://git-learn-black.vercel.app/) are live on Vercel. The actual editor, courses, RAG assistant, and setup live in the Windows desktop app. See [desktop architecture and packaging](docs/desktop-release.md) and [Chrome store release](docs/chrome-web-store.md). The GitLearn 0.4.1 extension is submitted for Chrome Web Store review; use Load unpacked until approval and verified public availability.
 
-On this Windows machine, double-click **Start GitLearn.cmd**. It starts the companion in the background and opens the app at [http://127.0.0.1:47831](http://127.0.0.1:47831).
+On this Windows machine, double-click **Start OutClass.cmd**. It starts the companion in the background and opens the app at [http://127.0.0.1:47831](http://127.0.0.1:47831).
 
 The [product page and complete setup guide](http://127.0.0.1:47831/welcome/) explain the local workflow, Chrome installation, folders, checkpoint review, and GitHub backup. Open **Product & guide** from any workspace view. `npm run preview:site` previews the separate public site at http://127.0.0.1:47832. Public hosting is configured separately from the local app.
 
@@ -20,20 +22,20 @@ npm run build
 npm start
 ```
 
-Use `npm run dev` for the interface and server with development transforms. Double-click **Stop GitLearn.cmd** to stop a launcher-started companion, or stop a foreground server with Ctrl+C. The launcher keeps its process ID and redacted startup logs in `.local/`.
+Use `npm run dev` for the interface and server with development transforms. Double-click **Stop OutClass.cmd** to stop a launcher-started companion, or stop a foreground server with Ctrl+C. The launcher keeps its process ID and redacted startup logs in `.local/`.
 
 ## Your first Udemy session
 
-1. Follow desktop setup and choose a **parent learning folder**. GitLearn creates history and practice folders inside it. In the developer browser version, choose an empty learning-history folder in **Setup**. GitHub and AI are optional and off by default.
+1. Follow desktop setup and choose a **parent learning folder**. OutClass creates history and practice folders inside it. In the developer browser version, choose an empty learning-history folder in **Setup**. GitHub and AI are optional and off by default.
 2. Add your Udemy lesson manually, or connect the Chrome extension below.
 3. Select **Mirror course** to create accessible lesson structure and separate coding workspaces. Discovery is partial; more lessons can be added as you go. Refresh preserves stable lesson paths and your notes.
-4. Select **Start lesson**. Choose **One project for the whole course** to keep building the same files across lessons. GitLearn creates it under `projects/`, or you can attach an existing project. Separate lesson folders and one-session existing folders remain available.
-5. Open **Code & learn**. Select or create a file, write code, and **Run** JavaScript or Python locally. Python needs an installed interpreter; JavaScript uses GitLearn’s Node runtime. **Preview** supports a single HTML file with inline CSS and JavaScript. Ctrl/Cmd+S saves; Ctrl/Cmd+Enter runs. VS Code remains optional. Notes save as you type.
+4. Select **Start lesson**. Choose **One project for the whole course** to keep building the same files across lessons. OutClass creates it under `projects/`, or you can attach an existing project. Separate lesson folders and one-session existing folders remain available.
+5. Open **Code & learn**. Select or create a file, write code, and **Run** JavaScript or Python locally. Python needs an installed interpreter; JavaScript uses OutClass’s Node runtime. **Preview** supports a single HTML file with inline CSS and JavaScript. Ctrl/Cmd+S saves; Ctrl/Cmd+Enter runs. VS Code remains optional. Notes save as you type.
 6. Select **Checkpoint** in the editor (or **Finish & review** in Overview), inspect the exact files and message, then **Save checkpoint**.
 
-Code you change after preview stays in your source folder; the commit uses the version you reviewed. GitLearn never changes the Git index or remotes in your existing source workspace.
+Code you change after preview stays in your source folder; the commit uses the version you reviewed. OutClass never changes the Git index or remotes in your existing source workspace.
 
-The learning-history repository is managed by the companion. Avoid editing or staging files directly in it. Write code in your course project or lesson folder; GitLearn copies reviewed snapshots into history. Automatic course projects live in a sibling `projects/` directory; separate lesson workspaces use `workspaces/`. Existing folders and checkpoints are preserved when upgrading.
+The learning-history repository is managed by the companion. Avoid editing or staging files directly in it. Write code in your course project or lesson folder; OutClass copies reviewed snapshots into history. Automatic course projects live in a sibling `projects/` directory; separate lesson workspaces use `workspaces/`. Existing folders and checkpoints are preserved when upgrading.
 
 **Continue building** in Overview restores the course, lesson, coding folder, saved file position, and last session note after a restart or checkpoint. The recap uses actual saved activity. If a folder moved, choose its current location to reattach it without moving files or changing its Git history. A missing last file falls back to available files.
 
@@ -41,7 +43,7 @@ After a failed run, select **Give me a hint** or **Explain this error**. The ass
 
 ## Build before the course ends
 
-After a successful saved run or checkpoint, GitLearn can suggest a related task while you are still taking the course. It explains the timing using recorded activity, recognizes section transitions, and lets you defer the suggestion. Python files lead to Python practice; unsupported languages receive no invented automatic exercise.
+After a successful saved run or checkpoint, OutClass can suggest a related task while you are still taking the course. It explains the timing using recorded activity, recognizes section transitions, and lets you defer the suggestion. Python files lead to Python practice; unsupported languages receive no invented automatic exercise.
 
 **Learn by doing** includes six curated JavaScript/Python briefs covering validation, collections, and a small activity-report project. You write the implementation. **Check my work** runs real behavior checks against saved code. Progressive hints and optional course-aware teaching help you reason; neither changes files or runs commands for you. Each attempt records saved source, checks, help use, and your reflection. These are specific learning records, not a mastery score.
 
@@ -55,11 +57,11 @@ In the editor's **Project console**, explicitly run package installation, tests,
 
 1. Run `npm run build` if `dist/extension` is missing.
 2. Open `chrome://extensions`, enable **Developer mode**, and select **Load unpacked**.
-3. Choose this project's `dist/extension` directory and pin **GitLearn**.
+3. Choose this project's `dist/extension` directory and pin **OutClass**.
 4. In the app's **Setup**, select **Get connection code**. Enter it in the extension popup.
 5. Open or reload your Udemy course page.
 
-The extension automatically observes accessible course and lesson titles/links. It queues context updates while the companion is offline. **Import visible transcript** explicitly imports text from an open Udemy transcript panel into the selected course’s local index. It does not download videos or read browser credentials. If Udemy does not expose a transcript, paste/import it in GitLearn’s **Sources**. Transcript imports require a running companion; metadata updates have a durable offline queue. Only the granted extension can submit course context/material; editor, repository, and AI actions stay in the local app. Reload the unpacked extension and the Udemy tab after rebuilding.
+The extension automatically observes accessible course and lesson titles/links. It queues context updates while the companion is offline. **Import visible transcript** explicitly imports text from an open Udemy transcript panel into the selected course’s local index. It does not download videos or read browser credentials. If Udemy does not expose a transcript, paste/import it in OutClass’s **Sources**. Transcript imports require a running companion; metadata updates have a durable offline queue. Only the granted extension can submit course context/material; editor, repository, and AI actions stay in the local app. Reload the unpacked extension and the Udemy tab after rebuilding.
 
 ## Coding and course-aware help
 
@@ -86,12 +88,12 @@ Assistant questions, retrieved excerpts, selected code, explicitly attached run 
 Choose one learning-history folder and optionally connect **one private GitHub repository** to it. Mirroring each course creates its own course/section/lesson folders inside the archive. New coding workspaces live alongside the archive; existing coding folders stay where they are. A sync pushes saved history across all courses together. You do not create a repository per course.
 
 1. Install [GitHub CLI](https://cli.github.com/) if missing. On Windows: `winget install --id GitHub.cli --exact --source winget`. The companion also detects the standard Windows installation without needing a PATH refresh.
-2. In **Settings → One repository. Every course.**, select **Sign in to GitHub**. Complete the CLI browser sign-in and return to GitLearn.
+2. In **Settings → One repository. Every course.**, select **Sign in to GitHub**. Complete the CLI browser sign-in and return to OutClass.
 3. Select **Check connection** to verify the signed-in account. Repository actions become available after verification and local workspace setup.
-4. Enter a name such as `learning` and select **Create private repo**, or connect the HTTPS URL of an existing **empty private** repository. GitLearn verifies its visibility and configures Git to use your GitHub CLI authentication. No token is entered in the app.
+4. Enter a name such as `learning` and select **Create private repo**, or connect the HTTPS URL of an existing **empty private** repository. OutClass verifies its visibility and configures Git to use your GitHub CLI authentication. No token is entered in the app.
 5. Save a checkpoint, then select **Sync now** in **Checkpoints**. Connecting a repository alone does not upload files.
 
-GitLearn creates a repository only when you click that action. Sync is manual, scans outgoing history, never force-pushes, and pauses on divergent remote history. If a push fails, the local commit stays safe. GitHub setup and sync require internet access; you can continue saving locally while disconnected.
+OutClass creates a repository only when you click that action. Sync is manual, scans outgoing history, never force-pushes, and pauses on divergent remote history. If a push fails, the local commit stays safe. GitHub setup and sync require internet access; you can continue saving locally while disconnected.
 
 ## Verification
 

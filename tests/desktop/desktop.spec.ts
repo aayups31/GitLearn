@@ -24,6 +24,8 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
   let desktop = await electron.launch({ args, executablePath, env });
   try {
     const page = await desktop.firstWindow();
+    expect(await desktop.evaluate(({ app }) => app.getName())).toBe("OutClass");
+    await expect(page).toHaveTitle("OutClass · Keep what you learn");
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await expect(
@@ -45,11 +47,9 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
       "extension",
       version,
     );
-    expect(
-      JSON.parse(
-        await readFile(path.join(extensionDirectory, "manifest.json"), "utf8"),
-      ).version,
-    ).toBe(version);
+    const extensionManifest = JSON.parse(await readFile(path.join(extensionDirectory, "manifest.json"), "utf8"));
+    expect(extensionManifest.version).toBe(version);
+    expect(extensionManifest.name).toBe("OutClass — Udemy learning companion");
     expect(
       (await readFile(path.join(extensionDirectory, "background.js"))).length,
     ).toBeGreaterThan(1000);

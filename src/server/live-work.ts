@@ -130,7 +130,7 @@ export class LiveWork {
       response = await this.fetcher(`https://api.github.com${route}`, {
         headers: {
           Accept: "application/vnd.github+json",
-          "User-Agent": "GitLearn",
+          "User-Agent": "OutClass",
           "X-GitHub-Api-Version": "2022-11-28",
           ...(previous?.etag ? { "If-None-Match": previous.etag } : {}),
         },

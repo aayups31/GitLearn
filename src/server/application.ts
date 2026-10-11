@@ -354,7 +354,7 @@ export class Application {
     const current = await readFile(manifestPath, "utf8").catch(() => undefined);
     if (current !== undefined && current !== last && current !== generated)
       throw new UserError(
-        "Your course.json was edited outside GitLearn. Keep your edits or resolve the difference before refreshing.",
+        "Your course.json was edited outside OutClass. Keep your edits or resolve the difference before refreshing.",
       );
     await mkdir(path.dirname(manifestPath), { recursive: true });
     await writeFile(manifestPath, generated);
