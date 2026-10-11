@@ -29,6 +29,8 @@ export interface Course {
   currentLessonId?: string;
   mirrored: boolean;
   observedAt: string;
+  workspaceMode?: "lesson" | "project";
+  project?: { id: string; root: string };
 }
 export interface Session {
   id: string;
@@ -42,6 +44,55 @@ export interface Session {
   startedAt: string;
   status: "active" | "paused";
   note: string;
+  projectId?: string;
+}
+export interface ResumeAnchor {
+  courseId: string;
+  lessonId: string;
+  workspace: string;
+  projectId?: string;
+  file?: string;
+  cursor?: number;
+  note: string;
+  updatedAt: string;
+  lastAction: "started" | "paused" | "saved" | "checkpoint" | "ended";
+}
+export interface ContinueItem extends ResumeAnchor {
+  folderAvailable: boolean;
+  fileAvailable: boolean;
+}
+export interface RunEvidence {
+  id: string;
+  sessionId: string;
+  courseId: string;
+  lessonId: string;
+  workspace: string;
+  path: string;
+  fileVersion: string;
+  source: string;
+  sourceTruncated: boolean;
+  output: string;
+  outputTruncated: boolean;
+  exitCode: number | null;
+  timedOut: boolean;
+  stopped: boolean;
+  startedAt: string;
+  finishedAt: string;
+  changedDuringRun: boolean;
+}
+export interface RunContext extends RunEvidence {
+  stale: boolean;
+}
+export interface Diagnostics {
+  nodeVersion: string;
+  pythonAvailable: boolean;
+  pythonRuntime: string;
+  gitAvailable: boolean;
+  historyWritable: boolean;
+  workspaceWritable: boolean | null;
+  hasApiKey: boolean;
+  assistantEnabled: boolean;
+  extensionConnected: boolean;
 }
 export interface Checkpoint {
   id: string;
@@ -101,4 +152,5 @@ export interface Status extends AppState {
   ghAvailable: boolean;
   extensionConnected: boolean;
   sourceFiles: number;
+  continueItems: ContinueItem[];
 }

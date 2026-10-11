@@ -2,6 +2,8 @@ import { test, expect, _electron as electron } from "@playwright/test";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { createRequire } from "node:module";
+const { version } = createRequire(import.meta.url)("../../package.json");
 test("desktop first-run, encrypted key persistence, local files, and bundled JavaScript runtime", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "gitlearn-desktop-"));
   const env: Record<string, string> = {
@@ -41,13 +43,13 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
       directory,
       "profile",
       "extension",
-      "0.2.0",
+      version,
     );
     expect(
       JSON.parse(
         await readFile(path.join(extensionDirectory, "manifest.json"), "utf8"),
       ).version,
-    ).toBe("0.2.0");
+    ).toBe(version);
     expect(
       (await readFile(path.join(extensionDirectory, "background.js"))).length,
     ).toBeGreaterThan(1000);
@@ -82,7 +84,7 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
       )
       .toBe(false);
     desktop = await electron.launch({ args, executablePath, env });
-    const reopened = await desktop.firstWindow();
+    let reopened = await desktop.firstWindow();
     await expect(
       reopened.getByRole("heading", {
         name: "Bring Udemy into your workspace.",
@@ -131,6 +133,10 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
         ],
       });
       await api("mirror", { courseId: "desktop-fixture" });
+      await api("course-project", {
+        courseId: "desktop-fixture",
+        mode: "project",
+      });
       const started = await api("start", {
         courseId: "desktop-fixture",
         lessonId: "1",
@@ -143,6 +149,15 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
           "console.log('Bundled desktop runtime',21*2); console.log('API key inherited',!!process.env.OPENAI_API_KEY);",
         version: null,
       });
+      await api("editor-anchor", {
+        sessionId: session.id,
+        path: "main.js",
+        cursor: 10,
+      });
+      await api("note", {
+        sessionId: session.id,
+        note: "Next: add an input check.",
+      });
       return {
         session,
         run: await api("workspace-run", {
@@ -154,15 +169,42 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
     expect(result.run.output).toContain("Bundled desktop runtime 42");
     expect(result.run.output).toContain("API key inherited false");
     expect(result.session.workspace).toContain(
-      path.join("My Learning", "workspaces"),
+      path.join("My Learning", "projects"),
     );
     await reopened.reload();
     await expect(
       reopened.getByRole("textbox", { name: "Code editor" }),
     ).toBeVisible();
+    await expect(reopened.getByLabel("Program output")).toContainText(
+      "Bundled desktop runtime 42",
+    );
+    await desktop.close();
+    await expect
+      .poll(() =>
+        fetch("http://127.0.0.1:47834/api/health").then(
+          () => true,
+          () => false,
+        ),
+      )
+      .toBe(false);
+    desktop = await electron.launch({ args, executablePath, env });
+    reopened = await desktop.firstWindow();
+    await expect(
+      reopened.getByRole("textbox", { name: "Code editor" }),
+    ).toContainText("Bundled desktop runtime");
+    await expect(reopened.getByLabel("Program output")).toContainText(
+      "Bundled desktop runtime 42",
+    );
+    await reopened.locator(".studio-notes summary").click();
+    await expect(reopened.getByLabel("Studio session notes")).toHaveValue(
+      "Next: add an input check.",
+    );
     await reopened
       .getByRole("button", { name: "Setup & preferences", exact: true })
       .click();
+    await expect(
+      reopened.getByRole("region", { name: "Device readiness" }),
+    ).toContainText("Available and writable");
     await reopened
       .getByRole("button", { name: "Remove key", exact: true })
       .click();

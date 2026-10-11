@@ -173,8 +173,10 @@ export function Onboarding({
                   ├ history/ <small>Git checkpoints, all courses</small>
                 </span>
                 <span>
-                  └ workspaces/{" "}
-                  <small>Editable code, by course and lesson</small>
+                  ├ projects/ <small>One evolving project per course</small>
+                </span>
+                <span>
+                  └ workspaces/ <small>Optional separate lesson folders</small>
                 </span>
               </div>
               {!state.gitAvailable && (

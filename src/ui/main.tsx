@@ -32,6 +32,7 @@ import type { Course, PublicPreview as Preview, Status } from "../shared";
 import "./style.css";
 import "./studio.css";
 import { Onboarding, DesktopKeySettings } from "./onboarding";
+import { ContinueLearning, SetupDiagnostics } from "./learning";
 const Studio = lazy(() =>
   import("./studio").then((module) => ({ default: module.Studio })),
 );
@@ -81,6 +82,7 @@ function App() {
   const [busy, setBusy] = useState("");
   const [add, setAdd] = useState(false);
   const [starting, setStarting] = useState<Course>();
+  const [recovering, setRecovering] = useState<Course>();
   const [preview, setPreview] = useState<Preview>();
   const [message, setMessage] = useState("");
   const [note, setNote] = useState("");
@@ -164,6 +166,18 @@ function App() {
       return () => clearTimeout(timer);
     }
   }, [notice]);
+  function continueLearning(courseId: string, workspace?: string) {
+    return act("continue", async () => {
+      const continued = await request<Status>("continue", {
+        courseId,
+        workspace,
+      });
+      setNote(continued.session?.note || "");
+      setSelectedCourse(courseId);
+      setRecovering(undefined);
+      navigate("studio", courseId);
+    });
+  }
   async function finish(studioNote?: string) {
     if (studioNote !== undefined) setNote(studioNote);
     await request("note", { note: studioNote ?? note });
@@ -280,7 +294,7 @@ function App() {
           <div className="connection">
             <span className={state ? "dot" : "dot offline"} />
             {state ? "Companion connected" : "Connecting…"}
-            <span className="version">v0.2</span>
+            <span className="version">v0.3</span>
           </div>
         </div>
       </aside>
@@ -638,6 +652,14 @@ function App() {
                       </button>
                     </section>
                   )}
+                  {configured && (
+                    <ContinueLearning
+                      state={state}
+                      busy={!!busy}
+                      onChooseFolder={setRecovering}
+                      onContinue={(courseId) => void continueLearning(courseId)}
+                    />
+                  )}
                   <div className="section-heading">
                     <h2>{configured ? "Your courses" : "The workflow"}</h2>
                     {configured && (
@@ -867,6 +889,15 @@ function App() {
             if (page !== "studio") setPage("overview");
             setNote("");
           }}
+        />
+      )}
+      {recovering && (
+        <RecoverFolder
+          course={recovering}
+          busy={!!busy}
+          act={act}
+          close={() => setRecovering(undefined)}
+          onContinue={(root) => void continueLearning(recovering.id, root)}
         />
       )}
       {preview && (
@@ -1396,6 +1427,74 @@ function ManualCourse({
     </Modal>
   );
 }
+function RecoverFolder({
+  course,
+  busy,
+  act,
+  close,
+  onContinue,
+}: {
+  course: Course;
+  busy: boolean;
+  act: Act;
+  close: () => void;
+  onContinue: (root: string) => void;
+}) {
+  const [root, setRoot] = useState("");
+  return (
+    <Modal
+      title="Find your coding folder"
+      subtitle={course.title}
+      close={close}
+    >
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!busy) onContinue(root);
+        }}
+      >
+        <p className="hint">
+          Choose the current location of this course’s code. Your lesson, note,
+          and last file position will stay with it.
+        </p>
+        <label>
+          Current coding folder
+          <div className="input-with-button">
+            <input
+              aria-label="Current coding folder"
+              required
+              value={root}
+              onChange={(event) => setRoot(event.target.value)}
+              placeholder="Full path to your existing folder"
+            />
+            <button
+              type="button"
+              className="button secondary"
+              disabled={busy}
+              onClick={() =>
+                act("browse", async () => {
+                  const result = await request<{ path: string }>("browse", {});
+                  if (result.path) setRoot(result.path);
+                })
+              }
+            >
+              <Folder size={14} />
+              Browse
+            </button>
+          </div>
+        </label>
+        <div className="modal-actions">
+          <button type="button" className="button secondary" onClick={close}>
+            Cancel
+          </button>
+          <button type="submit" className="button primary" disabled={busy}>
+            Continue <ArrowRight size={14} />
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
 function StartSession({
   course,
   state,
@@ -1414,8 +1513,15 @@ function StartSession({
   const [lesson, setLesson] = useState(
     course.currentLessonId || course.lessons[0]?.id || "",
   );
-  const [custom, setCustom] = useState(false);
-  const [workspace, setWorkspace] = useState("");
+  const [folderMode, setFolderMode] = useState<"lesson" | "project" | "custom">(
+    course.workspaceMode ||
+      (state.continueItems?.some((item) => item.courseId === course.id)
+        ? "lesson"
+        : "project"),
+  );
+  const [existingProject, setExistingProject] = useState(false);
+  const [workspace, setWorkspace] = useState(course.project?.root || "");
+  const custom = folderMode === "custom";
   return (
     <Modal
       title="Start a learning session"
@@ -1427,6 +1533,15 @@ function StartSession({
           event.preventDefault();
           if (busy) return;
           act("start", async () => {
+            if (!custom)
+              await request("course-project", {
+                courseId: course.id,
+                mode: folderMode,
+                root:
+                  folderMode === "project" && existingProject
+                    ? workspace
+                    : undefined,
+              });
             await request("start", {
               courseId: course.id,
               lessonId: lesson,
@@ -1440,6 +1555,7 @@ function StartSession({
         <label>
           Lesson
           <select
+            aria-label="Lesson"
             value={lesson}
             onChange={(event) => setLesson(event.target.value)}
           >
@@ -1452,25 +1568,47 @@ function StartSession({
         </label>
         <fieldset className="workspace-options">
           <legend>Where will you code?</legend>
-          <label className={!custom ? "radio-option selected" : "radio-option"}>
+          <label
+            className={
+              folderMode === "project"
+                ? "radio-option selected"
+                : "radio-option"
+            }
+          >
             <input
               type="radio"
               name="workspace"
-              checked={!custom}
-              onChange={() => setCustom(false)}
+              checked={folderMode === "project"}
+              onChange={() => setFolderMode("project")}
+            />
+            <div>
+              <strong>One project for the whole course</strong>
+              <p>Keep building the same files as you move through lessons.</p>
+            </div>
+            <span className="recommended">Recommended</span>
+          </label>
+          <label
+            className={
+              folderMode === "lesson" ? "radio-option selected" : "radio-option"
+            }
+          >
+            <input
+              type="radio"
+              name="workspace"
+              checked={folderMode === "lesson"}
+              onChange={() => setFolderMode("lesson")}
             />
             <div>
               <strong>Create a lesson folder</strong>
-              <p>A tidy workspace for this lesson. Open it in VS Code.</p>
+              <p>A separate coding folder for each lesson.</p>
             </div>
-            <span className="recommended">Recommended</span>
           </label>
           <label className={custom ? "radio-option selected" : "radio-option"}>
             <input
               type="radio"
               name="workspace"
               checked={custom}
-              onChange={() => setCustom(true)}
+              onChange={() => setFolderMode("custom")}
             />
             <div>
               <strong>Use my existing coding folder</strong>
@@ -1480,7 +1618,30 @@ function StartSession({
             </div>
           </label>
         </fieldset>
-        {custom && (
+        {folderMode === "project" && (
+          <>
+            {course.project && (
+              <p className="hint">Course project: {course.project.root}</p>
+            )}
+            <label className="project-folder-choice">
+              <input
+                type="checkbox"
+                checked={existingProject}
+                onChange={(event) => setExistingProject(event.target.checked)}
+              />
+              {course.project
+                ? "Choose a different existing project folder"
+                : "Use an existing folder as my course project"}
+            </label>
+            {!course.project && !existingProject && (
+              <p className="hint">
+                GitLearn creates a project folder for this course beside your
+                learning history.
+              </p>
+            )}
+          </>
+        )}
+        {(custom || (folderMode === "project" && existingProject)) && (
           <label>
             Coding folder
             <div className="input-with-button">
@@ -1578,6 +1739,7 @@ function Setup({
         <p>Start locally. Connect the extras when you want them.</p>
       </div>
       <div className="setup-stack">
+        <SetupDiagnostics api={request} />
         <DesktopKeySettings
           onSaved={() => act("key-refresh", async () => {})}
         />

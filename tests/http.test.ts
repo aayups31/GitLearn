@@ -78,6 +78,85 @@ it("requires authentication and never publishes the API key", async () => {
   expect(result.status).toBe(200);
   expect(await result.text()).not.toContain("localToken");
 });
+it("rejects invented and cross-course run IDs before requesting any AI help", async () => {
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${localToken}`,
+  };
+  const post = (route: string, body: unknown) =>
+    fetch(`${base}/api/${route}`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+  expect(
+    (
+      await post("setup", {
+        repoPath: path.join(directory, "history"),
+        aiEnabled: false,
+      })
+    ).status,
+  ).toBe(200);
+  for (const courseId of ["one", "two"])
+    await post("observations", {
+      eventId: courseId,
+      courseId,
+      title: courseId,
+      url: `https://www.udemy.com/course/${courseId}/learn/lecture/1`,
+      lessons: [{ id: "1", title: "Functions", section: "Basics", order: 0 }],
+    });
+  await post("start", { courseId: "one", lessonId: "1" });
+  const id = store.state().session!.id;
+  await post("workspace-file", {
+    sessionId: id,
+    path: "main.js",
+    content: "throw new Error('Real error');",
+    version: null,
+  });
+  const result = (await (
+    await post("workspace-run", { sessionId: id, path: "main.js" })
+  ).json()) as { run: { id: string } };
+  expect(
+    (
+      await post("assistant-chat", {
+        courseId: "one",
+        mode: "help",
+        question: "Explain",
+        runId: "00000000-0000-4000-8000-000000000000",
+      })
+    ).status,
+  ).toBe(404);
+  expect(
+    (
+      await post("assistant-chat", {
+        courseId: "two",
+        mode: "help",
+        question: "Explain",
+        runId: result.run.id,
+      })
+    ).status,
+  ).toBe(400);
+  expect(
+    (
+      await post("assistant-chat", {
+        courseId: "one",
+        mode: "course",
+        question: "Explain",
+        runId: result.run.id,
+      })
+    ).status,
+  ).toBe(400);
+  const diagnostics = await (
+    await fetch(`${base}/api/diagnostics`, { headers })
+  ).json();
+  expect(diagnostics).toMatchObject({
+    gitAvailable: true,
+    historyWritable: true,
+    hasApiKey: false,
+    workspaceWritable: true,
+  });
+  expect(diagnostics).not.toHaveProperty("apiKey");
+});
 it("pairs an extension with a one-use code and limits its authority", async () => {
   const headers = {
     "Content-Type": "application/json",
@@ -142,6 +221,11 @@ it("pairs an extension with a one-use code and limits its authority", async () =
     "library-index",
     "assistant-chat",
     "assistant-enable",
+    "course-project",
+    "continue",
+    "editor-anchor",
+    "diagnostics",
+    "workspace-runs",
   ]) {
     expect(
       (

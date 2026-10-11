@@ -42,7 +42,8 @@
       <h2>Local files and saved state</h2>
       <p>
         Course data, session notes, imported text, search indexes, embedding
-        vectors, and chat history are stored locally in GitLearn’s SQLite
+        vectors, chat history, course project bindings, resume positions, and
+        bounded local run evidence are stored in GitLearn’s SQLite
         database. Your working code and reviewed checkpoints live in the
         learning folders you choose. You can remove imported sources in the app.
         Your course folders and app data are retained when you uninstall so your
@@ -59,7 +60,9 @@
       <p>
         When enabled, code help can send your question, selected code, relevant
         local code or notes, and bounded chat context to OpenAI. Course mode
-        sends your question and relevant imported course passages. Semantic
+        sends your question and relevant imported course passages.
+        When you explicitly attach a recorded run or choose error help, its
+        saved entry-file source and bounded output are included. Semantic
         indexing sends uncached source passages for embeddings when you
         explicitly refresh the index; question retrieval may send the question
         for an embedding. AI commit messages use a small scanned diff when

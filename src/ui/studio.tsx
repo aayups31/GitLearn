@@ -36,12 +36,18 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import type { Course, Status } from "../shared";
+import type { Course, Status, ResumeAnchor, RunContext } from "../shared";
 import type { ChatMessage, Evidence } from "../server/library";
 import "./studio.css";
 
 type Api = <T>(route: string, body?: unknown) => Promise<T>;
-type File = { path: string; content: string; version: string; saved: string };
+type File = {
+  path: string;
+  content: string;
+  version: string;
+  saved: string;
+  cursor?: number;
+};
 type Library = {
   enabled: boolean;
   hasApiKey: boolean;
@@ -72,6 +78,7 @@ function Editor({
   onSave,
   onRun,
   onSelect,
+  onCursor,
 }: {
   file: File;
   theme: string;
@@ -79,17 +86,19 @@ function Editor({
   onSave: () => void;
   onRun: () => void;
   onSelect: (value: string) => void;
+  onCursor: (value: number) => void;
 }) {
   const container = useRef<HTMLDivElement>(null),
     view = useRef<EditorView>(null);
-  const handlers = useRef({ onChange, onSave, onRun, onSelect });
-  handlers.current = { onChange, onSave, onRun, onSelect };
+  const handlers = useRef({ onChange, onSave, onRun, onSelect, onCursor });
+  handlers.current = { onChange, onSave, onRun, onSelect, onCursor };
   useEffect(() => {
     const dark = theme === "dark";
     view.current = new EditorView({
       parent: container.current!,
       state: EditorState.create({
         doc: file.content,
+        selection: { anchor: Math.min(file.cursor || 0, file.content.length) },
         extensions: [
           basicSetup,
           language(file.path),
@@ -163,6 +172,8 @@ function Editor({
             },
           ]),
           EditorView.updateListener.of((update) => {
+            if (update.selectionSet || update.docChanged)
+              handlers.current.onCursor(update.state.selection.main.head);
             if (update.docChanged)
               handlers.current.onChange(update.state.doc.toString());
             if (update.selectionSet)
@@ -286,6 +297,10 @@ export function Studio({
     [exitCode, setExitCode] = useState<number | null>(null),
     [running, setRunning] = useState(false),
     [previewUrl, setPreviewUrl] = useState("");
+  const [lastRun, setLastRun] = useState<RunContext>(),
+    [attachedRun, setAttachedRun] = useState(false),
+    [tutorStyle, setTutorStyle] = useState<"hint" | "explain">("hint"),
+    [cursor, setCursor] = useState(0);
   const [savedNote, setSavedNote] = useState(session?.note || ""),
     [selection, setSelection] = useState("");
   const [library, setLibrary] = useState<Library>(),
@@ -308,6 +323,24 @@ export function Studio({
     dirty =
       Object.values(drafts).some((item) => item.content !== item.saved) ||
       (!!session && note !== savedNote);
+  const runDraft = lastRun && drafts[lastRun.path];
+  const runChanged =
+    !!lastRun &&
+    (lastRun.stale ||
+      (!!runDraft &&
+        (runDraft.version !== lastRun.fileVersion ||
+          runDraft.content !== runDraft.saved)));
+  useEffect(() => {
+    if (!session || !active) return;
+    const timer = setTimeout(() => {
+      void api("editor-anchor", {
+        sessionId: session.id,
+        path: active,
+        cursor,
+      }).catch(() => {});
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [session?.id, active, cursor]);
   const dirtyRef = useRef(false);
   dirtyRef.current = dirty;
   useEffect(() => {
@@ -395,6 +428,7 @@ export function Studio({
       }));
     }
     setActive(name);
+    setCursor(drafts[name]?.cursor || 0);
   };
   useEffect(() => {
     let cancelled = false;
@@ -402,17 +436,25 @@ export function Studio({
     setFiles([]);
     setActive("");
     setOutput("");
+    setLastRun(undefined);
+    setAttachedRun(false);
     setPreviewUrl("");
     setSavedNote(session?.note || "");
     setError("");
     if (session)
-      api<{ files: { path: string; size: number }[] }>(
-        `workspace-files?sessionId=${session.id}`,
-      )
+      api<{
+        files: { path: string; size: number }[];
+        anchor?: ResumeAnchor;
+        lastRun?: RunContext;
+      }>(`workspace-files?sessionId=${session.id}`)
         .then(async (result) => {
           if (cancelled) return;
           setFiles(result.files);
+          setLastRun(result.lastRun);
+          setOutput(result.lastRun?.output || "");
+          setExitCode(result.lastRun?.exitCode ?? null);
           const first =
+            result.files.find((item) => item.path === result.anchor?.file) ||
             result.files.find((item) => !/\.md$/i.test(item.path)) ||
             result.files[0];
           if (first) {
@@ -420,7 +462,14 @@ export function Studio({
               `workspace-file?sessionId=${session.id}&path=${encodeURIComponent(first.path)}`,
             );
             if (!cancelled) {
-              setDrafts({ [first.path]: { ...loaded, saved: loaded.content } });
+              const cursor =
+                first.path === result.anchor?.file
+                  ? result.anchor.cursor || 0
+                  : 0;
+              setDrafts({
+                [first.path]: { ...loaded, saved: loaded.content, cursor },
+              });
+              setCursor(cursor);
               setActive(first.path);
             }
           }
@@ -489,15 +538,19 @@ export function Studio({
       }
       setRunning(true);
       setOutput("Running locally…");
+      setLastRun(undefined);
+      setAttachedRun(false);
       setExitCode(null);
       setPreviewUrl("");
       try {
-        const result = await api<{ output: string; exitCode: number | null }>(
-          "workspace-run",
-          { sessionId: session.id, path: active },
-        );
+        const result = await api<{
+          output: string;
+          exitCode: number | null;
+          run: RunContext;
+        }>("workspace-run", { sessionId: session.id, path: active });
         setOutput(result.output || "Program finished without output.");
         setExitCode(result.exitCode);
+        setLastRun(result.run);
       } finally {
         setRunning(false);
       }
@@ -525,9 +578,10 @@ export function Studio({
         "Source saved locally. Refresh the index to add semantic search.",
       );
     });
-  const ask = (preset?: string) =>
+  const ask = (preset?: string, withRun = attachedRun, style = tutorStyle) =>
     libraryAction(async () => {
       const q = preset || question;
+      const requestMode = preset && withRun ? "help" : mode;
       if (!course || !q.trim()) return;
       if (session) {
         await api("note", { note, sessionId: session.id });
@@ -537,9 +591,11 @@ export function Studio({
       const result = await api<{ messages: ChatMessage[] }>("assistant-chat", {
         courseId: course.id,
         question: q,
-        mode,
+        mode: requestMode,
+        runId: requestMode === "help" && withRun ? lastRun?.id : undefined,
+        tutorStyle: style,
         selectedCode:
-          mode === "help" && attachCode && file
+          requestMode === "help" && attachCode && file
             ? {
                 path: active,
                 content: (selection || file.content).slice(0, 16000),
@@ -869,6 +925,13 @@ export function Studio({
                       if (!action && !running) void run();
                     }}
                     onSelect={setSelection}
+                    onCursor={(value) => {
+                      setCursor(value);
+                      setDrafts((previous) => ({
+                        ...previous,
+                        [active]: { ...previous[active], cursor: value },
+                      }));
+                    }}
                   />
                 ) : (
                   <div className="editor-blank">
@@ -923,10 +986,72 @@ export function Studio({
                     <Square size={12} />
                     Stop
                   </button>
+                ) : lastRun && exitCode !== 0 ? (
+                  <div className="run-help-actions">
+                    <button
+                      disabled={chatBusy}
+                      onClick={() => {
+                        setMode("help");
+                        setRightTab("chat");
+                        setMobileTab("assistant");
+                        setAttachedRun(true);
+                        setTutorStyle("hint");
+                        if (library?.enabled)
+                          void ask(
+                            "Give me one hint to understand this run’s failure, without solving it for me.",
+                            true,
+                            "hint",
+                          );
+                        else
+                          setQuestion(
+                            "Give me one hint to understand this run’s failure.",
+                          );
+                      }}
+                    >
+                      Give me a hint
+                    </button>
+                    <button
+                      disabled={chatBusy}
+                      onClick={() => {
+                        setMode("help");
+                        setRightTab("chat");
+                        setMobileTab("assistant");
+                        setAttachedRun(true);
+                        setTutorStyle("explain");
+                        if (library?.enabled)
+                          void ask(
+                            "Explain the error in this run and suggest a small next step.",
+                            true,
+                            "explain",
+                          );
+                        else
+                          setQuestion(
+                            "Explain the error in this run and suggest a small next step.",
+                          );
+                      }}
+                    >
+                      Explain this error <MessageSquare size={12} />
+                    </button>
+                  </div>
                 ) : (
                   <small>Local runtime · 10s limit</small>
                 )}
               </div>
+              {lastRun && (
+                <div className="run-evidence-note">
+                  {lastRun.path} ·{" "}
+                  {new Date(lastRun.finishedAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                  {runChanged
+                    ? " · Code changed — save and rerun"
+                    : " · Saved entry file"}
+                  {lastRun.stopped ? " · Stopped" : ""}
+                  {lastRun.timedOut ? " · Timed out" : ""}
+                  {lastRun.outputTruncated ? " · Stored output shortened" : ""}
+                </div>
+              )}
               <pre className="program-output" aria-label="Program output">
                 {output ||
                   "Run a Python or JavaScript file to see its output here."}
@@ -1328,6 +1453,43 @@ export function Studio({
                   Ask the course
                 </button>
               </div>
+              {mode === "help" && (
+                <div className="tutor-controls">
+                  <label>
+                    Help style{" "}
+                    <select
+                      aria-label="Help style"
+                      value={tutorStyle}
+                      onChange={(event) =>
+                        setTutorStyle(event.target.value as "hint" | "explain")
+                      }
+                    >
+                      <option value="hint">Hint first</option>
+                      <option value="explain">Explain with an example</option>
+                    </select>
+                  </label>
+                  {lastRun && (
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={attachedRun}
+                        onChange={(event) =>
+                          setAttachedRun(event.target.checked)
+                        }
+                      />
+                      Attach recorded run · {lastRun.path}
+                    </label>
+                  )}
+                  {attachedRun && lastRun && (
+                    <small>
+                      {runChanged
+                        ? "Code changed since this run. Save and rerun for current evidence."
+                        : `Saved entry file · exit ${lastRun.exitCode ?? "stopped"}`}{" "}
+                      · Output and saved source are sent with your question.
+                    </small>
+                  )}
+                </div>
+              )}
               <textarea
                 aria-label="Ask learning assistant"
                 placeholder={

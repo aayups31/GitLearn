@@ -27,13 +27,17 @@ Use `npm run dev` for the interface and server with development transforms. Doub
 1. Follow desktop setup and choose a **parent learning folder**. GitLearn creates history and practice folders inside it. In the developer browser version, choose an empty learning-history folder in **Setup**. GitHub and AI are optional and off by default.
 2. Add your Udemy lesson manually, or connect the Chrome extension below.
 3. Select **Mirror course** to create accessible lesson structure and separate coding workspaces. Discovery is partial; more lessons can be added as you go. Refresh preserves stable lesson paths and your notes.
-4. Select **Start lesson**. Create a lesson folder or choose an existing folder containing your own code.
+4. Select **Start lesson**. Choose **One project for the whole course** to keep building the same files across lessons. GitLearn creates it under `projects/`, or you can attach an existing project. Separate lesson folders and one-session existing folders remain available.
 5. Open **Code & learn**. Select or create a file, write code, and **Run** JavaScript or Python locally. Python needs an installed interpreter; JavaScript uses GitLearn’s Node runtime. **Preview** supports a single HTML file with inline CSS and JavaScript. Ctrl/Cmd+S saves; Ctrl/Cmd+Enter runs. VS Code remains optional. Notes save as you type.
 6. Select **Checkpoint** in the editor (or **Finish & review** in Overview), inspect the exact files and message, then **Save checkpoint**.
 
 Code you change after preview stays in your source folder; the commit uses the version you reviewed. GitLearn never changes the Git index or remotes in your existing source workspace.
 
-The learning-history repository is managed by the companion. Avoid editing or staging files directly in it. Write code in the lesson workspace or your linked source folder; GitLearn copies reviewed snapshots into history. The default lesson workspaces live in a sibling `workspaces/` directory.
+The learning-history repository is managed by the companion. Avoid editing or staging files directly in it. Write code in your course project or lesson folder; GitLearn copies reviewed snapshots into history. Automatic course projects live in a sibling `projects/` directory; separate lesson workspaces use `workspaces/`. Existing folders and checkpoints are preserved when upgrading.
+
+**Continue building** in Overview restores the course, lesson, coding folder, saved file position, and last session note after a restart or checkpoint. The recap uses actual saved activity. If a folder moved, choose its current location to reattach it without moving files or changing its Git history. A missing last file falls back to available files.
+
+After a failed run, select **Give me a hint** or **Explain this error**. The assistant receives the recorded saved entry file and bounded actual output, with current code attached when selected. Changed code is marked stale; rerun to check a proposed fix. **Hint first** helps you reason before asking for an explanation. Run history stays local unless explicitly attached to an enabled AI request. Settings includes **Device readiness** for JavaScript, Python, Git, folders, AI, and browser pairing.
 
 ## Connect Chrome once
 
@@ -63,7 +67,7 @@ In the installed app, add your own key during setup or in Settings. It is encryp
 
 Enable **AI-assisted commit messages** in Setup to send a small secret-scanned diff, course context, and your note to OpenAI. The default is `gpt-4o-mini`; set `OPENAI_MODEL` to override. Requests use foreground Responses, Structured Outputs, `store: false`, and a short timeout. API failures fall back to a useful deterministic message.
 
-Assistant questions, retrieved excerpts, selected code, and semantic-indexing excerpts go to OpenAI only after the assistant is enabled. Its generation also uses Responses, Structured Outputs, `store: false`, and bounded requests. Chat and the retrieval index stay in the companion’s SQLite database. `store: false` is not a zero-retention promise; consult [OpenAI data controls](https://developers.openai.com/api/docs/guides/your-data). Keep the assistant, AI commit messages, and GitHub disabled for fully local operation. Original notes are preserved verbatim.
+Assistant questions, retrieved excerpts, selected code, explicitly attached run evidence, and semantic-indexing excerpts go to OpenAI only after the assistant is enabled. Its generation also uses Responses, Structured Outputs, `store: false`, and bounded requests. Chat and the retrieval index stay in the companion’s SQLite database. `store: false` is not a zero-retention promise; consult [OpenAI data controls](https://developers.openai.com/api/docs/guides/your-data). Keep the assistant, AI commit messages, and GitHub disabled for fully local operation. Original notes are preserved verbatim.
 
 ## Optional GitHub
 
@@ -102,4 +106,4 @@ See [current build and architecture](docs/current-build.md), the [longer-term ar
 
 ## Next: from tutorials to independent work
 
-The [active product roadmap](docs/learning-to-contribution-roadmap.md) defines contextual debugging, persistent course projects, practice tasks, evidence-backed learning memory, short reviews, and guided open source contributions. The [learning and contribution architecture](docs/learning-architecture.md) specifies local data, retrieval scopes, runtime boundaries, matching, and verification. These features are planned beyond the 0.2 preview. Coding-agent integration is deliberately deferred.
+The [active product roadmap](docs/learning-to-contribution-roadmap.md) defines contextual debugging, persistent course projects, practice tasks, evidence-backed learning memory, short reviews, and guided open source contributions. The [learning and contribution architecture](docs/learning-architecture.md) specifies local data, retrieval scopes, runtime boundaries, matching, and verification. The 0.3 preview implements the first daily-workspace stage: persistent course projects, Continue, recorded-run error help, and setup diagnostics. Practical project environments, independent practice, learning memory/reviews, and guided open source discovery/contribution follow in the roadmap. Coding-agent integration is deliberately deferred.

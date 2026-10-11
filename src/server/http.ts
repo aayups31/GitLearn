@@ -69,7 +69,7 @@ export function createApp(
   });
   app.use(express.json({ limit: "1mb" }));
   app.get("/api/health", (_req, res) =>
-    res.json({ ok: true, name: "GitLearn", version: "0.2.0" }),
+    res.json({ ok: true, name: "GitLearn", version: "0.3.0" }),
   );
   app.get("/preview/:token", (req, res) => {
     res.setHeader("X-Frame-Options", "SAMEORIGIN");
@@ -186,6 +186,54 @@ export function createApp(
   app.get("/api/workspace-files", async (req, res) =>
     res.json(await workspace.list(text.min(1).parse(req.query.sessionId))),
   );
+  app.get("/api/diagnostics", async (_req, res) =>
+    res.json(await workspace.diagnostics()),
+  );
+  app.get("/api/workspace-runs", async (req, res) =>
+    res.json({
+      runs: await workspace.runs(text.min(1).parse(req.query.sessionId)),
+    }),
+  );
+  app.post("/api/editor-anchor", async (req, res) => {
+    const input = fileQuery
+      .extend({ cursor: z.number().int().min(0).max(512000) })
+      .parse(req.body);
+    res.json(
+      await application.serial(() =>
+        workspace.editorAnchor(input.sessionId, input.path, input.cursor),
+      ),
+    );
+  });
+  app.post("/api/course-project", async (req, res) => {
+    const input = z
+      .object({
+        courseId: text.min(1),
+        mode: z.enum(["lesson", "project"]),
+        root: text.min(1).optional(),
+      })
+      .parse(req.body);
+    res.json(
+      await application.serial(() =>
+        application.bindProject(input.courseId, input.mode, input.root),
+      ),
+    );
+  });
+  app.post("/api/continue", async (req, res) => {
+    const input = z
+      .object({ courseId: text.min(1), workspace: text.min(1).optional() })
+      .parse(req.body);
+    res.json(
+      await application.serial(() => {
+        const session = application.store.state().session;
+        if (input.workspace && session && workspace.isRunning(session.id))
+          throw new UserError(
+            "Stop the running program before choosing another folder.",
+            409,
+          );
+        return application.continueCourse(input.courseId, input.workspace);
+      }),
+    );
+  });
   app.get("/api/workspace-file", async (req, res) => {
     const input = fileQuery.parse(req.query);
     res.json(await workspace.read(input.sessionId, input.path));
@@ -284,6 +332,8 @@ export function createApp(
         courseId: text.min(1),
         question: z.string().min(1).max(4000),
         mode: z.enum(["help", "course"]),
+        runId: z.string().uuid().optional(),
+        tutorStyle: z.enum(["hint", "explain"]).default("explain"),
         selectedCode: z
           .object({ path: z.string().max(300), content: z.string().max(16000) })
           .optional(),
@@ -296,12 +346,25 @@ export function createApp(
       throw new UserError(
         "Select the active course before attaching your current code.",
       );
+    const session = application.store.state().session;
+    if (
+      input.runId &&
+      (input.mode !== "help" || session?.courseId !== input.courseId)
+    )
+      throw new UserError(
+        "Use Code help in the active course to explain a run.",
+      );
+    const runContext = input.runId
+      ? await workspace.runContext(session!.id, input.runId)
+      : undefined;
     res.json(
       await library.ask(
         input.courseId,
         input.question,
         input.mode,
         input.selectedCode,
+        runContext,
+        input.tutorStyle,
       ),
     );
   });

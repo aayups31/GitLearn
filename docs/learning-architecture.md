@@ -1,5 +1,7 @@
 # Learning and contribution architecture
 
+Stage A is implemented in the 0.3 preview using the existing SQLite key/value store: course project bindings, resume anchors, and up to twenty bounded runs per course. The editor restores saved file positions, exposes hint/explanation controls, and reattaches moved folders. Run evidence records the entry-file hash before execution and compares it afterward and before AI use; this does not fingerprint all imported modules or prove a proposed fix was tested. Future records below are introduced only when their stages are built.
+
 Updated October 10, 2026. Proposed architecture for [the learning-to-contribution roadmap](learning-to-contribution-roadmap.md). No new feature in this document is represented as delivered. Build on the [current desktop architecture](desktop-release.md): one TypeScript application, an isolated Electron window, a local companion, SQLite, existing Git checkpoints, course retrieval, and a restricted Chrome extension. The Vercel site remains marketing and downloads.
 
 ## Runtime ownership
@@ -27,18 +29,18 @@ Keep core operations deterministic: path allocation, state transitions, run attr
 
 ## Data model added incrementally
 
-| Record | Minimum useful data | Integrity rule |
-| --- | --- | --- |
-| Learning goal | Learner-entered outcome, interests, availability, preferred help style | Optional, editable, no inferred employment promise |
-| Project | ID, kind, granted root, runtime profile, course/lesson bindings, milestones | Never implicitly move an existing folder or reuse its Git authority |
-| Resume anchor | Project/task/lesson IDs, saved file and editor location, observed video position, last event | Saved state only; reconcile missing/changed files before opening |
-| Task | Objective/version, prerequisites, source/revision refs, starter provenance, rubric, verification profile | Generated tasks need validation; absent course evidence is visible |
-| Attempt | Task/project ID, revision or frozen artifact, hint/solution usage, explanation, run refs, outcome | Append-only attempts; stale run evidence cannot grade new bytes |
-| Run evidence | Command profile, project/cwd, input revision/hash, timestamps, exit, bounded output, test results | Actual execution only; distinguish passed, failed, canceled, timed out, and unverified |
-| Skill evidence | Skill ID, attempt/project refs, assistance context, date, verified outcome | Evidence supports a specific behavior, not a fabricated mastery score |
-| Review item | Objective, attempt refs, scheduling policy/version, due date, learner preference | Optional scheduling; idempotent completion and no silent notifications |
-| Repository candidate | Canonical GitHub identity, issue ID, checked metadata, source URLs, fetched time, match reasons | Cached snapshot, not a permanent claim that an issue is available |
-| Contribution | Repository/revision, selected issue, granted clone, branch, baseline, plan, run/diff refs, PR draft/status | Dedicated authority separate from the private history archive |
+| Record               | Minimum useful data                                                                                        | Integrity rule                                                                         |
+| -------------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Learning goal        | Learner-entered outcome, interests, availability, preferred help style                                     | Optional, editable, no inferred employment promise                                     |
+| Project              | ID, kind, granted root, runtime profile, course/lesson bindings, milestones                                | Never implicitly move an existing folder or reuse its Git authority                    |
+| Resume anchor        | Project/task/lesson IDs, saved file and editor location, observed video position, last event               | Saved state only; reconcile missing/changed files before opening                       |
+| Task                 | Objective/version, prerequisites, source/revision refs, starter provenance, rubric, verification profile   | Generated tasks need validation; absent course evidence is visible                     |
+| Attempt              | Task/project ID, revision or frozen artifact, hint/solution usage, explanation, run refs, outcome          | Append-only attempts; stale run evidence cannot grade new bytes                        |
+| Run evidence         | Command profile, project/cwd, input revision/hash, timestamps, exit, bounded output, test results          | Actual execution only; distinguish passed, failed, canceled, timed out, and unverified |
+| Skill evidence       | Skill ID, attempt/project refs, assistance context, date, verified outcome                                 | Evidence supports a specific behavior, not a fabricated mastery score                  |
+| Review item          | Objective, attempt refs, scheduling policy/version, due date, learner preference                           | Optional scheduling; idempotent completion and no silent notifications                 |
+| Repository candidate | Canonical GitHub identity, issue ID, checked metadata, source URLs, fetched time, match reasons            | Cached snapshot, not a permanent claim that an issue is available                      |
+| Contribution         | Repository/revision, selected issue, granted clone, branch, baseline, plan, run/diff refs, PR draft/status | Dedicated authority separate from the private history archive                          |
 
 Use SQLite migrations and typed shared schemas when each record ships. Preserve the existing course/session/checkpoint IDs; add mappings rather than a disruptive rewrite. Store bounded structured run/test data and source references, not unlimited console logs or full copies of upstream repositories. Define migration fixtures and rollback/recovery behavior before distributing an upgrade. A user can export selected portable records without exporting live credentials or the SQLite database.
 
@@ -80,16 +82,16 @@ Do not overwrite unrelated staged work, rewrite upstream history, force-push, or
 
 ## Verification tied to user outcomes
 
-| Flow | Required evidence |
-| --- | --- |
-| Resume | Restart, cross-course switch, missing path, unsaved work, actual lesson anchor |
-| Project setup | Supported Python/JavaScript app, isolated dependencies, input/Stop, server restart, scoped preview |
-| Tutor | Correct error/revision, cited source, no-evidence response, helpful escalation, provider outage |
-| Practice | Validated exercise, meaningful failing/passing variants, assistance attribution, unsupported execution |
-| Memory | Revision-aware source, course isolation, explicit cross-course scope, deletion, correction, export |
-| Recommendations | Actual issue fixtures, assigned/closed/stale changes, missing metadata, rate limit, no match, explainable ranking |
-| Contribution | Baseline versus regression, dedicated branch, exact diff, existing-index preservation, local PR draft, feedback, no implicit public writes |
-| Upgrade/distribution | Migration/recovery, packaged resource/runtime access, key exclusion, real supported Udemy layout |
+| Flow                 | Required evidence                                                                                                                          |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Resume               | Restart, cross-course switch, missing path, unsaved work, actual lesson anchor                                                             |
+| Project setup        | Supported Python/JavaScript app, isolated dependencies, input/Stop, server restart, scoped preview                                         |
+| Tutor                | Correct error/revision, cited source, no-evidence response, helpful escalation, provider outage                                            |
+| Practice             | Validated exercise, meaningful failing/passing variants, assistance attribution, unsupported execution                                     |
+| Memory               | Revision-aware source, course isolation, explicit cross-course scope, deletion, correction, export                                         |
+| Recommendations      | Actual issue fixtures, assigned/closed/stale changes, missing metadata, rate limit, no match, explainable ranking                          |
+| Contribution         | Baseline versus regression, dedicated branch, exact diff, existing-index preservation, local PR draft, feedback, no implicit public writes |
+| Upgrade/distribution | Migration/recovery, packaged resource/runtime access, key exclusion, real supported Udemy layout                                           |
 
 Use synthetic repositories and sanitized course fixtures for automated tests. Add a small voluntary real-course/project beta and a learner-selected live contribution check when those stages ship. Actual independent task performance and maintainable reviewable changes are product evaluation outcomes; automated app tests alone do not establish industry readiness.
 

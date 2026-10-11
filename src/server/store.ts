@@ -3,7 +3,7 @@ import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { homedir } from "node:os";
 import { randomBytes } from "node:crypto";
-import type { AppState, Preview } from "../shared.js";
+import type { AppState, Preview, ResumeAnchor } from "../shared.js";
 
 export class Store {
   readonly db: DatabaseSync;
@@ -27,6 +27,22 @@ export class Store {
       } satisfies AppState);
     if (!this.get("localToken"))
       this.put("localToken", randomBytes(32).toString("hex"));
+    // Existing lesson folders and Git history stay in place. Only known session context migrates.
+    if (!this.get("learningSchemaVersion")) {
+      this.transaction(() => {
+        const session = this.state().session;
+        if (session && !this.get(`resume:${session.courseId}`))
+          this.put(`resume:${session.courseId}`, {
+            courseId: session.courseId,
+            lessonId: session.lessonId,
+            workspace: session.workspace,
+            note: session.note,
+            updatedAt: session.startedAt,
+            lastAction: session.status === "paused" ? "paused" : "started",
+          } satisfies ResumeAnchor);
+        this.put("learningSchemaVersion", 1);
+      });
+    }
     // Preview candidates are already filtered/scanned, expire automatically, and survive a restart.
     this.db
       .prepare(

@@ -1,4 +1,15 @@
-# GitLearn 0.2.0 preview verification
+# GitLearn preview verification
+
+## 0.3 implementation checks
+
+Checked on Windows, October 10, 2026. The first daily-workspace stage is implemented; release packaging validation is in progress.
+
+- TypeScript and production builds passed. The full backend suite passed 66 cases; a subsequent focused six-case run includes the additional moved-folder recovery case, bringing covered backend cases to 67.
+- Six affected browser workflows passed on isolated ports without touching the learner's running app. The new flow exercised one project across two lessons, an actual error, hint attachment, a saved fix, reviewed checkpoints, restart, moved-folder recovery, and an isolated second course. Existing editor, setup, GitHub gating, and theme flows passed. The unchanged extension pairing/import/replay flow retains its 0.2 validation below; the 0.3 extension version is a packaging update.
+- One live OpenAI check used only a tiny synthetic lesson and program. A real ReferenceError produced a course-cited hint, the corrected saved program ran successfully, and a reviewed checkpoint was saved. No learner files or paid-course material were read.
+- The source Electron runtime passed first-run setup, encrypted sample-key persistence, extraction of its included extension, and local JavaScript execution. Expanded packaged checks and public asset verification remain pending at this checkpoint.
+
+## 0.2.0 preview verification
 
 Checked on Windows, October 10, 2026.
 

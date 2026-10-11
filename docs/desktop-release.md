@@ -1,4 +1,4 @@
-# GitLearn 0.2 Windows preview
+# GitLearn 0.3 Windows preview
 
 The public product is a static marketing site. The Windows download is the actual learning workspace. GitLearn remains the release name.
 
@@ -23,7 +23,7 @@ flowchart LR
 
 The renderer has no Node access and runs with context isolation and sandboxing. Only the main frame can invoke the narrow native bridge. The companion uses the bundled Electron runtime for JavaScript; Python and Git are local prerequisites. Learner folders, API credentials, and app data are excluded from installer resources. Native API keys use Electron safeStorage backed by Windows account encryption and are transferred to the companion over private IPC. Development can still read the project's .env, but packaged apps never do.
 
-The installed app uses the existing `LOCALAPPDATA/GitForLearning` companion database so an existing user's local course history is retained. Native preferences and encrypted keys live in Electron's GitLearn user-data directory. A standalone companion already listening on GitLearn's port can be reused; close it and reopen the desktop app to manage keys from the native UI. The installer retains learning files and app data on uninstall.
+The installed app uses the existing `LOCALAPPDATA/GitForLearning` companion database so an existing user's local course history is retained. Native preferences and encrypted keys live in Electron's GitLearn user-data directory. A matching-version standalone companion already listening on GitLearn's port can be reused; an older running version must be closed before updating; close it and reopen the desktop app to manage keys from the native UI. The installer retains learning files and app data on uninstall.
 
 ## Build and use
 
@@ -36,8 +36,8 @@ npm run package:extension
 npm run preview:site
 ```
 
-- Installer: `dist/releases/GitLearn-Setup-0.2.0.exe`.
-- Chrome upload: `dist/releases/GitLearn-Chrome-0.2.0.zip`.
+- Installer: `dist/releases/GitLearn-Setup-0.3.0.exe`.
+- Chrome upload: `dist/releases/GitLearn-Chrome-0.3.0.zip`.
 - Public site only: `dist/site/`; no workspace APIs or application build required by the host.
 - Native workspace: `dist/desktop/` and `dist/web/` plus runtime dependencies.
 
@@ -49,6 +49,8 @@ Desktop/My Learning/
     udemy/<course>/<section>/<lesson>/
   workspaces/    # real editable files, separate from history
     udemy/<course>/<section>/<lesson>/
+  projects/      # optional evolving course projects
+    udemy/<course>/
 ```
 
 The installer keeps the extension in resources/extension as ordinary files outside ASAR. The native app copies it into a version-specific folder in app data when the learner clicks Open included extension folder. Chrome can Load unpacked from that actual folder. Pair once; after pairing, Open my workspace focuses the desktop window when its own companion is running. Existing browser-only companion users retain the browser fallback.

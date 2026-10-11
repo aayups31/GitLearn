@@ -18,6 +18,8 @@ import type {
   Session,
   Status,
   Checkpoint,
+  ResumeAnchor,
+  ContinueItem,
 } from "../shared.js";
 import { Store } from "./store.js";
 import {
@@ -60,6 +62,33 @@ export class Application {
         /* Preview reports actionable errors. */
       }
     }
+    const continueItems: ContinueItem[] = await Promise.all(
+      state.courses.flatMap((course) => {
+        const anchor = this.store.get<ResumeAnchor>(`resume:${course.id}`);
+        if (!anchor) return [];
+        return [
+          (async () => {
+            const info = await lstat(anchor.workspace).catch(() => null);
+            const canonical =
+              info?.isDirectory() && !info.isSymbolicLink()
+                ? await realpath(anchor.workspace).catch(() => "")
+                : "";
+            const folderAvailable =
+              canonical.toLowerCase() === anchor.workspace.toLowerCase();
+            const fileAvailable =
+              folderAvailable &&
+              (!anchor.file ||
+                !!(
+                  await lstat(child(anchor.workspace, anchor.file)).catch(
+                    () => null,
+                  )
+                )?.isFile());
+            return { ...anchor, folderAvailable, fileAvailable };
+          })(),
+        ];
+      }),
+    );
+    continueItems.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
     return {
       ...state,
       hasApiKey: !!this.apiKey,
@@ -67,6 +96,7 @@ export class Application {
       ghAvailable,
       sourceFiles,
       extensionConnected: !!this.store.get("extensionToken"),
+      continueItems,
     };
   }
   configured() {
@@ -156,6 +186,149 @@ export class Application {
       lesson.path,
     );
   }
+  remember(session: Session, lastAction: ResumeAnchor["lastAction"]) {
+    const previous = this.store.get<ResumeAnchor>(`resume:${session.courseId}`);
+    const sameWorkspace = previous?.workspace === session.workspace;
+    this.store.put(`resume:${session.courseId}`, {
+      ...(sameWorkspace ? previous : {}),
+      courseId: session.courseId,
+      lessonId: session.lessonId,
+      workspace: session.workspace,
+      projectId: session.projectId,
+      note: session.note,
+      lastAction,
+      updatedAt: new Date().toISOString(),
+    } satisfies ResumeAnchor);
+  }
+  async codingFolder(root: string, create = false) {
+    const history = this.configured().settings.repoPath;
+    if (!path.isAbsolute(root))
+      throw new UserError("Use a full path to your coding folder.");
+    const workspace = path.resolve(root);
+    if (
+      inside(history, workspace) ||
+      inside(workspace, history) ||
+      workspace === path.parse(workspace).root
+    )
+      throw new UserError(
+        "Choose a coding folder separate from your learning history repository.",
+      );
+    // Check ancestors before creation so a junction cannot redirect an automatic project.
+    let parent = workspace;
+    while (true) {
+      const info = await lstat(parent).catch(() => null);
+      if (
+        info &&
+        (info.isSymbolicLink() ||
+          (await realpath(parent)).toLowerCase() !== parent.toLowerCase())
+      )
+        throw new UserError(
+          "Choose the real folder path, not a shortcut or junction.",
+        );
+      if (parent === path.dirname(parent)) break;
+      parent = path.dirname(parent);
+    }
+    if (create) await mkdir(workspace, { recursive: true });
+    const info = await lstat(workspace).catch(() => null);
+    if (!info?.isDirectory() || info.isSymbolicLink())
+      throw new UserError(
+        "Choose an existing coding folder without a junction or symlink.",
+      );
+    return realpath(workspace);
+  }
+  async bindProject(
+    courseId: string,
+    mode: "lesson" | "project",
+    requestedRoot?: string,
+  ) {
+    const state = this.configured();
+    if (state.session)
+      throw new UserError(
+        "Finish the current session before changing course folders.",
+      );
+    const course = state.courses.find((item) => item.id === courseId);
+    if (!course) throw new UserError("Course not found.");
+    if (mode === "project") {
+      const root = await this.codingFolder(
+        requestedRoot?.trim() ||
+          course.project?.root ||
+          path.join(
+            path.dirname(state.settings.repoPath),
+            "projects",
+            course.path,
+          ),
+        !requestedRoot && !course.project,
+      );
+      if (
+        state.courses.some(
+          (item) =>
+            item.id !== courseId &&
+            item.project?.root.toLowerCase() === root.toLowerCase(),
+        )
+      )
+        throw new UserError(
+          "That project belongs to another course. Choose a separate folder.",
+        );
+      course.project = {
+        id: course.project?.root === root ? course.project.id : randomUUID(),
+        root,
+      };
+    }
+    course.workspaceMode = mode;
+    this.store.save(state);
+    return state;
+  }
+  async continueCourse(courseId: string, requestedRoot?: string) {
+    const state = this.configured();
+    if (state.session && state.session.courseId !== courseId)
+      throw new UserError(
+        "Finish the current session before continuing another course.",
+      );
+    if (requestedRoot) {
+      const anchor = this.store.get<ResumeAnchor>(`resume:${courseId}`);
+      const course = state.courses.find((item) => item.id === courseId);
+      if (!anchor || !course)
+        throw new UserError("No saved workspace was found for this course.");
+      const root = await this.codingFolder(requestedRoot);
+      if (
+        state.courses.some(
+          (item) =>
+            item.id !== courseId &&
+            item.project?.root.toLowerCase() === root.toLowerCase(),
+        )
+      )
+        throw new UserError(
+          "That project belongs to another course. Choose a separate folder.",
+        );
+      if (course.project?.root === anchor.workspace) course.project.root = root;
+      anchor.workspace = root;
+      if (state.session) {
+        state.session.workspace = root;
+        state.session.id = randomUUID();
+        state.session.status = "active";
+      }
+      this.store.transaction(() => {
+        this.store.save(state);
+        this.store.put(`resume:${courseId}`, anchor);
+      });
+    }
+    if (state.session) {
+      if (state.session.courseId !== courseId)
+        throw new UserError(
+          "Finish the current session before continuing another course.",
+        );
+      return this.sessionAction("resume");
+    }
+    const anchor = this.store.get<ResumeAnchor>(`resume:${courseId}`);
+    if (!anchor)
+      throw new UserError("Start a lesson to create a place to continue from.");
+    await this.start(courseId, anchor.lessonId, anchor.workspace);
+    const next = this.configured();
+    next.session!.note = anchor.note;
+    this.store.save(next);
+    this.remember(next.session!, "started");
+    return next;
+  }
   async mirror(courseId: string) {
     const state = this.configured();
     const course = state.courses.find((item) => item.id === courseId);
@@ -232,30 +405,14 @@ export class Application {
     const course = state.courses.find((item) => item.id === courseId);
     const lesson = course?.lessons.find((item) => item.id === lessonId);
     if (!course || !lesson) throw new UserError("Select a lesson first.");
-    const workspace = requestedWorkspace?.trim()
-      ? path.resolve(requestedWorkspace)
-      : this.workspace(state, course, lesson);
-    if (requestedWorkspace && !path.isAbsolute(requestedWorkspace))
-      throw new UserError("Use a full path to your existing coding folder.");
-    if (
-      inside(state.settings.repoPath, workspace) ||
-      inside(workspace, state.settings.repoPath) ||
-      workspace === path.parse(workspace).root
-    )
-      throw new UserError(
-        "Choose a coding folder separate from your learning history repository.",
-      );
-    if (requestedWorkspace) {
-      const info = await lstat(workspace).catch(() => null);
-      if (!info?.isDirectory() || info.isSymbolicLink())
-        throw new UserError(
-          "Choose an existing coding folder without a junction or symlink.",
-        );
-      if ((await realpath(workspace)).toLowerCase() !== workspace.toLowerCase())
-        throw new UserError(
-          "Choose the real folder path, not a shortcut or junction.",
-        );
-    } else await mkdir(workspace, { recursive: true });
+    const project =
+      course.workspaceMode === "project" ? course.project : undefined;
+    const workspace = await this.codingFolder(
+      requestedWorkspace?.trim() ||
+        project?.root ||
+        this.workspace(state, course, lesson),
+      !requestedWorkspace && !project,
+    );
     state.session = {
       id: randomUUID(),
       courseId,
@@ -268,8 +425,10 @@ export class Application {
       startedAt: new Date().toISOString(),
       status: "active",
       note: "",
+      projectId: project?.root === workspace ? project.id : undefined,
     };
     this.store.save(state);
+    this.remember(state.session, "started");
     return state;
   }
   async sessionAction(action: "pause" | "resume" | "discard", note?: string) {
@@ -279,6 +438,14 @@ export class Application {
       assertClean(note, "session note");
       state.session.note = note;
     }
+    this.remember(
+      state.session,
+      action === "discard"
+        ? "ended"
+        : action === "pause"
+          ? "paused"
+          : "started",
+    );
     if (action === "discard") state.session = null;
     else state.session.status = action === "pause" ? "paused" : "active";
     this.store.save(state);
@@ -291,6 +458,7 @@ export class Application {
     assertClean(note, "session note");
     state.session.note = note;
     this.store.save(state);
+    this.remember(state.session, "saved");
     return state;
   }
   async candidate(state: AppState, session: Session) {
@@ -486,6 +654,7 @@ export class Application {
     });
     await git.reconcile(state.settings.repoPath, preview.files);
     state.checkpoints.unshift(record);
+    this.remember(state.session!, "checkpoint");
     state.session = null;
     this.store.transaction(() => {
       this.store.save(state);
@@ -518,7 +687,10 @@ export class Application {
     journal.record.sha = sha;
     if (!state.checkpoints.some((item) => item.id === journal.record.id))
       state.checkpoints.unshift(journal.record);
-    if (state.session?.id === journal.record.sessionId) state.session = null;
+    if (state.session?.id === journal.record.sessionId) {
+      this.remember(state.session, "checkpoint");
+      state.session = null;
+    }
     this.store.transaction(() => {
       this.store.save(state);
       this.store.remove("commitJournal");

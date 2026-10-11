@@ -82,10 +82,20 @@ async function startCompanion() {
       signal: AbortSignal.timeout(1500),
     });
     const health = await response.json();
-    if (health.ok && health.name === "GitLearn") return;
+    if (health.ok && health.name === "GitLearn") {
+      if (health.version !== app.getVersion())
+        throw new Error(
+          "Another GitLearn version is running. Save your files and close it, then open this version again.",
+        );
+      return;
+    }
     throw new Error("The GitLearn port is occupied by another application.");
   } catch (error) {
-    if (error instanceof Error && error.message.includes("occupied"))
+    if (
+      error instanceof Error &&
+      (error.message.includes("occupied") ||
+        error.message.includes("Another GitLearn version"))
+    )
       throw error;
   }
   if (safeStorage.isEncryptionAvailable()) {

@@ -123,15 +123,17 @@ Public release work includes authenticated real-Udemy validation, Chrome Store s
 
 ## 8. Delivery order and exit criteria
 
-| Stage | Deliverable | Exit criterion |
-| --- | --- | --- |
-| A: dependable daily workspace | Persistent course projects, factual Continue recap, contextual error help, runtime/setup diagnostics | A returning learner resumes and runs an existing supported Python/JavaScript practice workspace without reorganizing files or re-explaining their context |
-| B: practical projects | Scoped environments, interactive terminal, managed development servers, project preview, briefs and milestones | A supported Python/JavaScript project is built and tested locally from a reproducible brief |
-| C: practice and feedback | Curated tasks, grounded variations, attempts, hints, behavioral checks, changed-requirement tasks | Learners complete comparable tasks with decreasing assistance; failure and unverifiable cases remain accurate |
-| D: memory and review | Evidence-backed skills, cited past attempts, opt-in cross-course search, short scheduled reviews, export | A learner can recover an explanation and demonstrate a concept again with traceable evidence |
-| E: live work discovery | Curated catalog, live GitHub issue checks, explainable matching, prerequisite tasks, saved shortlist | The learner selects a real suitable issue with an accurate brief and setup requirements |
-| F: contribution workspace | Repository-scoped RAG, baseline/reproduction, contribution branch workflow, diff/test review, local PR draft, feedback history | One supported contribution flow reaches a correct reviewable draft without unrequested public writes |
-| G: broader access | Store distribution, tested upgrades, additional adapters and OS support, optional managed AI | Each expansion passes real-platform, privacy, recovery, and cost checks |
+The 0.3 implementation completes Stage A's local foundation: course project bindings, factual Continue, saved-file/cursor anchors, bounded actual run evidence with stale detection, hint/explanation controls, moved-folder recovery, and device diagnostics. The code stays in the existing local app. Stages B-F remain planned; coding-agent integration remains deferred. See [current build](current-build.md) for delivered behavior and [release verification](release-validation.md) for test evidence.
+
+| Stage                         | Deliverable                                                                                                                    | Exit criterion                                                                                                                                            |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A: dependable daily workspace | Persistent course projects, factual Continue recap, contextual error help, runtime/setup diagnostics                           | A returning learner resumes and runs an existing supported Python/JavaScript practice workspace without reorganizing files or re-explaining their context |
+| B: practical projects         | Scoped environments, interactive terminal, managed development servers, project preview, briefs and milestones                 | A supported Python/JavaScript project is built and tested locally from a reproducible brief                                                               |
+| C: practice and feedback      | Curated tasks, grounded variations, attempts, hints, behavioral checks, changed-requirement tasks                              | Learners complete comparable tasks with decreasing assistance; failure and unverifiable cases remain accurate                                             |
+| D: memory and review          | Evidence-backed skills, cited past attempts, opt-in cross-course search, short scheduled reviews, export                       | A learner can recover an explanation and demonstrate a concept again with traceable evidence                                                              |
+| E: live work discovery        | Curated catalog, live GitHub issue checks, explainable matching, prerequisite tasks, saved shortlist                           | The learner selects a real suitable issue with an accurate brief and setup requirements                                                                   |
+| F: contribution workspace     | Repository-scoped RAG, baseline/reproduction, contribution branch workflow, diff/test review, local PR draft, feedback history | One supported contribution flow reaches a correct reviewable draft without unrequested public writes                                                      |
+| G: broader access             | Store distribution, tested upgrades, additional adapters and OS support, optional managed AI                                   | Each expansion passes real-platform, privacy, recovery, and cost checks                                                                                   |
 
 Complete a narrow end-to-end stage before adding more surfaces. Public release preparation can proceed alongside the daily-workspace stages. Platform expansion remains planned, including coding problems, interactive courses, YouTube, documents, and notebooks; choose the next adapter from beta evidence. Do not assign dates until representative project/runtime and contribution feasibility checks pass.
 
@@ -139,14 +141,14 @@ Start evaluation with a small voluntary beta on actual Udemy courses. Measure ti
 
 ### First implementation slice
 
-| Work item | Existing entry points | Reviewable result |
-| --- | --- | --- |
-| A1: project binding and migration | src/shared.ts, src/server/store.ts, src/server/application.ts | Associate an existing course with a stable project ID/root; retain old lesson paths and checkpoints; recover a migration safely |
-| A2: persistent course workspace | src/server/workspace.ts, src/ui/main.tsx, src/ui/studio.tsx | Choose separate lesson folders or one evolving course project; preserve existing files and source Git state |
-| A3: Continue anchor | Store/application plus the workspace UI | Restore saved file/location, course/lesson, unfinished activity, and factual recap after restarting; handle missing files |
-| A4: trusted error context | src/server/workspace.ts, src/server/library.ts, src/ui/studio.tsx | Persist bounded run evidence keyed to saved bytes; Explain this error sends the selected actual run and code with visible context; mark stale runs |
-| A5: setup diagnostics | src/desktop/bridge.ts, src/desktop/main.ts, onboarding/settings | Explain missing prerequisites and active folder/runtime/key status without exposing credentials; retain a usable local fallback |
-| A6: one complete user journey | Workspace/application tests, browser workflow, packaged desktop check | Resume a course project across two lessons, run/fix code, get grounded help, save a reviewed checkpoint, and recover after restart; a second course stays isolated |
+| Work item                         | Existing entry points                                                 | Reviewable result                                                                                                                                                  |
+| --------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A1: project binding and migration | src/shared.ts, src/server/store.ts, src/server/application.ts         | Associate an existing course with a stable project ID/root; retain old lesson paths and checkpoints; recover a migration safely                                    |
+| A2: persistent course workspace   | src/server/workspace.ts, src/ui/main.tsx, src/ui/studio.tsx           | Choose separate lesson folders or one evolving course project; preserve existing files and source Git state                                                        |
+| A3: Continue anchor               | Store/application plus the workspace UI                               | Restore saved file/location, course/lesson, unfinished activity, and factual recap after restarting; handle missing files                                          |
+| A4: trusted error context         | src/server/workspace.ts, src/server/library.ts, src/ui/studio.tsx     | Persist bounded run evidence keyed to saved bytes; Explain this error sends the selected actual run and code with visible context; mark stale runs                 |
+| A5: setup diagnostics             | src/desktop/bridge.ts, src/desktop/main.ts, onboarding/settings       | Explain missing prerequisites and active folder/runtime/key status without exposing credentials; retain a usable local fallback                                    |
+| A6: one complete user journey     | Workspace/application tests, browser workflow, packaged desktop check | Resume a course project across two lessons, run/fix code, get grounded help, save a reviewed checkpoint, and recover after restart; a second course stays isolated |
 
 Only the records and interfaces used by this slice are introduced. Exercise generation, recommendation ranking, contribution publication, and provider integration remain out of this first slice. Deliver and validate A before creating the UI for later stages.
 

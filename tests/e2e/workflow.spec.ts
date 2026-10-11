@@ -6,6 +6,7 @@ import path from "node:path";
 test("first-time setup → Udemy lesson → source code → reviewed local checkpoint", async ({
   page,
   request,
+  baseURL,
 }) => {
   const source = await mkdtemp(path.join(tmpdir(), "gitlearn-browser-source-"));
   const repo = await mkdtemp(path.join(tmpdir(), "gitlearn-browser-history-"));
@@ -155,7 +156,7 @@ test("first-time setup → Udemy lesson → source code → reviewed local check
   await expect(page.getByText("Saved locally", { exact: true })).toBeVisible();
   const bootstrap = await (
     await request.post("/api/bootstrap", {
-      headers: { Origin: "http://127.0.0.1:47831" },
+      headers: { Origin: baseURL! },
     })
   ).json();
   const state = await (

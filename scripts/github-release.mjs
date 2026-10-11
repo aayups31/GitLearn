@@ -105,6 +105,7 @@ if (args[0] === "status") {
   );
   console.log(`Updated preview installer and checksums for v${version}.`);
 } else if (args[0] === "view") {
+  const { version } = JSON.parse(await readFile("package.json", "utf8"));
   console.log(
     (
       await command(
@@ -112,7 +113,7 @@ if (args[0] === "status") {
         [
           "release",
           "view",
-          "v0.2.0",
+          `v${version}`,
           "--repo",
           "aayups31/GitLearn",
           "--json",

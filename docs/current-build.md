@@ -1,10 +1,15 @@
-# GitLearn 0.2 Windows and Udemy preview
+# GitLearn 0.3 Windows and Udemy preview
 
 Updated October 10, 2026. This is the current delivery scope and architecture. The full specification and earlier architecture/implementation plan retain the longer product roadmap; they do not describe every feature as already delivered.
 
-The next-release [learning-to-contribution roadmap](learning-to-contribution-roadmap.md) and [supporting architecture](learning-architecture.md) add independent practice, project workflows, personal reviews, and guided open source work. Those additions are planned; the delivered capabilities are listed below.
+The [learning-to-contribution roadmap](learning-to-contribution-roadmap.md) and [supporting architecture](learning-architecture.md) define the path from tutorials to independent projects and guided open source work. Stage A's daily workspace is implemented in 0.3; independent tasks, practical project environments, personal reviews, and live contribution workflows remain planned.
 
 ## What works
+
+- One evolving project per course, automatically created beside history or attached to an existing folder. Explicit course bindings have stable identities. Separate lesson folders remain available; upgrades preserve existing folders and checkpoints.
+- **Continue building** restores the last lesson, coding folder, saved file position, session note, and latest available run. The recap uses stored activity and checkpoint messages. Missing files fall back to available files; an explicit Choose folder flow reattaches moved folders while preserving context and source Git history.
+- **Give me a hint / Explain this error** attach server-recorded saved entry-file source/hash and actual bounded output to Code help. Entry-file changes are marked stale; incomplete runs and truncated evidence remain identified. Hint-first guidance is a prompt behavior, not proof of learner mastery or a guarantee about every generated answer. Fixes require a fresh local run.
+- **Device readiness** checks bundled JavaScript, local Python, Git, writable folders, key/assistant status, and extension pairing. It displays no credentials. Coding, notes, and checkpoints remain usable without AI or GitHub.
 
 - Windows desktop installer with an isolated Electron renderer, bundled JavaScript runtime, guided first-run setup, native folder picker, encrypted API-key storage, course workspace, checkpoint timeline, and preferences. Source-development launchers remain available.
 - **Code & learn**: a Linear-inspired three-column workspace with course navigation, a real CodeMirror editor, and a course-specific assistant/source library. Light and dark themes, keyboard save/run, mobile panel switching, and lazy-loaded editor code.
@@ -64,15 +69,15 @@ Portable files live in the chosen managed Git repository. Operational state live
 
 ## Deliberate simplifications
 
-| Earlier target | First build |
-| --- | --- |
-| pnpm workspace monorepo | One npm project with clear module boundaries |
-| Native messaging host and registry registration | Authenticated loopback HTTP with a Windows desktop installer; development launchers remain available |
-| Separate VS Code extension | Embedded CodeMirror editor with optional installed VS Code CLI |
-| Separate Node distribution and native SQLite dependency | Bundled Electron JavaScript runtime and built-in SQLite; source development requires Node 24+ |
-| Continuous file watchers and automatic checkpoint triggers | Explicit Start / Finish; saved disk files collected during preview |
-| Durable automatic push worker | Durable local checkpoints and explicit Sync now retry |
-| AI note cleanup and broad manual learning sources | Original notes, course-material imports, and course RAG; Udemy focus |
+| Earlier target                                             | First build                                                                                          |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| pnpm workspace monorepo                                    | One npm project with clear module boundaries                                                         |
+| Native messaging host and registry registration            | Authenticated loopback HTTP with a Windows desktop installer; development launchers remain available |
+| Separate VS Code extension                                 | Embedded CodeMirror editor with optional installed VS Code CLI                                       |
+| Separate Node distribution and native SQLite dependency    | Bundled Electron JavaScript runtime and built-in SQLite; source development requires Node 24+        |
+| Continuous file watchers and automatic checkpoint triggers | Explicit Start / Finish; saved disk files collected during preview                                   |
+| Durable automatic push worker                              | Durable local checkpoints and explicit Sync now retry                                                |
+| AI note cleanup and broad manual learning sources          | Original notes, course-material imports, and course RAG; Udemy focus                                 |
 
 Windows x64 packaging is delivered as an unsigned preview. Edge verification, other learning platforms, multi-device coordination, video transcription, and richer course progress capture remain future work. The editor has no interactive shell, package manager, debugger, or language server. Python execution requires an installed interpreter; HTML preview supports inline assets only. The Git repository is companion-managed: external edits/staging pause saves; direct existing-repository automation and normal Git hooks are outside this build.
 
@@ -80,7 +85,7 @@ Windows x64 packaging is delivered as an unsigned preview. Edge verification, ot
 
 Automated validation uses temporary real Git repositories, HTTP boundary checks, sanitized Udemy DOM fixtures, the actual unpacked Chrome extension, and the full browser workflow. It covers exact reviewed-byte commits, source edits after review, excluded secrets, unrelated staging, branch changes, interrupted-save recovery, event deduplication, pairing, context capture, reconnect replay, and mobile overflow.
 
-Verification includes 59 backend tests, six browser workflows, a successful TypeScript/production build, static-site desktop/mobile checks, and the actual packaged desktop workflow. Additional checks cover multiple course checkpoints in one archive, GitHub account verification and credential preparation, private repository creation arguments, shared-archive sync state, failed push preservation, retryable Git setup, AI outage fallback, unsafe model output, changed Git remotes, and alternate push destinations. Editor/RAG checks cover disk saves and JavaScript/Python execution, Stop, external-edit conflicts, restricted HTML preview, explicit extension transcript import, source deduplication/removal, course isolation, cached embeddings, missing evidence, cited passages, local history, and checkpoints. Routine tests mock remote APIs.
+Verification covers 67 backend cases, six affected 0.3 browser workflows, and successful TypeScript/production builds. The unchanged extension pairing/import/replay flow and static-site/desktop checks also retain their 0.2 validation; final 0.3 packaging checks are recorded in release-validation.md. Additional checks cover multiple course checkpoints in one archive, GitHub account verification and credential preparation, private repository creation arguments, shared-archive sync state, failed push preservation, retryable Git setup, AI outage fallback, unsafe model output, changed Git remotes, and alternate push destinations. Editor/RAG checks cover disk saves and JavaScript/Python execution, Stop, external-edit conflicts, restricted HTML preview, explicit extension transcript import, source deduplication/removal, course isolation, cached embeddings, missing evidence, cited passages, local history, and checkpoints. Routine tests mock remote APIs.
 
 A separate live synthetic check passed semantic embeddings, a cited course answer, and an AI checkpoint using the supplied local key. No real learner course material or code was accessed. Site, extension, frontend, packaged ASAR, external extension resources, and staged source passed configured-key/environment-file scans. [Release validation](release-validation.md) contains the verification record.
 

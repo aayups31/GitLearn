@@ -12,6 +12,7 @@ vi.mock("openai", () => ({
 import { CourseLibrary, chunks } from "../src/server/library";
 import { Store } from "../src/server/store";
 import { Application } from "../src/server/application";
+import { Workspace } from "../src/server/workspace";
 let directory: string, store: Store, app: Application, library: CourseLibrary;
 beforeEach(async () => {
   parse.mockReset();
@@ -230,4 +231,50 @@ it("bounds long transcript chunks and preserves source line positions", () => {
   expect(result.every((item) => item.text.length <= 1800)).toBe(true);
   expect(result[0].startLine).toBe(1);
   expect(result[result.length - 1].endLine).toBe(3);
+});
+it("grounds hint-first error help in an actual run and labels evidence stale after a saved edit", async () => {
+  await app.start("agents", "1");
+  const workspace = new Workspace(app),
+    id = store.state().session!.id;
+  const file = await workspace.save(
+    id,
+    "main.js",
+    "console.log(missingTool);",
+    null,
+  );
+  const result = await workspace.run(id, file.path);
+  await workspace.save(
+    id,
+    file.path,
+    "const missingTool = 'ready'; console.log(missingTool);",
+    file.version,
+  );
+  const context = await workspace.runContext(id, result.run.id);
+  parse.mockResolvedValue({
+    output_parsed: {
+      answer: "Check where missingTool is defined, then rerun your saved edit.",
+      citations: [],
+    },
+  });
+  await library.ask(
+    "agents",
+    "Give me a hint about this error",
+    "help",
+    undefined,
+    context,
+    "hint",
+  );
+  const request = parse.mock.calls[0][0];
+  const input = JSON.parse(
+    request.input.at(-1).content.split("\nQuestion: ")[0],
+  );
+  expect(input.tutorStyle).toBe("hint");
+  expect(input.runContext.output).toContain("ReferenceError");
+  expect(input.runContext.source).toBe("console.log(missingTool);");
+  expect(input.runContext.fileVersion).toBe(file.version);
+  expect(input.runContext.stale).toBe(true);
+  expect(input.runContext.workspace).toBeUndefined();
+  expect(request.instructions).toContain("do not supply the full solution");
+  expect(request.instructions).toContain("tested a fix");
+  expect(request.store).toBe(false);
 });
