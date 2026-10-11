@@ -216,6 +216,37 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
         .then(() => true)
         .catch(() => false),
     ).toBe(false);
+    const nativeTool = await reopened.evaluate(
+      async (command) => {
+        const { token } = await (
+          await fetch("/api/bootstrap", { method: "POST" })
+        ).json();
+        const headers = {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        };
+        const state = await (await fetch("/api/state", { headers })).json();
+        const launched = await fetch("/api/project-command", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ sessionId: state.session.id, command }),
+        });
+        if (!launched.ok) throw Error("Native tool did not launch");
+        for (let i = 0; i < 80; i++) {
+          const { commands } = await (
+            await fetch(`/api/project-commands?sessionId=${state.session.id}`, {
+              headers,
+            })
+          ).json();
+          if (commands[0].state !== "running") return commands[0];
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+        throw Error("Native tool did not finish");
+      },
+      `& '${process.execPath.replaceAll("'", "''")}' --version; exit 23`,
+    );
+    expect(nativeTool.output).toContain(process.version);
+    expect(nativeTool.exitCode).toBe(23);
     const practical = await reopened.evaluate(async () => {
       const { token } = await (
         await fetch("/api/bootstrap", { method: "POST" })

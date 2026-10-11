@@ -86,7 +86,7 @@ export function createApp(
   });
   app.use(express.json({ limit: "1mb" }));
   app.get("/api/health", (_req, res) =>
-    res.json({ ok: true, name: "GitLearn", version: "0.4.0" }),
+    res.json({ ok: true, name: "GitLearn", version: "0.4.1" }),
   );
   app.get("/preview/:token", (req, res) => {
     res.setHeader("X-Frame-Options", "SAMEORIGIN");

@@ -4,7 +4,7 @@ Your developer registration is ready; the dashboard has no extension listing yet
 
 ## Upload package
 
-Build and run `npm run package:extension`. Upload `dist/releases/GitLearn-Chrome-0.4.0.zip` when creating a new item in the developer dashboard. It contains the MV3 manifest, built background/content/popup scripts, popup assets, and icons. It contains no API key, source environment, server, local data, or Node modules.
+Build and run `npm run package:extension`. Upload `dist/releases/GitLearn-Chrome-0.4.1.zip` when creating a new item in the developer dashboard. It contains the MV3 manifest, built background/content/popup scripts, popup assets, and icons. It contains no API key, source environment, server, local data, or Node modules.
 
 ## Suggested listing
 
@@ -32,7 +32,7 @@ Single purpose: bring the user's accessible Udemy lesson context and explicitly 
 - 127.0.0.1:47831 host permission: communicate with the user's local companion. Paired extension credentials cannot edit code, use AI, or change repositories. They can submit course material/context, read minimal connection status, and focus an already running desktop workspace.
 - No remote code, broad browser history access, videos, credentials, cookies, advertising, or analytics.
 
-Review the dashboard's current privacy form against actual handling. Course-page URLs/context fall within website content or browsing activity; imported transcript text is website content. Disclose local processing and optional OpenAI/GitHub processing in the companion. Never select a no-data declaration that contradicts these behaviors. The source privacy page is `src/site/privacy.html`; supply its actual public URL after hosting is configured.
+Review the dashboard's current privacy form against actual handling. Course-page URLs/context fall within website content or browsing activity; imported transcript text is website content. Disclose local processing and optional OpenAI/GitHub processing in the companion. Never select a no-data declaration that contradicts these behaviors. Public homepage: https://git-learn-black.vercel.app/. Public privacy policy: https://git-learn-black.vercel.app/privacy.
 
 The 128px icon is in extension/static/icons/icon-128.png. A ready 1280x800 listing screenshot is in docs/store-assets/extension-1280x800.png. It uses the actual tested popup with an example course and no private learner data. The optional promotional tile is 440x280. Describe what is visible; do not imply automatic video access or support beyond Udemy.
 

@@ -36,8 +36,8 @@ npm run package:extension
 npm run preview:site
 ```
 
-- Installer: `dist/releases/GitLearn-Setup-0.4.0.exe`.
-- Chrome upload: `dist/releases/GitLearn-Chrome-0.4.0.zip`.
+- Installer: `dist/releases/GitLearn-Setup-0.4.1.exe`.
+- Chrome upload: `dist/releases/GitLearn-Chrome-0.4.1.zip`.
 - Public site only: `dist/site/`; no workspace APIs or application build required by the host.
 - Native workspace: `dist/desktop/` and `dist/web/` plus runtime dependencies.
 

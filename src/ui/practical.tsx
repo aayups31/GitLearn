@@ -840,7 +840,8 @@ export function ProjectConsole({
               </span>
             </div>
             <pre className="command-output" aria-label="Project command output">
-              {latest.output || "Waiting for output…"}
+              {latest.output.replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, "") ||
+                "Waiting for output…"}
             </pre>
           </>
         )}

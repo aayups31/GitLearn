@@ -73,13 +73,16 @@ it("accepts interactive line input and stops a long-running process", async () =
     () => runtime.status(id)[0].state === "stopped" && !workspace.isRunning(id),
   );
 });
-it.runIf(process.platform === "win32")("launches an installed native tool through PowerShell and preserves its exit code", async () => {
-  const executable = process.execPath.replaceAll("'", "''");
-  await runtime.start(id, `& '${executable}' --version; exit 23`);
-  await waitFor(() => runtime.status(id)[0].state !== "running");
-  expect(runtime.status(id)[0].output).toContain(process.version);
-  expect(runtime.status(id)[0].exitCode).toBe(23);
-});
+it.runIf(process.platform === "win32")(
+  "launches an installed native tool through PowerShell and preserves its exit code",
+  async () => {
+    const executable = process.execPath.replaceAll("'", "''");
+    await runtime.start(id, `& '${executable}' --version; exit 23`);
+    await waitFor(() => runtime.status(id)[0].state !== "running");
+    expect(runtime.status(id)[0].output).toContain(process.version);
+    expect(runtime.status(id)[0].exitCode).toBe(23);
+  },
+);
 it("marks an old running record interrupted rather than pretending a process restarted", () => {
   store.put("project:commands", [
     { id: "old", state: "running", output: "saved output" },

@@ -1,5 +1,23 @@
 # GitLearn preview verification
 
+## 0.4.1 Windows project-command patch
+
+Verified on Windows, October 10, 2026. Restored the credential-free Windows system variables needed by installed tools launched through PowerShell. The console also removes terminal control sequences from displayed output.
+
+- All 81 backend cases in 13 files passed, including actual native-tool execution through PowerShell with preserved nonzero exit status.
+- A real generated React/Vite project installed its public npm dependencies, served its local application with HTTP 200, and stopped cleanly. This uses installed Node/npm; the bundled single-file JavaScript runner is separate.
+- The affected practical-learning browser scenario passed: during-course suggestion, learner-written checks, hints, reflection, fresh review, console, and project scaffold. Both static-site scenarios passed. The previous complete nine-scenario browser run remains recorded below.
+- The final packaged desktop scenario passed in 23.8 seconds, including a Windows external-tool command as well as encrypted-key persistence/removal, bundled JavaScript, restored files, practical checks, scaffolding, and stopping its tracked command on close.
+- Production build, packaged version/privacy checks, and configured-key/environment-file exclusion scans passed.
+- The public site at https://git-learn-black.vercel.app/ was verified with the setup guide, privacy page, and release links. Vercel automatically deployed the `main` checkpoint `526f73c` successfully.
+
+| Artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| GitLearn-Setup-0.4.1.exe | 115,970,859 | `2466120e9c6848ee31b5096cd350522d96927a583f8d3255af675800e057b0a1` |
+| GitLearn-Chrome-0.4.1.zip | 137,008 | `76a70a107535d9d839c42b59079c0d4fd26266335d6608817eaf7c956dce797e` |
+
+The installer remains unsigned. Chrome account verification/store review and real Udemy learner beta sessions are separate release gates. The six curated JavaScript/Python briefs do not claim broad curriculum coverage or certify industry readiness; remaining roadmap depth is described below and in the learning roadmap.
+
 ## 0.4 practical-learning and contribution preview
 
 Verified on Windows, October 10, 2026. Implementation checkpoint: `dba7e54` on `main`.
