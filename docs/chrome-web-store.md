@@ -1,6 +1,6 @@
 # Chrome Web Store preparation
 
-The 0.4.1 ZIP was accepted and draft item `iaokfcjeghdefpgcgbcomiehhogbkbcp` was created on October 10, 2026 after the publisher enabled Google two-step verification. Listing completion, privacy declarations, and store review are separate from uploading the package. Official steps: https://developer.chrome.com/docs/webstore/publish.
+The 0.4.1 ZIP was accepted and draft item `iaokfcjeghdefpgcgbcomiehhogbkbcp` was created on October 10, 2026 after the publisher enabled Google two-step verification. The description, Education/English category, icon, screenshot, homepage/support URLs, permission justifications, data categories, privacy-policy URL, and reviewer instructions are saved. Distribution is free and public. Chrome's remaining submission gates are the three publisher privacy certifications and a verified public publisher contact email. Store approval is separate from uploading the package. Official steps: https://developer.chrome.com/docs/webstore/publish.
 
 ## Upload package
 
