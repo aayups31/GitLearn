@@ -7,7 +7,7 @@ import { Application } from "../src/server/application";
 import { Workspace } from "../src/server/workspace";
 import { ProjectRuntime } from "../src/server/project-runtime";
 import { Practice } from "../src/server/practice";
-import { nativeCompiler } from "../src/server/native-runtime";
+import { nativeCompiler, localTool } from "../src/server/native-runtime";
 import { projectKinds, practiceLanguage } from "../src/project-types";
 
 let folder: string,
@@ -172,10 +172,23 @@ it("uses the nearest Python venv for pip, project commands and saved-file runs",
   // Install a real wheel without a network dependency and import it from the selected venv.
   const wheel = `${project.directory}/support_library-0.1-py3-none-any.whl`;
   const bootstrap = `${project.directory}/prepare_wheel.py`;
-  await workspace.save(id, bootstrap, `import zipfile\nwith zipfile.ZipFile(${JSON.stringify(wheel)}, 'w') as z:\n    z.writestr('support_library/__init__.py', 'VALUE = 73\\n')\n    z.writestr('support_library-0.1.dist-info/METADATA', 'Metadata-Version: 2.1\\nName: support-library\\nVersion: 0.1\\n')\n    z.writestr('support_library-0.1.dist-info/WHEEL', 'Wheel-Version: 1.0\\nGenerator: OutClass-test\\nRoot-Is-Purelib: true\\nTag: py3-none-any\\n')\n    z.writestr('support_library-0.1.dist-info/RECORD', '')\n`, null);
+  await workspace.save(
+    id,
+    bootstrap,
+    `import zipfile\nwith zipfile.ZipFile(${JSON.stringify(wheel)}, 'w') as z:\n    z.writestr('support_library/__init__.py', 'VALUE = 73\\n')\n    z.writestr('support_library-0.1.dist-info/METADATA', 'Metadata-Version: 2.1\\nName: support-library\\nVersion: 0.1\\n')\n    z.writestr('support_library-0.1.dist-info/WHEEL', 'Wheel-Version: 1.0\\nGenerator: OutClass-test\\nRoot-Is-Purelib: true\\nTag: py3-none-any\\n')\n    z.writestr('support_library-0.1.dist-info/RECORD', '')\n`,
+    null,
+  );
   expect((await workspace.run(id, bootstrap)).exitCode).toBe(0);
-  const requirements = await workspace.read(id, `${project.directory}/requirements.txt`);
-  await workspace.save(id, requirements.path, `./${wheel}\n`, requirements.version);
+  const requirements = await workspace.read(
+    id,
+    `${project.directory}/requirements.txt`,
+  );
+  await workspace.save(
+    id,
+    requirements.path,
+    `./${wheel}\n`,
+    requirements.version,
+  );
   const install = await runtime.start(id, project.dependencies);
   await waitFor(
     () =>
@@ -183,8 +196,15 @@ it("uses the nearest Python venv for pip, project commands and saved-file runs",
   );
   expect(runtime.status(id).find((r) => r.id === install.id)?.exitCode).toBe(0);
   const installed = await workspace.read(id, project.entry);
-  await workspace.save(id, project.entry, "from support_library import VALUE; print('Installed package',VALUE)", installed.version);
-  expect((await workspace.run(id, project.entry)).output).toContain("Installed package 73");
+  await workspace.save(
+    id,
+    project.entry,
+    "from support_library import VALUE; print('Installed package',VALUE)",
+    installed.version,
+  );
+  expect((await workspace.run(id, project.entry)).output).toContain(
+    "Installed package 73",
+  );
 }, 60000);
 
 it.runIf(!!(await nativeCompiler(true)))(
@@ -252,4 +272,54 @@ it.runIf(!!(await nativeCompiler(false)))(
     );
   },
   30000,
+);
+it.runIf(
+  !!(await nativeCompiler(false)) &&
+    (await localTool("cmake")) &&
+    (await localTool("ninja")),
+)(
+  "configures and builds a genuine multi-file C project from its generated console commands",
+  async () => {
+    const project = await runtime.scaffold(id, "c");
+    const main = await workspace.read(id, project.entry);
+    await workspace.save(
+      id,
+      project.entry,
+      '#include <stdio.h>\n#include "feature.h"\nint main(void){printf("Multi-file result %d\\n", answer()); return 0;}\n',
+      main.version,
+    );
+    await workspace.save(
+      id,
+      `${project.directory}/feature.h`,
+      "int answer(void);\n",
+      null,
+    );
+    await workspace.save(
+      id,
+      `${project.directory}/feature.c`,
+      "int answer(void){return 42;}\n",
+      null,
+    );
+    const cmake = await workspace.read(
+      id,
+      `${project.directory}/CMakeLists.txt`,
+    );
+    await workspace.save(
+      id,
+      cmake.path,
+      cmake.content.replace("main.c)", "main.c feature.c)"),
+      cmake.version,
+    );
+    for (const command of [project.install, project.check, project.start]) {
+      const job = await runtime.start(id, command);
+      await waitFor(
+        () =>
+          runtime.status(id).find((r) => r.id === job.id)?.state !== "running",
+      );
+      const result = runtime.status(id).find((r) => r.id === job.id)!;
+      expect(result.exitCode, result.output).toBe(0);
+    }
+    expect(runtime.status(id)[0].output).toContain("Multi-file result 42");
+  },
+  60000,
 );

@@ -43,7 +43,7 @@ export function projectTemplate(
       strict: true,
       noEmit: true,
       allowImportingTsExtensions: true,
-      erasableSyntaxOnly: true,
+      rewriteRelativeImportExtensions: true,
       skipLibCheck: true,
     },
     include: ["src"],
@@ -75,6 +75,8 @@ export function projectTemplate(
       `import React from "react";\nimport { createRoot } from "react-dom/client";\nimport "./style.css";\n\nfunction App() {\n  // Your brief and implementation belong here.\n  return <main><h1>My learning project</h1><p>Choose one useful feature and build it yourself.</p></main>;\n}\n\ncreateRoot(document.getElementById("root")${ts ? "!" : ""}).render(<App />);\n`;
     files["src/style.css"] =
       "body { margin: 0; font-family: system-ui, sans-serif; }\nmain { max-width: 800px; margin: 60px auto; padding: 24px; }\n";
+    if (ts)
+      files["src/vite-env.d.ts"] = '/// <reference types="vite/client" />\n';
     if (ts)
       files["tsconfig.json"] =
         JSON.stringify(
@@ -118,6 +120,7 @@ export function projectTemplate(
       'import type { ReactNode } from "react";\nimport "./globals.css";\nexport default function Layout({ children }: { children: ReactNode }) {\n  return <html lang="en"><body>{children}</body></html>;\n}\n';
     files["app/globals.css"] =
       "body { font-family: system-ui, sans-serif; margin: 0; }\nmain { max-width: 800px; margin: 60px auto; padding: 24px; }\n";
+    files["app/styles.d.ts"] = 'declare module "*.css" {}\n';
     files["tsconfig.json"] =
       JSON.stringify(
         {
@@ -157,18 +160,20 @@ export function projectTemplate(
     entry = `src/main.${ts ? "ts" : "mjs"}`;
     pkg(
       {
-        dev: `node ${entry}`,
+        dev: ts ? `tsx ${entry}` : `node ${entry}`,
         check: ts ? "tsc --noEmit" : `node --check ${entry}`,
         test: "node --test",
       },
       {},
-      ts ? { typescript: "7.0.2", "@types/node": "^24.0.0" } : {},
+      ts
+        ? { typescript: "7.0.2", tsx: "4.23.15", "@types/node": "^24.0.0" }
+        : {},
     );
     files[entry] =
       `// Build one useful feature from your brief.\n${ts ? 'const message: string = "My learning project";' : 'const message = "My learning project";'}\nconsole.log(message);\n`;
     if (ts) files["tsconfig.json"] = JSON.stringify(tsconfig, null, 2) + "\n";
     note =
-      "Node.js 24+ runs erasable TypeScript syntax. Running a .ts file does not type-check it; use Check project. JSX/TSX, enums, decorators and tsconfig path aliases need your project's build tool.";
+      "Install Node.js 24+ and npm. The TypeScript project uses tsx for execution (including enums) and tsc for type checks. Run saved file uses Node's erasable syntax support; use Start project for transformations and Check/build project for type checking. JSX/TSX web apps use React/Next.js starters. Decorators and path aliases need your course's project configuration.";
   } else if (kind === "python") {
     entry = "main.py";
     const packages: Record<PythonProfile, string> = {

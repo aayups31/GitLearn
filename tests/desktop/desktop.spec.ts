@@ -308,6 +308,30 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
         sessionId,
         kind: "react",
       });
+      const next = await api("project-scaffold", { sessionId, kind: "next" });
+      await api("workspace-file", {
+        sessionId,
+        path: "runtime.ts",
+        version: null,
+        content:
+          'const answer: number = 42; console.log("Bundled TypeScript", answer);',
+      });
+      const typescript = await api("workspace-run", {
+        sessionId,
+        path: "runtime.ts",
+      });
+      const diagnostics = await api("diagnostics");
+      let native;
+      if (diagnostics.cppCompiler) {
+        await api("workspace-file", {
+          sessionId,
+          path: "native.cpp",
+          version: null,
+          content:
+            '#include <iostream>\nint main(){std::cout << "Packaged C++ 42\\n";return 0;}',
+        });
+        native = await api("workspace-run", { sessionId, path: "native.cpp" });
+      }
       const command = await api("project-command", {
         sessionId,
         command: 'node -e "console.log(process.pid); setInterval(()=>{},1000)"',
@@ -318,6 +342,9 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
         changedRequirement,
         ledger,
         scaffold,
+        next,
+        typescript,
+        native,
         command,
         sessionId,
       };
@@ -327,6 +354,13 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
     expect(practical.changedRequirement.attempts[0].passed).toBe(false);
     expect(practical.ledger.content).toContain("OutClass Learning Ledger");
     expect(practical.scaffold.entry).toContain("main.jsx");
+    expect(practical.next.entry).toContain("app/page.tsx");
+    expect(practical.typescript.exitCode).toBe(0);
+    expect(practical.typescript.output).toContain("Bundled TypeScript 42");
+    if (practical.native) {
+      expect(practical.native.exitCode).toBe(0);
+      expect(practical.native.output).toContain("Packaged C++ 42");
+    }
     let childPid = 0;
     await expect
       .poll(async () => {

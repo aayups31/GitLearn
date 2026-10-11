@@ -10,7 +10,7 @@ A local learning workspace that turns Udemy lessons into your own code, practica
 
 **Windows desktop preview:** download the installer from [GitHub Releases](https://github.com/aayups31/OutClass/releases), open OutClass, and follow its first-run setup. Choose one parent learning folder; OutClass creates practice and history folders for each course automatically. JavaScript's runtime is bundled. Git for Windows is required for checkpoints; Python is optional for Python lessons. VS Code and GitHub remain optional.
 
-The [public website and setup guide](https://git-learn-black.vercel.app/) are live on Vercel. The actual editor, courses, RAG assistant, and setup live in the Windows desktop app. See [desktop architecture and packaging](docs/desktop-release.md) and [Chrome store release](docs/chrome-web-store.md). The OutClass 0.4.2 store item remains pending review. Use the current preview ZIP with Load unpacked for 0.5.0 features until an updated store package is approved.
+The [public website and setup guide](https://git-learn-black.vercel.app/) are live on Vercel. The actual editor, courses, RAG assistant, and setup live in the Windows desktop app. See [desktop architecture and packaging](docs/desktop-release.md) and [Chrome store release](docs/chrome-web-store.md). The OutClass 0.4.2 store item remains pending review. Use the current preview ZIP with Load unpacked for current preview features until an updated store package is approved.
 
 On this Windows machine, double-click **Start OutClass.cmd**. It starts the companion in the background and opens the app at [http://127.0.0.1:47831](http://127.0.0.1:47831).
 
@@ -32,7 +32,7 @@ Use `npm run dev` for the interface and server with development transforms. Doub
 2. Add your Udemy lesson manually, or connect the Chrome extension below.
 3. Select **Mirror course** to create accessible lesson structure and separate coding workspaces. Discovery is partial; more lessons can be added as you go. Refresh preserves stable lesson paths and your notes.
 4. Select **Start lesson**. Choose **One project for the whole course** to keep building the same files across lessons. OutClass creates it under `projects/`, or you can attach an existing project. Separate lesson folders and one-session existing folders remain available.
-5. Open **Code & learn**. Select or create a file, write code, and **Run** JavaScript or Python locally. Python needs an installed interpreter; JavaScript uses OutClass’s Node runtime. **Preview** supports a single HTML file with inline CSS and JavaScript. Ctrl/Cmd+S saves; Ctrl/Cmd+Enter runs. VS Code remains optional. Notes save as you type.
+5. Open **Code & learn**. Select or create a file, write code, and **Run** JavaScript, erasable TypeScript, Python, C or C++ locally. Python needs an installed interpreter; C/C++ need GCC/G++ or Clang on PATH. JavaScript/TypeScript use OutClass’s Node runtime. React/Next.js JSX/TSX use their project dev server in Project console. **Preview** supports a single HTML file with inline CSS and JavaScript. Ctrl/Cmd+S saves; Ctrl/Cmd+Enter runs. VS Code remains optional. Notes save as you type.
 6. Select **Checkpoint** in the editor (or **Finish & review** in Overview), inspect the exact files and message, then **Save checkpoint**.
 
 Code you change after preview stays in your source folder; the commit uses the version you reviewed. OutClass never changes the Git index or remotes in your existing source workspace.
@@ -47,7 +47,7 @@ After a failed run, select **Give me a hint** or **Explain this error**. The ass
 
 After a successful saved run or checkpoint, OutClass can suggest a related task while you are still taking the course. It explains the timing using recorded activity, recognizes section transitions, and lets you defer the suggestion. Python files lead to Python practice; unsupported languages receive no invented automatic exercise.
 
-**Learn by doing** includes six curated JavaScript/Python briefs covering validation, collections, and a small activity-report project. You write the implementation. **Check my work** runs real behavior checks against saved code. Progressive hints and optional course-aware teaching help you reason; neither changes files or runs commands for you. Each attempt records saved source, checks, help use, and your reflection. These are specific learning records, not a mastery score.
+**Learn by doing** includes curated JavaScript, TypeScript, Python, C and C++ briefs covering validation, collections, and a small activity-report project. You write the implementation. **Check my work** runs real behavior checks against saved code. Progressive hints and optional course-aware teaching help you reason; neither changes files or runs commands for you. Each attempt records saved source, checks, help use, and your reflection. These are specific learning records, not a mastery score.
 
 **Reviews** offer fresh-file retries on a 1/3/7/14-day schedule, with an opt-out and no background notifications. **Search my learning** explicitly searches your recorded attempts and reflections across courses. Export downloads the local learning record as JSON. Current retries repeat the curated brief; generated transfer variants remain planned.
 
@@ -112,7 +112,7 @@ Stop the running companion before `npm run test:e2e`; the browser suite starts i
 
 ## Preview boundaries
 
-This is a working unsigned Windows x64/Chrome preview with a downloadable installer. The desktop app bundles its JavaScript runtime; Git is required for checkpoints, and Python is needed for Python execution. Running from source requires Node 24+. It uses authenticated loopback HTTP, an embedded CodeMirror editor, optional VS Code CLI integration, and Node's built-in SQLite. No hosted backend, account system, or separate vector database is required. Interactive terminal input, dependency installation, multi-file HTML serving, debuggers, and language-server integration remain outside this focused editor.
+This is a working unsigned Windows x64/Chrome preview with a downloadable installer. The desktop app bundles its JavaScript runtime; Git is required for checkpoints, and Python is needed for Python execution. Running from source requires Node 24+. It uses authenticated loopback HTTP, an embedded CodeMirror editor, optional VS Code CLI integration, and Node's built-in SQLite. No hosted backend, account system, or separate vector database is required. Project console supports explicit dependency installation, local dev servers and bounded line input. Full terminal emulation, debuggers and language-server integration remain outside this focused editor.
 
 Real authenticated Udemy layouts vary and need live validation on your course. The complete workflow is covered by fixtures plus manual fallback. Ignore rules, hard exclusions, and credential patterns reduce leakage risk; they cannot detect every sensitive value. Inspect previews and select only learner-owned source folders.
 
@@ -127,3 +127,11 @@ The [active product roadmap](docs/learning-to-contribution-roadmap.md) defines c
 ## Active learning in 0.5
 
 Use **Learn by doing → My direction** to set a goal and session budget, keep an independent project, attach evidence to milestones, and export a readable learning ledger. Completed tasks unlock changed-requirement challenges. The assistant enforces saved-code/run freshness; local scripts accept bounded line input. Fresh Udemy observations attach video positions to reviewed checkpoints. [Implementation scope and boundaries](docs/active-learning-release.md).
+
+## Languages and project environments in 0.6
+
+**Code & learn → Project console → Create project** offers React, React with TypeScript, Next.js with TypeScript, Node.js, standalone TypeScript, Python, C and C++. Each starter supplies prepare, dependency, check/build and start commands. React/Next.js open on loopback ports 5173/3000. JSX and TSX need the project dev server; TypeScript saved-file execution strips types and requires a separate project check for type safety.
+
+Python projects can select NumPy/pandas, FastAPI, Flask, scikit-learn, PyTorch or an empty requirements file for other libraries. Create the project environment, then install packages explicitly. Saved-file runs and generated commands select the nearest `.venv`. Any compatible package can be added; native/GPU/OS requirements are not supplied by OutClass.
+
+Short C11/C++17 programs compile with GCC/G++ or Clang, then run with the existing input/output/time limits. Multi-file CMake and MSVC workflows use Project console and your installed toolchain. TypeScript and C/C++ practice tasks preserve actual execution evidence and changed-requirement checks. See [0.6 release scope and instructions](docs/releases/0.6.0.md).

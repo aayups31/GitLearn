@@ -4,40 +4,41 @@ import { UserError } from "./safety.js";
 export async function nativeCompiler(
   cpp: boolean,
 ): Promise<string | undefined> {
-  for (const executable of cpp ? ["g++", "clang++"] : ["gcc", "clang"]) {
-    const found = await new Promise<boolean>((resolve) => {
-      const env: NodeJS.ProcessEnv = {};
-      for (const key of [
-        "PATH",
-        "Path",
-        "SystemRoot",
-        "SYSTEMROOT",
-        "WINDIR",
-        "TEMP",
-        "TMP",
-      ])
-        if (process.env[key]) env[key] = process.env[key];
-      const child = spawn(executable, ["--version"], {
-        env,
-        shell: false,
-        windowsHide: true,
-        stdio: "ignore",
-      });
-      const timer = setTimeout(() => {
-        child.kill();
-        resolve(false);
-      }, 2000);
-      child.on("error", () => {
-        clearTimeout(timer);
-        resolve(false);
-      });
-      child.on("close", (code) => {
-        clearTimeout(timer);
-        resolve(code === 0);
-      });
+  for (const executable of cpp ? ["g++", "clang++"] : ["gcc", "clang"])
+    if (await localTool(executable)) return executable;
+}
+export function localTool(executable: string) {
+  return new Promise<boolean>((resolve) => {
+    const env: NodeJS.ProcessEnv = {};
+    for (const key of [
+      "PATH",
+      "Path",
+      "SystemRoot",
+      "SYSTEMROOT",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+    ])
+      if (process.env[key]) env[key] = process.env[key];
+    const child = spawn(executable, ["--version"], {
+      env,
+      shell: false,
+      windowsHide: true,
+      stdio: "ignore",
     });
-    if (found) return executable;
-  }
+    const timer = setTimeout(() => {
+      child.kill();
+      resolve(false);
+      }, 5000);
+    child.on("error", () => {
+      clearTimeout(timer);
+      resolve(false);
+    });
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      resolve(code === 0);
+    });
+  });
 }
 
 // The parent owns the ten-second timer, process tree and temporary build directory.

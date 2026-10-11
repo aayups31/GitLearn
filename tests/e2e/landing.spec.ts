@@ -9,7 +9,7 @@ test("the local app opens the independently built product and setup guide", asyn
   await expect(page).toHaveTitle("OutClass · Break free from tutorial hell");
   await expect(page.locator(".guide-list li")).toHaveCount(8);
   await expect(page.locator("#extension-status")).toContainText(
-    "Chrome review",
+    "pending review",
   );
 });
 

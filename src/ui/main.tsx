@@ -304,7 +304,7 @@ function App() {
           <div className="connection">
             <span className={state ? "dot" : "dot offline"} />
             {state ? "Companion connected" : "Connecting…"}
-            <span className="version">v0.5</span>
+            <span className="version">v0.6</span>
           </div>
         </div>
       </aside>

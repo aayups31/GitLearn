@@ -29,6 +29,7 @@ import {
   pythonProfileLabels,
   type ProjectKind,
   type PythonProfile,
+  practiceLanguage,
 } from "../project-types";
 import type { Diagnostics } from "../shared";
 type Api = <T>(route: string, body?: unknown) => Promise<T>;
@@ -166,6 +167,7 @@ export function LearningHub({
     [tab, setTab] = useState("practice"),
     [selected, setSelected] = useState<PracticeTask>(),
     [reflection, setReflection] = useState("");
+  const [languageFilter, setLanguageFilter] = useState("course");
   const action = useAction();
   const [memoryQuery, setMemoryQuery] = useState(""),
     [memory, setMemory] = useState<ReturnType<Practice["search"]>>([]);
@@ -191,10 +193,19 @@ export function LearningHub({
       onCode(courseId);
     });
   const tasks = data?.tasks.filter((t) => t.courseId === courseId) || [];
+  const selectedLanguage =
+    languageFilter === "course"
+      ? practiceLanguage(
+          state.courses.find((c) => c.id === courseId)?.title || "",
+        )
+      : languageFilter === "all"
+        ? undefined
+        : languageFilter;
   const catalog =
     data?.exercises.filter(
       (e) =>
         !e.transferFrom &&
+        (!selectedLanguage || e.language === selectedLanguage) &&
         e.kind === (tab === "projects" ? "project" : "practice"),
     ) || [];
   const opportunity = data?.opportunities.find((o) => o.courseId === courseId);
@@ -219,6 +230,29 @@ export function LearningHub({
               {c.title}
             </option>
           ))}
+        </select>
+        <select
+          aria-label="Practice language"
+          value={languageFilter}
+          onChange={(e) => setLanguageFilter(e.target.value)}
+        >
+          <option value="course">For this course</option>
+          <option value="all">All languages</option>
+          {["javascript", "typescript", "python", "c", "cpp"].map(
+            (language) => (
+              <option key={language} value={language}>
+                {
+                  {
+                    javascript: "JavaScript",
+                    typescript: "TypeScript",
+                    python: "Python",
+                    c: "C",
+                    cpp: "C++",
+                  }[language]
+                }
+              </option>
+            ),
+          )}
         </select>
         <button
           className="text-button"

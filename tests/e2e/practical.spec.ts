@@ -128,8 +128,9 @@ test("a during-course suggestion becomes learner-written work, real checks, hint
   await page.getByLabel("Project command").fill("node --version");
   await page.getByRole("button", { name: "Run command", exact: true }).click();
   await expect(page.getByLabel("Project command output")).toContainText(/v\d+/);
+  await page.getByLabel("Project technology").selectOption("react");
   await page
-    .getByRole("button", { name: "Create React app", exact: true })
+    .getByRole("button", { name: "Create project", exact: true })
     .click();
   await expect(page.locator(".project-console-content")).toContainText(
     "Created apps/react-",

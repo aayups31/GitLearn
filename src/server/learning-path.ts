@@ -243,7 +243,7 @@ export class LearningPath {
       ].map((m) => m[1]);
       const matches = changed.filter((c) =>
         references.some((r) =>
-          r.startsWith(".")
+          r.startsWith(".") || /\.(?:h|hpp|hxx)$/.test(r)
             ? path.posix
                 .normalize(path.posix.join(path.posix.dirname(file), r))
                 .replace(/\.[^.]+$/, "") === c.replace(/\.[^.]+$/, "")

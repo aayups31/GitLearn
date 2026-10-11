@@ -2,6 +2,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { realpath } from "node:fs/promises";
 import { projectTemplate } from "./project-templates.js";
+import { nativeCompiler, localTool } from "./native-runtime.js";
 import type { ProjectKind, PythonProfile } from "../project-types.js";
 import path from "node:path";
 import type { Application } from "./application.js";
@@ -68,6 +69,19 @@ export class ProjectRuntime {
       );
     const directory = `apps/${kind}-${randomUUID().slice(0, 8)}`;
     const { files, ...commands } = projectTemplate(kind, directory, profile);
+    if (kind === "c" || kind === "cpp") {
+      const compiler = await nativeCompiler(kind === "cpp");
+      if (compiler && (await localTool("ninja"))) {
+        const previous = commands.install;
+        commands.install = `cmake -G Ninja -DCMAKE_${kind === "cpp" ? "CXX" : "C"}_COMPILER=${compiler} -S ${directory} -B ${directory}/build`;
+        files["README.md"] = files["README.md"].replace(
+          previous,
+          commands.install,
+        );
+        commands.note +=
+          " Detected Ninja and compiler are selected for CMake setup.";
+      }
+    }
     for (const [relative, content] of Object.entries(files))
       await this.workspace.save(
         sessionId,
@@ -235,12 +249,14 @@ export class ProjectRuntime {
       this.workspace.untrack(sessionId, child);
       record.exitCode = code;
       record.finishedAt = new Date().toISOString();
-      if (record.state === "running") record.state = "finished";
       const current = await this.workspace
         .versions(sessionId)
         .catch(() => undefined);
       record.changedDuringRun =
         !current || JSON.stringify(current) !== JSON.stringify(record.versions);
+      // Keep the console busy until evidence is captured, so the next command
+      // cannot race the previous command's close handler.
+      if (record.state === "running") record.state = "finished";
       const baseline = this.records().find(
         (r) =>
           r.command === command &&
