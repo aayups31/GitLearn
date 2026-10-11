@@ -7,6 +7,7 @@ import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 import { javascript } from "@codemirror/lang-javascript";
 import { python } from "@codemirror/lang-python";
+import { cpp } from "@codemirror/lang-cpp";
 import { html } from "@codemirror/lang-html";
 import { css } from "@codemirror/lang-css";
 import { json } from "@codemirror/lang-json";
@@ -60,10 +61,11 @@ type Library = {
   model: string;
 };
 function language(file: string) {
+  if (/\.(?:c|h|cpp|cc|cxx|hpp|hxx)$/i.test(file)) return cpp();
   if (/\.py$/i.test(file)) return python();
   if (/\.[cm]?[jt]sx?$/i.test(file))
     return javascript({
-      typescript: /\.tsx?$/.test(file),
+      typescript: /\.[cm]?tsx?$/i.test(file),
       jsx: /x$/.test(file),
     });
   if (/\.html?$/i.test(file)) return html();
@@ -1142,7 +1144,7 @@ export function Studio({
               )}
               <pre className="program-output" aria-label="Program output">
                 {output ||
-                  "Run a Python or JavaScript file to see its output here."}
+                  "Run a JavaScript, TypeScript, Python, C or C++ file. Start React/Next.js apps from Project console."}
               </pre>
               <div className="runner-note">
                 {lastRun?.regression && (

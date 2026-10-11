@@ -109,10 +109,8 @@ it("bounds noisy programs and rejects unsupported local runtimes", async () => {
   const result = await workspace.run(id, "main.js");
   expect(result.output.length).toBeLessThan(64500);
   expect(result.output).toContain("Output limit");
-  await workspace.save(id, "main.cpp", "int main() {}", null);
-  await expect(workspace.run(id, "main.cpp")).rejects.toThrow(
-    "own local toolchain",
-  );
+  await workspace.save(id, "main.rs", "fn main() {}", null);
+  await expect(workspace.run(id, "main.rs")).rejects.toThrow("Run supports");
 });
 it.skipIf(
   spawnSync("python", ["--version"], { windowsHide: true }).status !== 0,

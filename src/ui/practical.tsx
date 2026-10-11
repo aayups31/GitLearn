@@ -22,6 +22,15 @@ import type { Candidate, Contribution } from "../server/live-work";
 import type { CommandRecord } from "../server/project-runtime";
 import "./practical.css";
 import { PersonalPath } from "./learning-path";
+import {
+  projectKinds,
+  projectLabels,
+  pythonProfiles,
+  pythonProfileLabels,
+  type ProjectKind,
+  type PythonProfile,
+} from "../project-types";
+import type { Diagnostics } from "../shared";
 type Api = <T>(route: string, body?: unknown) => Promise<T>;
 type Dashboard = ReturnType<Practice["dashboard"]>;
 function useAction() {
@@ -601,7 +610,8 @@ export function LearningHub({
                   course and survive a restart.
                 </p>
                 <small>
-                  Curated OutClass exercises v1 · JavaScript and Python
+                  Curated OutClass exercises · JavaScript, TypeScript, Python, C
+                  and C++
                 </small>
               </>
             )}
@@ -738,11 +748,18 @@ export function ProjectConsole({
     [command, setCommand] = useState("node --test"),
     [input, setInput] = useState(""),
     [port, setPort] = useState("5173");
+  const [kind, setKind] = useState<ProjectKind>("react-ts"),
+    [profile, setProfile] = useState<PythonProfile>("minimal"),
+    [diagnostics, setDiagnostics] = useState<Diagnostics>();
   const action = useAction();
   const [scaffold, setScaffold] = useState<{
     directory: string;
     install: string;
     start: string;
+    check: string;
+    dependencies: string;
+    note: string;
+    port?: number;
   }>();
   const load = async () => {
     const r = await api<{ commands: CommandRecord[] }>(
@@ -751,6 +768,11 @@ export function ProjectConsole({
     setCommands(r.commands);
     onRunning(r.commands.some((c) => c.state === "running"));
   };
+  useEffect(() => {
+    void api<Diagnostics>("diagnostics")
+      .then(setDiagnostics)
+      .catch(() => {});
+  }, [sessionId]);
   useEffect(() => {
     let live = true;
     const poll = () => {
@@ -784,30 +806,56 @@ export function ProjectConsole({
       <div className="project-console-content">
         <p>
           Commands run locally in your project folder. Review the command before
-          running it. Node and Python accept line input; full-screen terminal
+          running it. Programs can accept line input; full-screen terminal
           programs need an external terminal.
         </p>
         <div className="command-presets">
-          {["react", "python"].map((kind) => (
-            <button
-              key={kind}
-              disabled={action.busy || !!running}
-              onClick={() =>
-                action.run(async () => {
-                  const result = await api<{
-                    directory: string;
-                    install: string;
-                    start: string;
-                  }>("project-scaffold", { sessionId, kind });
-                  setScaffold(result);
-                  setCommand(result.install);
-                  await onFilesChanged();
-                })
-              }
+          <select
+            aria-label="Project technology"
+            value={kind}
+            onChange={(e) => setKind(e.target.value as ProjectKind)}
+          >
+            {projectKinds.map((k) => (
+              <option key={k} value={k}>
+                {projectLabels[k]}
+              </option>
+            ))}
+          </select>
+          {kind === "python" && (
+            <select
+              aria-label="Python packages"
+              value={profile}
+              onChange={(e) => setProfile(e.target.value as PythonProfile)}
             >
-              Create {kind === "react" ? "React app" : "Python project"}
-            </button>
-          ))}
+              {pythonProfiles.map((p) => (
+                <option key={p} value={p}>
+                  {pythonProfileLabels[p]}
+                </option>
+              ))}
+            </select>
+          )}
+          <button
+            disabled={action.busy || !!running}
+            onClick={() =>
+              action.run(async () => {
+                const result = await api<{
+                  directory: string;
+                  install: string;
+                  start: string;
+                  check: string;
+                  dependencies: string;
+                  note: string;
+                  port?: number;
+                }>("project-scaffold", { sessionId, kind, profile });
+                setScaffold(result);
+                setCommand(result.install);
+                if (result.port) setPort(String(result.port));
+                await onFilesChanged();
+              })
+            }
+          >
+            Create project
+          </button>
           {["node --test", "python -m venv .venv"].map((c) => (
             <button key={c} onClick={() => setCommand(c)}>
               {c}
@@ -820,6 +868,24 @@ export function ProjectConsole({
             Start dev server
           </button>
         </div>
+        {diagnostics && (
+          <p className="toolchain-status">
+            Node {diagnostics.nodeVersion} · Python{" "}
+            {diagnostics.pythonAvailable ? "available" : "needs installation"} ·
+            npm {diagnostics.npmAvailable ? "available" : "needs installation"}{" "}
+            · C {diagnostics.cCompiler || "needs GCC/Clang"} · C++{" "}
+            {diagnostics.cppCompiler || "needs G++/Clang++"}
+            <button
+              onClick={() =>
+                action.run(async () =>
+                  setDiagnostics(await api<Diagnostics>("diagnostics")),
+                )
+              }
+            >
+              Recheck tools
+            </button>
+          </p>
+        )}
         {scaffold && (
           <p role="status">
             Created {scaffold.directory}.{" "}
@@ -827,10 +893,22 @@ export function ProjectConsole({
               Prepare environment
             </button>{" "}
             ·{" "}
+            {scaffold.dependencies && (
+              <>
+                <button onClick={() => setCommand(scaffold.dependencies)}>
+                  Install packages
+                </button>{" "}
+                ·{" "}
+              </>
+            )}
+            <button onClick={() => setCommand(scaffold.check)}>
+              Check/build project
+            </button>{" "}
+            ·{" "}
             <button onClick={() => setCommand(scaffold.start)}>
               Start project
             </button>
-            . Web apps require an installed Node.js/npm toolchain.
+            . {scaffold.note}
           </p>
         )}
         <form
@@ -1011,7 +1089,7 @@ export function LiveWorkHub({
           value={language}
           onChange={(e) => setLanguage(e.target.value)}
         >
-          {["JavaScript", "Python", "TypeScript"].map((l) => (
+          {["JavaScript", "Python", "TypeScript", "C", "C++"].map((l) => (
             <option key={l}>{l}</option>
           ))}
         </select>

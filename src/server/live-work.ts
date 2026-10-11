@@ -356,7 +356,7 @@ export class LiveWork {
     return candidate;
   }
   async discover(
-    language: "JavaScript" | "Python" | "TypeScript",
+    language: "JavaScript" | "Python" | "TypeScript" | "C" | "C++",
     courseId?: string,
   ) {
     if (this.busy)

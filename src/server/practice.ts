@@ -1,6 +1,11 @@
 import { randomUUID, createHash } from "node:crypto";
 import { spawn } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { readFile, mkdtemp, writeFile, rm } from "node:fs/promises";
+import path from "node:path";
+import { tmpdir } from "node:os";
+import { nativeArguments, nativeCompiler } from "./native-runtime.js";
+import { practiceLanguage } from "../project-types.js";
+import { nativeExercises, nativeHarness } from "./native-exercises.js";
 import { pathToFileURL } from "node:url";
 import type { Application } from "./application.js";
 import type { Workspace } from "./workspace.js";
@@ -15,7 +20,7 @@ type Case = {
 export type Exercise = {
   id: string;
   title: string;
-  language: "javascript" | "python";
+  language: "javascript" | "python" | "typescript" | "c" | "cpp";
   kind: "practice" | "project";
   skill: string;
   minutes: number;
@@ -27,6 +32,7 @@ export type Exercise = {
   cases: Case[];
   topics: string[];
   transferFrom?: string;
+  nativeChecks?: string[];
 };
 export const exercises: Exercise[] = (
   ["javascript", "python"] as const
@@ -314,6 +320,22 @@ exercises.push(
     }),
 );
 
+// TypeScript uses the same behavior contracts plus typed starter signatures.
+exercises.push(
+  ...exercises
+    .filter((e) => e.language === "javascript")
+    .map((e) => ({
+      ...e,
+      id: e.id.replace("javascript-", "typescript-"),
+      language: "typescript" as const,
+      transferFrom: e.transferFrom?.replace("javascript-", "typescript-"),
+      starter: e.starter
+        .replace("(price, discount)", "(price: unknown, discount: unknown)")
+        .replace("(sessions)", "(sessions: Array<Record<string, unknown>>)"),
+    })),
+  ...nativeExercises(),
+);
+
 export interface Attempt {
   id: string;
   at: string;
@@ -366,6 +388,7 @@ export function runtimeEnvironment() {
   ])
     if (process.env[key]) env[key] = process.env[key];
   env.PYTHONIOENCODING = "utf-8";
+  env.NEXT_TELEMETRY_DISABLED = "1";
   return env;
 }
 export class Practice {
@@ -492,13 +515,7 @@ export class Practice {
       ]
         .join(" ")
         .toLowerCase();
-      const language =
-        successfulRun?.path.endsWith(".py") || /python/.test(titles)
-          ? "python"
-          : /\.(?:[cm]?js|jsx|tsx?)$/.test(successfulRun?.path || "") ||
-              /javascript|typescript|react|\bjs\b/.test(titles)
-            ? "javascript"
-            : undefined;
+      const language = practiceLanguage(titles, successfulRun?.path);
       if (!language) return [];
       const eligible = exercises.filter(
         (e) =>
@@ -558,7 +575,9 @@ export class Practice {
       ];
     });
     return {
-      exercises: exercises.map(({ starter, hints, ...spec }) => spec),
+      exercises: exercises.map(
+        ({ starter, hints, nativeChecks, ...spec }) => spec,
+      ),
       tasks: courseId ? tasks.filter((t) => t.courseId === courseId) : tasks,
       opportunities,
       liveOpportunities: courses.flatMap((course) => {
@@ -684,7 +703,7 @@ export class Practice {
     }
     const session = this.app.configured().session!;
     const id = randomUUID(),
-      file = `practice/${spec.id}-${id.slice(0, 6)}/solution.${spec.language === "python" ? "py" : "mjs"}`;
+      file = `practice/${spec.id}-${id.slice(0, 6)}/solution.${{ python: "py", javascript: "mjs", typescript: "ts", c: "c", cpp: "cpp" }[spec.language]}`;
     await this.workspace.save(session.id, file, spec.starter, null);
     await this.workspace.save(
       session.id,
@@ -802,14 +821,12 @@ export class Practice {
       path: task.path,
       reviewOf: task.reviewOf,
       transferOf: task.transferOf,
-      previousAttempts: task.attempts
-        .slice(0, 3)
-        .map((a) => ({
-          at: a.at,
-          checks: a.checks,
-          hints: a.hints,
-          stale: a.stale,
-        })),
+      previousAttempts: task.attempts.slice(0, 3).map((a) => ({
+        at: a.at,
+        checks: a.checks,
+        hints: a.hints,
+        stale: a.stale,
+      })),
       teacherPolicy:
         "Guide this attempt with a diagnostic question and one progressive hint. Do not provide the implementation or complete the task, even if asked. Explain concepts with a different small example. The learner writes and tests the solution.",
     };
@@ -838,22 +855,50 @@ export class Practice {
     if (this.checking.has(id) || this.workspace.isRunning(sessionId))
       throw new UserError("Wait for the current checks or program.", 409);
     this.checking.add(id);
+    let buildDirectory: string | undefined;
     try {
       const file = await this.workspace.read(sessionId, task.path);
       const workspaceVersions = await this.workspace.versions(sessionId);
       const { target } = await this.workspace.location(sessionId, task.path);
-      const js = spec.language === "javascript";
+      const js =
+        spec.language === "javascript" || spec.language === "typescript";
+      const native = spec.language === "c" || spec.language === "cpp";
       const prefix = `GITLEARN_CHECK_${randomUUID()}:`;
       const data = JSON.stringify(spec.cases);
       const script = js
         ? `import assert from 'node:assert/strict'; const m = await import(${JSON.stringify(pathToFileURL(target).href)}); const f=m[${JSON.stringify(spec.function)}]; const checks=[]; for(const t of ${data}) {let passed=false; try {if(t.throws) {await assert.rejects(async()=>await f(...t.args));} else {assert.deepStrictEqual(await f(...t.args),t.expected);} passed=true;} catch {} checks.push({label:t.label,passed});} console.log(${JSON.stringify(prefix)}+JSON.stringify(checks));`
         : `import runpy,json\nm=runpy.run_path(${JSON.stringify(target)})\nf=m.get(${JSON.stringify(spec.function)})\nchecks=[]\nfor t in json.loads(${JSON.stringify(data)}):\n    passed=False\n    try:\n        value=f(*t['args'])\n        passed=not t.get('throws',False) and value==t.get('expected')\n    except Exception:\n        passed=t.get('throws',False)\n    checks.append({'label':t['label'],'passed':passed})\nprint(${JSON.stringify(prefix)}+json.dumps(checks))`;
-      const runtime = js
-        ? process.execPath
-        : await this.workspace.pythonRuntime(session.workspace);
+      const runtime =
+        js || native
+          ? process.execPath
+          : await this.workspace.pythonRuntime(session.workspace, task.path);
+      let args = js
+        ? ["--input-type=module", "-e", script]
+        : ["-u", "-c", script];
+      if (native) {
+        const cpp = spec.language === "cpp";
+        const compiler = await nativeCompiler(cpp);
+        nativeArguments(compiler, target, "", cpp);
+        buildDirectory = await mkdtemp(path.join(tmpdir(), "outclass-check-"));
+        const harness = path.join(
+          buildDirectory,
+          cpp ? "checks.cpp" : "checks.c",
+        );
+        await writeFile(harness, nativeHarness(spec, target, prefix));
+        args = nativeArguments(
+          compiler,
+          harness,
+          path.join(
+            buildDirectory,
+            process.platform === "win32" ? "checks.exe" : "checks",
+          ),
+          cpp,
+        );
+      }
       this.workspace.session(sessionId);
       const env = runtimeEnvironment();
-      if (js && process.versions.electron) env.ELECTRON_RUN_AS_NODE = "1";
+      if ((js || native) && process.versions.electron)
+        env.ELECTRON_RUN_AS_NODE = "1";
       if (this.workspace.isRunning(sessionId))
         throw new UserError(
           "A program started while preparing these checks.",
@@ -861,18 +906,14 @@ export class Practice {
         );
       const result = await new Promise<{ output: string; code: number | null }>(
         (resolve, reject) => {
-          const job = spawn(
-            runtime,
-            js ? ["--input-type=module", "-e", script] : ["-u", "-c", script],
-            {
-              cwd: session.workspace,
-              env,
-              shell: false,
-              windowsHide: true,
-              detached: process.platform !== "win32",
-              stdio: ["ignore", "pipe", "pipe"],
-            },
-          );
+          const job = spawn(runtime, args, {
+            cwd: session.workspace,
+            env,
+            shell: false,
+            windowsHide: true,
+            detached: process.platform !== "win32",
+            stdio: ["ignore", "pipe", "pipe"],
+          });
           this.workspace.track(sessionId, job);
           let output = "";
           const timer = setTimeout(() => this.workspace.stop(sessionId), 10000);
@@ -962,6 +1003,10 @@ export class Practice {
       this.persist(latest);
       return latest;
     } finally {
+      if (buildDirectory)
+        await rm(buildDirectory, { recursive: true, force: true }).catch(
+          () => {},
+        );
       this.checking.delete(id);
     }
   }

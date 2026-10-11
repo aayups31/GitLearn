@@ -1,3 +1,4 @@
+import { projectKinds, pythonProfiles } from "../project-types.js";
 import express, {
   type Request,
   type Response,
@@ -339,12 +340,13 @@ export function createApp(
     const input = z
       .object({
         sessionId: z.string().uuid(),
-        kind: z.enum(["react", "python"]),
+        kind: z.enum(projectKinds),
+        profile: z.enum(pythonProfiles).optional(),
       })
       .parse(req.body);
     res.json(
       await application.serial(() =>
-        runtime.scaffold(input.sessionId, input.kind),
+        runtime.scaffold(input.sessionId, input.kind, input.profile),
       ),
     );
   });
@@ -363,7 +365,9 @@ export function createApp(
   app.post("/api/live-search", async (req, res) =>
     res.json(
       await live.discover(
-        z.enum(["JavaScript", "Python", "TypeScript"]).parse(req.body.language),
+        z
+          .enum(["JavaScript", "Python", "TypeScript", "C", "C++"])
+          .parse(req.body.language),
         req.body.courseId ? text.parse(req.body.courseId) : undefined,
       ),
     ),

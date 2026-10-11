@@ -6,7 +6,12 @@ import {
   realpath,
   writeFile,
   access,
+  mkdtemp,
+  rm,
+  stat,
 } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { nativeCompiler, nativeArguments } from "./native-runtime.js";
 import { constants } from "node:fs";
 import { createHash, randomUUID } from "node:crypto";
 import { spawn, type ChildProcess } from "node:child_process";
@@ -244,15 +249,29 @@ export class Workspace {
         .map((run) => this.runContext(id, run.id, versions)),
     );
   }
-  async pythonRuntime(workspace?: string) {
-    if (workspace)
+  async pythonRuntime(workspace?: string, relative?: string) {
+    const roots: string[] = [];
+    if (workspace) {
+      let directory = relative
+        ? path.dirname(child(workspace, relative))
+        : workspace;
+      while (inside(workspace, directory)) {
+        roots.push(directory);
+        if (directory === workspace) break;
+        directory = path.dirname(directory);
+      }
+    }
+    for (const root of roots)
       for (const folder of [".venv", "venv"]) {
         const candidate = path.join(
-          workspace,
+          root,
           folder,
           process.platform === "win32" ? "Scripts/python.exe" : "bin/python",
         );
-        if ((await lstat(candidate).catch(() => null))?.isFile())
+        if (
+          (await stat(candidate).catch(() => null))?.isFile() &&
+          inside(root, await realpath(path.dirname(candidate)))
+        )
           return candidate;
       }
     return "python";
@@ -281,6 +300,25 @@ export class Workspace {
       webToolchainAvailable: await git.available("node"),
       pythonAvailable,
       pythonRuntime,
+      cCompiler: await nativeCompiler(false),
+      cppCompiler: await nativeCompiler(true),
+      npmAvailable: (
+        await Promise.all(
+          (process.env.PATH || process.env.Path || "")
+            .split(path.delimiter)
+            .map((directory) =>
+              stat(
+                path.join(
+                  directory,
+                  process.platform === "win32" ? "npm.cmd" : "npm",
+                ),
+              ).then(
+                (info) => info.isFile(),
+                () => false,
+              ),
+            ),
+        )
+      ).some(Boolean),
       gitAvailable,
       historyWritable,
       workspaceWritable,
@@ -382,14 +420,34 @@ export class Workspace {
         409,
       );
     const extension = path.extname(relative).toLowerCase();
-    if (![".js", ".mjs", ".cjs", ".py"].includes(extension))
+    if (
+      ![
+        ".js",
+        ".mjs",
+        ".cjs",
+        ".ts",
+        ".mts",
+        ".cts",
+        ".py",
+        ".c",
+        ".cpp",
+        ".cc",
+        ".cxx",
+      ].includes(extension)
+    )
       throw new UserError(
-        "Run supports JavaScript and Python. Use Preview for HTML; other languages need their own local toolchain.",
+        "Run supports JavaScript, erasable TypeScript, Python, C and C++. React/Next.js JSX and TSX need their project's dev server in Project console. Use Preview for HTML.",
       );
     const runtime =
       extension === ".py"
-        ? await this.pythonRuntime(session.workspace)
+        ? await this.pythonRuntime(session.workspace, relative)
         : process.execPath;
+    const native = [".c", ".cpp", ".cc", ".cxx"].includes(extension);
+    const compiler = native
+      ? await nativeCompiler(extension !== ".c")
+      : undefined;
+    // Validate the compiler before allocating a temporary build directory.
+    if (native) nativeArguments(compiler, target, "", extension !== ".c");
     const startedAt = new Date().toISOString();
     this.session(id);
     // Runtime lookup awaits disk access; recheck before spawning to prevent two overlapping runs.
@@ -415,24 +473,42 @@ export class Workspace {
     env.PYTHONIOENCODING = "utf-8";
     if (extension !== ".py" && process.versions.electron)
       env.ELECTRON_RUN_AS_NODE = "1";
+    const buildDirectory = native
+      ? await mkdtemp(path.join(tmpdir(), "outclass-native-"))
+      : undefined;
+    // mkdtemp yields; preserve the one-program-per-workspace invariant.
+    if (this.jobs.has(id)) {
+      if (buildDirectory)
+        await rm(buildDirectory, { recursive: true, force: true });
+      throw new UserError("A program is already running. Stop it first.", 409);
+    }
+    const args = native
+      ? nativeArguments(
+          compiler,
+          target,
+          path.join(
+            buildDirectory!,
+            process.platform === "win32" ? "program.exe" : "program",
+          ),
+          extension !== ".c",
+        )
+      : extension === ".py"
+        ? ["-u", target]
+        : [target];
     return new Promise<{
       output: string;
       exitCode: number | null;
       timedOut: boolean;
       run: RunContext;
     }>((resolve, reject) => {
-      const job = spawn(
-        runtime,
-        extension === ".py" ? ["-u", target] : [target],
-        {
-          cwd: session.workspace,
-          env,
-          windowsHide: true,
-          shell: false,
-          detached: process.platform !== "win32",
-          stdio: ["pipe", "pipe", "pipe"],
-        },
-      );
+      const job = spawn(runtime, args, {
+        cwd: session.workspace,
+        env,
+        windowsHide: true,
+        shell: false,
+        detached: process.platform !== "win32",
+        stdio: ["pipe", "pipe", "pipe"],
+      });
       this.jobs.set(id, job);
       const live = { path: relative, output: "", inputs: 0 };
       this.liveRuns.set(id, live);
@@ -475,6 +551,10 @@ export class Workspace {
         clearTimeout(timer);
         this.jobs.delete(id);
         this.liveRuns.delete(id);
+        if (buildDirectory)
+          await rm(buildDirectory, { recursive: true, force: true }).catch(
+            () => {},
+          );
         if (failed) return;
         const completeOutput =
           output + (timedOut ? "\n[Stopped after 10 seconds]" : "");

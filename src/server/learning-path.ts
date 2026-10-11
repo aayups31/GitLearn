@@ -1,3 +1,4 @@
+import { practiceLanguage } from "../project-types.js";
 import { z } from "zod";
 import { createHash } from "node:crypto";
 import { lstat } from "node:fs/promises";
@@ -232,12 +233,12 @@ export class LearningPath {
       : [];
     const dependencies: { file: string; references: string[] }[] = [];
     for (const file of Object.keys(versions).filter((p) =>
-      /\.(?:[cm]?js|jsx|tsx?|py)$/.test(p),
+      /\.(?:[cm]?[jt]sx?|py|c|h|cpp|cc|cxx|hpp|hxx)$/.test(p),
     )) {
       const source = (await this.workspace.read(session.id, file)).content;
       const references = [
         ...source.matchAll(
-          /(?:from\s+|import\s+|require\s*\(\s*)["']?(\.?\/?[\w./-]+)/g,
+          /(?:from\s+|import\s+|require\s*\(\s*|#\s*include\s*)["']?(\.?\/?[\w./-]+)/g,
         ),
       ].map((m) => m[1]);
       const matches = changed.filter((c) =>
@@ -361,13 +362,7 @@ export class LearningPath {
     const topic =
       `${current?.title || ""} ${current?.section || ""}`.toLowerCase();
     const runs = this.app.store.get<RunEvidence[]>(`runs:${id}`) || [];
-    const language =
-      /python/i.test(course.title) || runs.some((r) => r.path.endsWith(".py"))
-        ? "python"
-        : /javascript|typescript|react/i.test(course.title) ||
-            runs.some((r) => /\.[cm]?js$/.test(r.path))
-          ? "javascript"
-          : undefined;
+    const language = practiceLanguage(course.title, runs[0]?.path);
     const tasks = this.practice.tasks().filter((t) => t.courseId === id);
     const candidates = this.practice
       .dashboard(id)

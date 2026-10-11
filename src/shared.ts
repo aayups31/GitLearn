@@ -94,6 +94,9 @@ export interface Diagnostics {
   webToolchainAvailable: boolean;
   pythonAvailable: boolean;
   pythonRuntime: string;
+  cCompiler?: string;
+  cppCompiler?: string;
+  npmAvailable?: boolean;
   gitAvailable: boolean;
   historyWritable: boolean;
   workspaceWritable: boolean | null;

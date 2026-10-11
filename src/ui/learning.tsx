@@ -123,10 +123,15 @@ export function SetupDiagnostics({
     ? [
         ["JavaScript", true, `Node ${result.nodeVersion} · ready locally`],
         [
+          "TypeScript",
+          true,
+          "Erasable .ts/.mts/.cts scripts run locally · use a project type check before claiming type safety",
+        ],
+        [
           "Web projects",
-          result.webToolchainAvailable,
-          result.webToolchainAvailable
-            ? "Installed Node.js detected · npm/Vite projects can use the project console"
+          result.webToolchainAvailable && !!result.npmAvailable,
+          result.webToolchainAvailable && result.npmAvailable
+            ? "Node.js/npm detected · React, Next.js and Node projects use Project console"
             : "Install Node.js with npm for web projects. Short JavaScript runs work now.",
         ],
         [
@@ -135,6 +140,20 @@ export function SetupDiagnostics({
           result.pythonAvailable
             ? `Ready · ${result.pythonRuntime}`
             : "Install Python, then restart OutClass. JavaScript works now.",
+        ],
+        [
+          "C",
+          !!result.cCompiler,
+          result.cCompiler
+            ? `${result.cCompiler} · single-file C11 compile/run ready`
+            : "Install GCC or Clang, add it to PATH, then restart OutClass.",
+        ],
+        [
+          "C++",
+          !!result.cppCompiler,
+          result.cppCompiler
+            ? `${result.cppCompiler} · single-file C++17 compile/run ready`
+            : "Install G++ or Clang++, add it to PATH, then restart OutClass.",
         ],
         [
           "Checkpoints",
