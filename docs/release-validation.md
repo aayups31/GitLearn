@@ -9,6 +9,7 @@ Verified on Windows, October 10, 2026. Restored the credential-free Windows syst
 - The affected practical-learning browser scenario passed: during-course suggestion, learner-written checks, hints, reflection, fresh review, console, and project scaffold. Both static-site scenarios passed. The previous complete nine-scenario browser run remains recorded below.
 - The final packaged desktop scenario passed in 23.8 seconds, including a Windows external-tool command as well as encrypted-key persistence/removal, bundled JavaScript, restored files, practical checks, scaffolding, and stopping its tracked command on close.
 - Production build, packaged version/privacy checks, and configured-key/environment-file exclusion scans passed.
+- The [0.4.1 GitHub release](https://github.com/aayups31/GitLearn/releases/tag/v0.4.1) is public. Both download URLs returned HTTP 200; asset sizes, GitHub SHA-256 digests, and the downloaded checksum file match the local tested artifacts.
 - The public site at https://git-learn-black.vercel.app/ was verified with the setup guide, privacy page, and release links. Vercel automatically deployed the `main` checkpoint `526f73c` successfully.
 
 | Artifact | Bytes | SHA-256 |

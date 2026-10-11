@@ -1,11 +1,11 @@
 {
-  "version": "0.4.0",
+  "version": "0.4.1",
   "windows": {
-    "url": "https://github.com/aayups31/GitLearn/releases/download/v0.4.0/GitLearn-Setup-0.4.0.exe",
+    "url": "https://github.com/aayups31/GitLearn/releases/download/v0.4.1/GitLearn-Setup-0.4.1.exe",
     "size": "111 MB"
   },
   "extension": {
-    "url": "https://github.com/aayups31/GitLearn/releases/download/v0.4.0/GitLearn-Chrome-0.4.0.zip",
+    "url": "https://github.com/aayups31/GitLearn/releases/download/v0.4.1/GitLearn-Chrome-0.4.1.zip",
     "size": "134 KB"
   },
   "chromeStoreUrl": null

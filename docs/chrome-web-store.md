@@ -1,6 +1,6 @@
 # Chrome Web Store preparation
 
-Your developer registration is ready; the dashboard has no extension listing yet. Registration does not publish the extension. Official steps: https://developer.chrome.com/docs/webstore/publish.
+The 0.4.1 ZIP was accepted and draft item `iaokfcjeghdefpgcgbcomiehhogbkbcp` was created on October 10, 2026 after the publisher enabled Google two-step verification. Listing completion, privacy declarations, and store review are separate from uploading the package. Official steps: https://developer.chrome.com/docs/webstore/publish.
 
 ## Upload package
 
