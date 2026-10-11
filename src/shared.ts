@@ -45,12 +45,14 @@ export interface Session {
   status: "active" | "paused";
   note: string;
   projectId?: string;
+  contributionId?: string;
 }
 export interface ResumeAnchor {
   courseId: string;
   lessonId: string;
   workspace: string;
   projectId?: string;
+  contributionId?: string;
   file?: string;
   cursor?: number;
   note: string;

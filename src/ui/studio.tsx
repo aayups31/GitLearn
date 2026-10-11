@@ -39,6 +39,7 @@ import {
 import type { Course, Status, ResumeAnchor, RunContext } from "../shared";
 import type { ChatMessage, Evidence } from "../server/library";
 import "./studio.css";
+import { ProjectConsole, TaskGuide, PracticePrompt } from "./practical";
 
 type Api = <T>(route: string, body?: unknown) => Promise<T>;
 type File = {
@@ -265,6 +266,8 @@ export function Studio({
   sessionNote,
   onNoteChange,
   busy,
+  onPractice,
+  onLive,
 }: {
   state: Status;
   selectedCourse?: string;
@@ -279,6 +282,8 @@ export function Studio({
   sessionNote: string;
   onNoteChange: (value: string) => void;
   busy: boolean;
+  onPractice: () => void;
+  onLive: () => void;
 }) {
   const course =
     state.courses.find((item) => item.id === selectedCourse) ||
@@ -301,6 +306,7 @@ export function Studio({
     [attachedRun, setAttachedRun] = useState(false),
     [tutorStyle, setTutorStyle] = useState<"hint" | "explain">("hint"),
     [cursor, setCursor] = useState(0);
+  const [projectRunning, setProjectRunning] = useState(false);
   const [savedNote, setSavedNote] = useState(session?.note || ""),
     [selection, setSelection] = useState("");
   const [library, setLibrary] = useState<Library>(),
@@ -682,11 +688,23 @@ export function Studio({
           {session && (
             <button
               className="button primary studio-checkpoint"
-              disabled={busy || !!action || running}
-              onClick={finish}
+              disabled={busy || !!action || running || projectRunning}
+              onClick={
+                session.contributionId
+                  ? () =>
+                      safe("end", async () => {
+                        for (const name of Object.keys(drafts))
+                          await saveFile(name);
+                        await api("note", { sessionId: session.id, note });
+                        await api("session", { action: "discard" });
+                        await onRefresh();
+                        onLive();
+                      })
+                  : finish
+              }
             >
               <GitCommitHorizontal size={15} />
-              Checkpoint
+              {session.contributionId ? "End work session" : "Checkpoint"}
             </button>
           )}
         </div>
@@ -736,6 +754,39 @@ export function Studio({
           </div>
         ) : (
           <>
+            {session.contributionId ? (
+              <div className="contribution-context">
+                Contribution workspace · you write the change; the teacher
+                guides your reasoning.
+                <button onClick={onLive}>Plan & review</button>
+              </div>
+            ) : (
+              <>
+                <PracticePrompt
+                  api={api}
+                  courseId={course.id}
+                  changed={lastRun?.id}
+                  onOpen={onPractice}
+                />
+                <TaskGuide
+                  api={api}
+                  sessionId={session.id}
+                  courseId={course.id}
+                  workspace={session.workspace}
+                  beforeCheck={async () => {
+                    for (const name of Object.keys(drafts))
+                      await saveFile(name);
+                  }}
+                  onAsk={(q) => {
+                    setMode("help");
+                    setTutorStyle("hint");
+                    setQuestion(q);
+                    setRightTab("chat");
+                    setMobileTab("assistant");
+                  }}
+                />
+              </>
+            )}
             <div className="studio-toolbar">
               <span>
                 <Folder size={13} />
@@ -750,7 +801,7 @@ export function Studio({
                   New file
                 </button>
                 <button
-                  disabled={!file || !!action || running}
+                  disabled={!file || !!action || running || projectRunning}
                   onClick={() =>
                     safe("save", async () => {
                       await saveFile();
@@ -766,7 +817,7 @@ export function Studio({
                 </button>
                 <button
                   className="run-button"
-                  disabled={!file || !!action || running}
+                  disabled={!file || !!action || running || projectRunning}
                   onClick={run}
                 >
                   <Play size={13} />
@@ -945,6 +996,12 @@ export function Studio({
               </div>
             </div>
             <div className="studio-bottom">
+              <ProjectConsole
+                api={api}
+                sessionId={session.id}
+                onRunning={setProjectRunning}
+                onFilesChanged={loadFiles}
+              />
               <details className="studio-notes">
                 <summary>
                   <BookOpen size={13} />

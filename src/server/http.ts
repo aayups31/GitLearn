@@ -13,6 +13,9 @@ import { run } from "./git.js";
 import { githubStatus, signInGithub } from "./github.js";
 import { Workspace } from "./workspace.js";
 import { CourseLibrary } from "./library.js";
+import { Practice } from "./practice.js";
+import { ProjectRuntime } from "./project-runtime.js";
+import { LiveWork } from "./live-work.js";
 
 const text = z.string().max(2000);
 function matches(a: string, b: string) {
@@ -27,7 +30,14 @@ export function createApp(
 ) {
   const app = express();
   const workspace = new Workspace(application);
-  app.locals.stopPrograms = () => workspace.stopAll();
+  const practice = new Practice(application, workspace);
+  const runtime = new ProjectRuntime(application, workspace);
+  const live = new LiveWork(application, workspace, runtime, practice);
+  app.locals.stopPrograms = () => {
+    live.stopAll();
+    runtime.stopAll();
+    workspace.stopAll();
+  };
   const library = new CourseLibrary(application);
   app.disable("x-powered-by");
   const localOrigins = new Set([
@@ -183,6 +193,135 @@ export function createApp(
     res.json({ opened: !!focusDesktop });
   });
   const fileQuery = z.object({ sessionId: text.min(1), path: text.min(1) });
+  app.get("/api/practice", (req, res) =>
+    res.json(
+      practice.dashboard(
+        req.query.courseId ? text.parse(req.query.courseId) : undefined,
+      ),
+    ),
+  );
+  app.post("/api/practice-start", async (req, res) => {
+    const input = z
+      .object({
+        courseId: text.min(1),
+        exerciseId: text.min(1),
+        reviewOf: z.string().uuid().optional(),
+      })
+      .parse(req.body);
+    res.json(
+      await application.serial(() =>
+        practice.start(input.courseId, input.exerciseId, input.reviewOf),
+      ),
+    );
+  });
+  app.post("/api/practice-check", async (req, res) => {
+    const input = z
+      .object({ taskId: z.string().uuid(), sessionId: z.string().uuid() })
+      .parse(req.body);
+    res.json(await practice.check(input.taskId, input.sessionId));
+  });
+  app.post("/api/practice-hint", (req, res) =>
+    res.json(practice.hint(z.string().uuid().parse(req.body.taskId))),
+  );
+  app.post("/api/practice-update", (req, res) => {
+    const input = z
+      .object({
+        taskId: z.string().uuid(),
+        action: z.enum(["pause", "resume", "reflection"]),
+        reflection: z.string().max(4000).default(""),
+      })
+      .parse(req.body);
+    res.json(practice.update(input.taskId, input.action, input.reflection));
+  });
+  app.post("/api/practice-defer", (req, res) => {
+    const input = z
+      .object({ key: text, days: z.number().int().min(1).max(365) })
+      .parse(req.body);
+    practice.defer(input.key, input.days);
+    res.json({ ok: true });
+  });
+  app.post("/api/practice-reviews", (req, res) => {
+    application.store.put(
+      "practice:reviewsEnabled",
+      z.boolean().parse(req.body.enabled),
+    );
+    res.json({ ok: true });
+  });
+  app.get("/api/learning-export", (_req, res) =>
+    res.json({
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      practice: practice.dashboard(),
+      contributions: live.records(),
+    }),
+  );
+  app.get("/api/project-commands", (req, res) =>
+    res.json({
+      commands: runtime.status(text.min(1).parse(req.query.sessionId)),
+    }),
+  );
+  app.post("/api/project-command", async (req, res) => {
+    const input = z
+      .object({ sessionId: z.string().uuid(), command: text.min(1) })
+      .parse(req.body);
+    res.json(await runtime.start(input.sessionId, input.command));
+  });
+  app.post("/api/project-scaffold", async (req,res)=>{
+    const input=z.object({sessionId:z.string().uuid(),kind:z.enum(["react","python"])}).parse(req.body);
+    res.json(await application.serial(()=>runtime.scaffold(input.sessionId,input.kind)));
+  });
+  app.post("/api/project-input", (req, res) => {
+    const input = z
+      .object({ id: z.string().uuid(), text: z.string().max(4000) })
+      .parse(req.body);
+    runtime.input(input.id, input.text);
+    res.json({ ok: true });
+  });
+  app.post("/api/project-stop", (req, res) => {
+    runtime.stop(z.string().uuid().parse(req.body.id));
+    res.json({ ok: true });
+  });
+  app.get("/api/live-work", (_req, res) => res.json(live.status()));
+  app.post("/api/live-search", async (req, res) =>
+    res.json(
+      await live.discover(
+        z.enum(["JavaScript", "Python", "TypeScript"]).parse(req.body.language),
+      ),
+    ),
+  );
+  app.post("/api/live-select", async (req, res) => {
+    const input = z
+      .object({ courseId: text.min(1), url: text.min(1) })
+      .parse(req.body);
+    res.json(await live.select(input.courseId, input.url));
+  });
+  app.post("/api/live-clone", async (req, res) =>
+    res.json(
+      await application.serial(() =>
+        live.clone(z.string().uuid().parse(req.body.id)),
+      ),
+    ),
+  );
+  app.post("/api/live-open", async (req, res) =>
+    res.json(
+      await application.serial(() =>
+        live.open(z.string().uuid().parse(req.body.id)),
+      ),
+    ),
+  );
+  app.post("/api/live-update", (req, res) => {
+    const input = z
+      .object({
+        id: z.string().uuid(),
+        notes: z.string().max(8000),
+        stages: z.array(z.string().max(30)).max(6),
+      })
+      .parse(req.body);
+    res.json(live.update(input.id, input.notes, input.stages));
+  });
+  app.post("/api/live-draft", async (req, res) =>
+    res.json(await live.draft(z.string().uuid().parse(req.body.id))),
+  );
   app.get("/api/workspace-files", async (req, res) =>
     res.json(await workspace.list(text.min(1).parse(req.query.sessionId))),
   );
@@ -357,16 +496,25 @@ export function createApp(
     const runContext = input.runId
       ? await workspace.runContext(session!.id, input.runId)
       : undefined;
-    res.json(
-      await library.ask(
-        input.courseId,
-        input.question,
-        input.mode,
-        input.selectedCode,
-        runContext,
-        input.tutorStyle,
-      ),
+    const teaching =
+      input.mode === "help"
+        ? {
+            practice: practice.context(input.courseId),
+            contribution: live.context(input.courseId),
+          }
+        : undefined;
+    const answer = await library.ask(
+      input.courseId,
+      input.question,
+      input.mode,
+      input.selectedCode,
+      runContext,
+      input.tutorStyle,
+      teaching,
     );
+    if (teaching?.practice && answer.mode !== "retrieval")
+      practice.recordHelp(teaching.practice.taskId);
+    res.json(answer);
   });
   app.post("/api/assistant-clear", (req, res) => {
     const id = text.min(1).parse(req.body.courseId);

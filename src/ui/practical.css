@@ -1,0 +1,651 @@
+.learning-hub {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding-bottom: 48px;
+}
+.learning-hub .page-heading h1 {
+  font-size: 34px;
+  letter-spacing: -1.3px;
+  margin-bottom: 12px;
+}
+.learning-hub .page-heading p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+.learning-controls {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 8px 0 28px;
+  flex-wrap: wrap;
+}
+.learning-controls select {
+  max-width: 380px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 9px 12px;
+  color: var(--ink);
+}
+.learning-controls > .text-button {
+  margin-left: auto;
+}
+.learning-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--line);
+  gap: 28px;
+  margin-bottom: 26px;
+}
+.learning-tabs button {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted);
+  padding: 12px 0;
+  font-size: 13px;
+}
+.learning-tabs button[aria-selected="true"] {
+  color: var(--ink);
+  border-color: var(--accent);
+}
+.learning-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 38px;
+}
+.learning-list {
+  min-width: 0;
+}
+.learning-section-label {
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 28px 0 15px;
+}
+.learning-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 21px 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  width: 100%;
+  background: none;
+  color: var(--ink);
+}
+.learning-row > svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.learning-row > div {
+  flex: 1;
+  min-width: 0;
+}
+.learning-row h3,
+.practice-prompt h3 {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0 0 7px;
+  line-height: 1.5;
+}
+.learning-row p {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.7;
+}
+.task-row {
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+.task-row:hover,
+.task-row.selected {
+  background: var(--hover);
+}
+.learning-detail {
+  border-left: 1px solid var(--line);
+  padding: 22px 0 22px 32px;
+  min-width: 0;
+}
+.learning-detail h2 {
+  font-size: 23px;
+  line-height: 1.35;
+  letter-spacing: -0.6px;
+  margin: 15px 0;
+}
+.learning-detail p,
+.learning-detail li {
+  font-size: 12px;
+  line-height: 1.9;
+  color: var(--muted);
+}
+.learning-detail li {
+  margin-bottom: 10px;
+}
+.learning-detail ul {
+  padding-left: 16px;
+}
+.learning-detail small {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.learning-detail label:not(.contribution-step) {
+  display: block;
+  font-size: 11px;
+  margin: 22px 0 14px;
+}
+.learning-detail textarea {
+  display: block;
+  resize: vertical;
+  min-height: 105px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px;
+  width: 100%;
+  margin-top: 10px;
+  line-height: 1.7;
+}
+.learning-detail > .button {
+  margin: 6px 10px 12px 0;
+  font-size: 11px;
+}
+.learning-detail > .text-button {
+  margin: 6px 0 12px;
+  display: flex;
+}
+.learning-detail-mark {
+  margin: 8px 0 26px;
+  color: var(--accent);
+}
+.learning-detail a {
+  font-size: 11px;
+  color: var(--accent);
+  text-decoration: none;
+}
+.learning-reason {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: var(--accent-soft);
+  border-radius: 7px;
+  padding: 17px 20px;
+  margin: 0 0 20px;
+  color: var(--accent);
+}
+.learning-reason svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.learning-reason p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--ink);
+}
+.learning-reason small {
+  font-size: 10px;
+  color: var(--muted);
+}
+.learning-empty {
+  padding: 50px 10px;
+  color: var(--muted);
+  max-width: 430px;
+}
+.learning-empty svg {
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+.learning-empty h2 {
+  font-size: 18px;
+  color: var(--ink);
+}
+.learning-empty p,
+.learning-caption {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+.behavior-check,
+.skill-record {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+.behavior-check.passed,
+.inline-checks .passed {
+  color: var(--success);
+}
+.skill-record {
+  border-top: 1px solid var(--line);
+  padding: 22px 0;
+}
+.skill-record p {
+  margin: 6px 0 0;
+  font-size: 11px;
+}
+.skill-record strong {
+  font-weight: 500;
+  color: var(--ink);
+}
+.review-preference {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  padding: 10px 0;
+}
+.review-preference input {
+  accent-color: var(--accent);
+}
+.practice-prompt {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 25px 0;
+  margin: 0 0 18px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.practice-prompt > svg {
+  flex-shrink: 0;
+  color: var(--accent);
+  margin-top: 4px;
+}
+.practice-prompt > div:first-of-type {
+  flex: 1;
+}
+.practice-prompt small {
+  color: var(--accent);
+  font-size: 10px;
+  display: block;
+  margin-bottom: 10px;
+}
+.practice-prompt p {
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 0 0 7px;
+  color: var(--muted);
+}
+.practice-prompt span {
+  font-size: 10px;
+  color: var(--muted);
+}
+.prompt-actions {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 13px;
+}
+.prompt-actions .button {
+  font-size: 11px;
+  white-space: nowrap;
+}
+.prompt-actions .text-button {
+  font-size: 11px;
+}
+.issue-input {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.issue-input input {
+  flex: 1;
+  min-width: 0;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 11px;
+  color: var(--ink);
+  font-size: 12px;
+}
+.issue-input button {
+  background: none;
+  border: 0;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.opportunity-row {
+  border-bottom: 1px solid var(--line);
+  padding: 24px 0;
+}
+.opportunity-row small {
+  font-size: 10px;
+  color: var(--muted);
+}
+.opportunity-row h3 {
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 500;
+  margin: 9px 0;
+}
+.opportunity-row a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.opportunity-row p {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.opportunity-row .text-button {
+  font-size: 11px;
+}
+.contributor-source {
+  border-bottom: 1px solid var(--line);
+  padding: 12px 0;
+  font-size: 11px;
+}
+.contributor-source pre,
+.contribution-draft pre {
+  font-family: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 340px;
+  overflow: auto;
+  font-size: 11px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+.contribution-step {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  margin: 13px 0;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.contribution-step input {
+  accent-color: var(--accent);
+}
+.issue-body {
+  white-space: pre-wrap;
+  max-height: 270px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+.clone-review {
+  padding: 12px;
+  background: var(--soft);
+  border-radius: 5px;
+  overflow-wrap: anywhere;
+}
+.contribution-draft {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  font-size: 12px;
+}
+.task-guide,
+.project-console {
+  flex-shrink: 0;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+}
+.task-guide summary,
+.project-console summary {
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 11px;
+  color: var(--ink);
+  cursor: pointer;
+  list-style: none;
+}
+.task-guide summary > svg,
+.project-console summary > svg {
+  color: var(--accent);
+}
+.task-guide summary small,
+.project-console summary small {
+  margin-left: auto;
+  font-size: 9px;
+  color: var(--muted);
+}
+.task-guide-content {
+  padding: 0 20px 14px;
+  max-height: 235px;
+  overflow: auto;
+}
+.task-guide-content p,
+.task-guide-content li {
+  font-size: 11px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+.task-guide-content ul {
+  padding-left: 16px;
+}
+.task-guide-actions {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.task-guide-actions button {
+  gap: 6px;
+  font-size: 10px !important;
+  color: var(--accent) !important;
+}
+.guided-hint {
+  background: var(--accent-soft);
+  padding: 12px;
+  border-radius: 5px;
+  color: var(--ink) !important;
+}
+.inline-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 10px;
+  margin-top: 15px;
+  color: var(--muted);
+}
+.inline-checks span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.inline-checks pre {
+  width: 100%;
+  white-space: pre-wrap;
+  color: var(--muted);
+  font-size: 10px;
+}
+.project-console-content {
+  padding: 0 18px 14px;
+  max-height: 320px;
+  overflow: auto;
+}
+.project-console-content > p {
+  font-size: 10px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.project-console-content form {
+  display: flex;
+  gap: 12px;
+  margin: 10px 0;
+}
+.project-console-content input {
+  background: var(--soft);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  border-radius: 5px;
+  padding: 9px;
+  font-family: monospace;
+  font-size: 11px;
+  min-width: 0;
+  flex: 1;
+}
+.project-console-content form button {
+  white-space: nowrap;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--accent);
+}
+.command-output {
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 200px;
+  overflow: auto;
+  background: var(--soft);
+  padding: 12px;
+  border-radius: 5px;
+  color: var(--ink);
+}
+.command-status {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 9px;
+  color: var(--muted);
+  padding-top: 7px;
+}
+.command-status code {
+  overflow-wrap: anywhere;
+}
+.command-presets {
+  display: flex;
+  gap: 13px;
+  flex-wrap: wrap;
+}
+.command-presets button {
+  font-size: 9px;
+  padding: 5px 0;
+  color: var(--muted);
+}
+.app-preview-control {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  font-size: 10px;
+  color: var(--muted);
+  margin: 14px 0;
+}
+.app-preview-control label {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.app-preview-control input {
+  width: 80px;
+}
+.app-preview-control a {
+  color: var(--accent);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.studio .practice-prompt {
+  padding: 15px 20px;
+  margin: 0;
+  flex-shrink: 0;
+}
+.studio .practice-prompt p {
+  font-size: 10px;
+}
+.studio .practice-prompt h3 {
+  font-size: 12px;
+}
+.studio .practice-prompt small {
+  margin-bottom: 6px;
+}
+.studio .prompt-actions button {
+  padding: 7px !important;
+  gap: 4px;
+  color: var(--accent);
+}
+.studio .task-guide {
+  order: 0;
+}
+.contribution-context {
+  padding: 12px 20px;
+  flex-shrink: 0;
+  background: var(--accent-soft);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.contribution-context button {
+  color: var(--accent);
+  font-size: 10px;
+  margin-left: 15px;
+}
+@media (max-width: 1150px) {
+  .learning-grid {
+    grid-template-columns: minmax(0, 1fr) 310px;
+    gap: 22px;
+  }
+  .learning-detail {
+    padding-left: 22px;
+  }
+  .learning-hub .page-heading h1 {
+    font-size: 29px;
+  }
+}
+@media (max-width: 850px) {
+  .learning-grid {
+    grid-template-columns: 1fr;
+  }
+  .learning-detail {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding: 25px 0;
+  }
+  .learning-controls select {
+    max-width: 100%;
+    width: 100%;
+  }
+  .learning-controls > .text-button {
+    margin-left: 0;
+  }
+  .practice-prompt {
+    flex-wrap: wrap;
+  }
+  .prompt-actions {
+    flex-direction: row;
+    padding-left: 36px;
+  }
+  .learning-row {
+    gap: 10px;
+  }
+  .learning-row h3 {
+    font-size: 12px;
+  }
+  .learning-row .text-button {
+    font-size: 11px;
+  }
+  .issue-input {
+    flex-wrap: wrap;
+  }
+  .issue-input input {
+    flex-basis: 100%;
+  }
+  .learning-hub .page-heading h1 {
+    font-size: 27px;
+  }
+  .task-guide-content {
+    max-height: 195px;
+  }
+  .studio .practice-prompt {
+    display: none;
+  }
+  .command-status {
+    flex-direction: column;
+  }
+}

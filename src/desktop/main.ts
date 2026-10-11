@@ -46,6 +46,8 @@ function external(url: string) {
     !target.hash
   )
     return shell.openExternal(target.href);
+  if (target.protocol === "http:" && target.hostname === "127.0.0.1" && Number(target.port)>=1024 && Number(target.port)<=65535 && target.origin!==origin && !target.username && !target.password)
+    return shell.openExternal(target.href);
   if (
     target.protocol !== "https:" ||
     !allowedExternal.has(target.hostname) ||

@@ -1,0 +1,1110 @@
+import React, { useEffect, useState } from "react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  BookOpen,
+  Check,
+  ChevronRight,
+  Circle,
+  Clock3,
+  Download,
+  Flag,
+  Github,
+  Lightbulb,
+  Play,
+  RefreshCw,
+  Square,
+  Terminal,
+} from "lucide-react";
+import type { Status } from "../shared";
+import type { Exercise, PracticeTask, Practice } from "../server/practice";
+import type { Candidate, Contribution } from "../server/live-work";
+import type { CommandRecord } from "../server/project-runtime";
+import "./practical.css";
+type Api = <T>(route: string, body?: unknown) => Promise<T>;
+type Dashboard = ReturnType<Practice["dashboard"]>;
+function useAction() {
+  const [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
+  return {
+    busy,
+    error,
+    run: async (fn: () => Promise<void>) => {
+      setBusy(true);
+      setError("");
+      try {
+        await fn();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Try again.");
+      } finally {
+        setBusy(false);
+      }
+    },
+  };
+}
+export function PracticePrompt({
+  api,
+  courseId,
+  changed,
+  onOpen,
+}: {
+  api: Api;
+  courseId?: string;
+  changed?: unknown;
+  onOpen: () => void;
+}) {
+  const [data, setData] = useState<Dashboard>();
+  useEffect(() => {
+    let live = true;
+    api<Dashboard>(
+      `practice${courseId ? `?courseId=${encodeURIComponent(courseId)}` : ""}`,
+    )
+      .then((r) => {
+        if (live) setData(r);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [courseId, changed]);
+  const suggestion = data?.opportunities[0],
+    exercise = data?.exercises.find((e) => e.id === suggestion?.exerciseId);
+  if (!suggestion || !exercise) return null;
+  return (
+    <section
+      className="practice-prompt"
+      aria-label="Practical learning opportunity"
+    >
+      <Lightbulb size={18} />
+      <div>
+        <small>A useful moment to build</small>
+        <h3>{exercise.title}</h3>
+        <p>{suggestion.reason}</p>
+        <span>
+          {exercise.minutes} minutes · {exercise.kind} ·{" "}
+          {suggestion.courseTitle}
+        </span>
+      </div>
+      <div className="prompt-actions">
+        <button className="button primary" onClick={onOpen}>
+          Explore task <ArrowRight size={14} />
+        </button>
+        <button
+          className="text-button"
+          onClick={() =>
+            void api("practice-defer", { key: suggestion.key, days: 1 }).then(
+              () => setData(undefined),
+            )
+          }
+        >
+          Later
+        </button>
+      </div>
+    </section>
+  );
+}
+export function LearningHub({
+  state,
+  api,
+  onCode,
+  onRefresh,
+}: {
+  state: Status;
+  api: Api;
+  onCode: (id: string) => void;
+  onRefresh: () => Promise<unknown>;
+}) {
+  const [data, setData] = useState<Dashboard>(),
+    [courseId, setCourseId] = useState(
+      state.session?.courseId || state.courses[0]?.id || "",
+    ),
+    [tab, setTab] = useState("practice"),
+    [selected, setSelected] = useState<PracticeTask>(),
+    [reflection, setReflection] = useState("");
+  const action = useAction();
+  const load = async () => setData(await api<Dashboard>("practice"));
+  useEffect(() => {
+    void load().catch(() => {});
+  }, [state.checkpoints.length]);
+  useEffect(() => {
+    setReflection(selected?.reflection || "");
+  }, [selected?.id]);
+  const spec = data?.exercises.find((e) => e.id === selected?.exerciseId);
+  const start = (id: string, reviewOf?: string) =>
+    action.run(async () => {
+      const task = await api<PracticeTask>("practice-start", {
+        courseId,
+        exerciseId: id,
+        reviewOf,
+      });
+      await onRefresh();
+      setSelected(task);
+      await load();
+      onCode(courseId);
+    });
+  const tasks = data?.tasks.filter((t) => t.courseId === courseId) || [];
+  const catalog =
+    data?.exercises.filter(
+      (e) => e.kind === (tab === "projects" ? "project" : "practice"),
+    ) || [];
+  const opportunity = data?.opportunities.find((o) => o.courseId === courseId);
+  return (
+    <div className="learning-hub">
+      <div className="page-heading">
+        <div className="eyebrow">Learn by doing</div>
+        <h1>Build before the course ends.</h1>
+        <p>Small practical steps. Your own decisions. A teacher beside you.</p>
+      </div>
+      <div className="learning-controls">
+        <select
+          aria-label="Practical learning course"
+          value={courseId}
+          onChange={(e) => {
+            setCourseId(e.target.value);
+            setSelected(undefined);
+          }}
+        >
+          {state.courses.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.title}
+            </option>
+          ))}
+        </select>
+        <button
+          className="text-button"
+          onClick={() =>
+            action.run(async () => {
+              const exported = await api("learning-export");
+              const url = URL.createObjectURL(
+                new Blob([JSON.stringify(exported, null, 2)], {
+                  type: "application/json",
+                }),
+              );
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "gitlearn-learning.json";
+              a.click();
+              setTimeout(() => URL.revokeObjectURL(url), 1000);
+            })
+          }
+        >
+          <Download size={14} />
+          Export learning
+        </button>
+      </div>
+      {action.error && (
+        <div className="alert error" role="alert">
+          {action.error}
+        </div>
+      )}
+      <div
+        className="learning-tabs"
+        role="tablist"
+        aria-label="Practical learning views"
+      >
+        {["practice", "projects", "reviews"].map((t) => (
+          <button
+            key={t}
+            role="tab"
+            aria-selected={tab === t}
+            onClick={() => {
+              setTab(t);
+              setSelected(undefined);
+            }}
+          >
+            {t[0].toUpperCase() + t.slice(1)}
+          </button>
+        ))}
+      </div>
+      {tab !== "reviews" && opportunity && (
+        <div className="learning-reason">
+          <Lightbulb size={16} />
+          <p>
+            {opportunity.reason} These are curated transfer tasks; the course
+            remains available throughout.
+          </p>
+        </div>
+      )}
+      {!state.courses.length ? (
+        <div className="learning-empty">
+          <BookOpen size={26} />
+          <h2>Bring a course, then make it yours.</h2>
+          <p>Add your first course from My courses.</p>
+        </div>
+      ) : tab === "reviews" ? (
+        <>
+          <label className="review-preference">
+            <input
+              type="checkbox"
+              checked={data?.reviewEnabled ?? true}
+              onChange={(e) =>
+                action.run(async () => {
+                  await api("practice-reviews", { enabled: e.target.checked });
+                  await load();
+                })
+              }
+            />
+            Show short review suggestions
+          </label>
+          <p className="learning-caption">
+            Revisit a fresh attempt without the old solution. Results describe
+            the checked behavior; outside assistance and broader proficiency are
+            not measured.
+          </p>
+          {data?.reviews
+            .filter((r) => r.courseId === courseId)
+            .map((review) => {
+              const task = data.tasks.find((t) => t.id === review.taskId)!;
+              return (
+                <div className="learning-row" key={review.taskId}>
+                  <Clock3 size={18} />
+                  <div>
+                    <h3>{review.title}</h3>
+                    <p>
+                      {Date.parse(review.dueAt) <= Date.now()
+                        ? "Ready for a short review"
+                        : `Next review ${new Date(review.dueAt).toLocaleDateString()}`}{" "}
+                      · recorded attempt {review.evidenceId.slice(0, 8)}
+                    </p>
+                  </div>
+                  <button
+                    className="text-button"
+                    disabled={action.busy}
+                    onClick={() => start(task.exerciseId, task.id)}
+                  >
+                    Try again <ArrowRight size={14} />
+                  </button>
+                </div>
+              );
+            })}
+          {!data?.reviews.some((r) => r.courseId === courseId) && (
+            <div className="learning-empty">
+              <Clock3 size={25} />
+              <h2>Memory grows from work.</h2>
+              <p>
+                Complete a practical task to create your first review and skill
+                record.
+              </p>
+            </div>
+          )}
+          {data?.skills
+            .filter((s) => s.courseId === courseId)
+            .map((skill) => (
+              <div className="skill-record" key={skill.taskId}>
+                <Check size={15} />
+                <div>
+                  <strong>{skill.skill}</strong>
+                  <p>
+                    {skill.assistance} · evidence {skill.evidence.slice(0, 8)}
+                  </p>
+                </div>
+              </div>
+            ))}
+        </>
+      ) : (
+        <div className="learning-grid">
+          <section className="learning-list">
+            {!!tasks.length && (
+              <>
+                <div className="learning-section-label">Your attempts</div>
+                {tasks.map((task) => (
+                  <button
+                    className={`learning-row task-row ${selected?.id === task.id ? "selected" : ""}`}
+                    key={task.id}
+                    onClick={() => setSelected(task)}
+                  >
+                    {task.status === "completed" ? (
+                      <Check size={17} />
+                    ) : (
+                      <Circle size={17} />
+                    )}
+                    <div>
+                      <h3>
+                        {
+                          data?.exercises.find((e) => e.id === task.exerciseId)
+                            ?.title
+                        }
+                      </h3>
+                      <p>
+                        {task.status} · {task.attempts.length} recorded checks ·{" "}
+                        {task.hints} help requests
+                      </p>
+                    </div>
+                    <ChevronRight size={14} />
+                  </button>
+                ))}
+              </>
+            )}
+            <div className="learning-section-label">
+              {tab === "projects"
+                ? "Independent project briefs"
+                : "Choose a practical task"}
+            </div>
+            {catalog.map((exercise) => (
+              <div className="learning-row" key={exercise.id}>
+                <Flag size={17} />
+                <div>
+                  <h3>{exercise.title}</h3>
+                  <p>
+                    {exercise.language} · {exercise.minutes} minutes ·{" "}
+                    {exercise.skill}
+                  </p>
+                </div>
+                <button
+                  className="text-button"
+                  disabled={action.busy}
+                  onClick={() => start(exercise.id)}
+                >
+                  Start <ArrowRight size={14} />
+                </button>
+              </div>
+            ))}
+          </section>
+          <aside className="learning-detail">
+            {selected && spec ? (
+              <>
+                <small>
+                  {spec.kind} · {spec.language}
+                </small>
+                <h2>{spec.title}</h2>
+                <p>{spec.brief}</p>
+                <div className="learning-section-label">
+                  Acceptance criteria
+                </div>
+                <ul>
+                  {spec.requirements.map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
+                </ul>
+                {selected.attempts[0] && (
+                  <>
+                    <div className="learning-section-label">
+                      Latest saved attempt
+                    </div>
+                    {selected.attempts[0].checks.map((c) => (
+                      <div
+                        className={`behavior-check ${c.passed ? "passed" : ""}`}
+                        key={c.label}
+                      >
+                        {c.passed ? <Check size={13} /> : <Circle size={13} />}
+                        <span>{c.label}</span>
+                      </div>
+                    ))}
+                    {selected.attempts[0].stale && (
+                      <p>
+                        The entry file changed during checks. Run them again.
+                      </p>
+                    )}
+                  </>
+                )}
+                <label>
+                  Explain your approach
+                  <textarea
+                    value={reflection}
+                    onChange={(e) => setReflection(e.target.value)}
+                    placeholder="What did you choose, and what would you change next?"
+                    maxLength={4000}
+                  />
+                </label>
+                <button
+                  className="button"
+                  disabled={action.busy}
+                  onClick={() =>
+                    action.run(async () => {
+                      const task = await api<PracticeTask>("practice-update", {
+                        taskId: selected.id,
+                        action: "reflection",
+                        reflection,
+                      });
+                      setSelected(task);
+                      await load();
+                    })
+                  }
+                >
+                  Save reflection
+                </button>
+                {selected.status !== "completed" && (
+                  <button
+                    className="text-button"
+                    disabled={action.busy}
+                    onClick={() =>
+                      action.run(async () => {
+                        setSelected(
+                          await api("practice-update", {
+                            taskId: selected.id,
+                            action:
+                              selected.status === "active" ? "pause" : "resume",
+                          }),
+                        );
+                        await load();
+                      })
+                    }
+                  >
+                    {selected.status === "active"
+                      ? "Pause this task"
+                      : "Resume this task"}
+                  </button>
+                )}
+                <button
+                  className="button primary"
+                  onClick={() =>
+                    action.run(async () => {
+                      if (!state.session) await api("continue", { courseId });
+                      await onRefresh();
+                      onCode(courseId);
+                    })
+                  }
+                >
+                  Open code & teacher <ArrowRight size={14} />
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="learning-detail-mark">
+                  <Flag size={28} />
+                </div>
+                <h2>Make a small thing real.</h2>
+                <p>
+                  Choose a brief, implement your own approach, and run
+                  behavioral checks. Hints help you think through the next step.
+                </p>
+                <p>
+                  Nothing writes the solution for you. Tasks stay beside your
+                  course and survive a restart.
+                </p>
+                <small>
+                  Curated GitLearn exercises v1 · JavaScript and Python
+                </small>
+              </>
+            )}
+          </aside>
+        </div>
+      )}
+    </div>
+  );
+}
+export function TaskGuide({
+  api,
+  sessionId,
+  courseId,
+  workspace,
+  beforeCheck,
+  onAsk,
+}: {
+  api: Api;
+  sessionId: string;
+  courseId: string;
+  workspace: string;
+  beforeCheck: () => Promise<void>;
+  onAsk: (q: string) => void;
+}) {
+  const [data, setData] = useState<Dashboard>(),
+    [hint, setHint] = useState("");
+  const action = useAction();
+  const load = async () =>
+    setData(await api(`practice?courseId=${encodeURIComponent(courseId)}`));
+  useEffect(() => {
+    void load().catch(() => {});
+    setHint("");
+  }, [sessionId]);
+  const task =
+    data?.tasks.find(
+      (t) => t.workspace === workspace && t.status === "active",
+    ) ||
+    data?.tasks.find(
+      (t) => t.workspace === workspace && t.status === "completed",
+    );
+  const spec = data?.exercises.find((e) => e.id === task?.exerciseId);
+  if (!task || !spec) return null;
+  return (
+    <details className="task-guide" open={task.status === "active"}>
+      <summary>
+        <Flag size={13} />
+        <span>{spec.title}</span>
+        <small>
+          {task.status === "completed"
+            ? "Checks passed"
+            : `${spec.minutes} min · practical task`}
+        </small>
+      </summary>
+      <div className="task-guide-content">
+        <p>{spec.brief}</p>
+        <ul>
+          {spec.requirements.map((r) => (
+            <li key={r}>{r}</li>
+          ))}
+        </ul>
+        <div className="task-guide-actions">
+          <button
+            disabled={action.busy || task.status !== "active"}
+            onClick={() =>
+              action.run(async () => {
+                await beforeCheck();
+                await api("practice-check", { taskId: task.id, sessionId });
+                await load();
+              })
+            }
+          >
+            <Check size={13} />
+            Check my work
+          </button>
+          <button
+            disabled={action.busy}
+            onClick={() =>
+              action.run(async () => {
+                const r = await api<{ hint: string }>("practice-hint", {
+                  taskId: task.id,
+                });
+                setHint(r.hint);
+                await load();
+              })
+            }
+          >
+            <Lightbulb size={13} />
+            Next hint
+          </button>
+          <button
+            onClick={() =>
+              onAsk(
+                `Help me reason about ${spec.title}. Ask me one diagnostic question based on my current approach. Do not write the solution.`,
+              )
+            }
+          >
+            Ask my teacher <ArrowRight size={13} />
+          </button>
+        </div>
+        {hint && (
+          <p className="guided-hint" role="status">
+            {hint}
+          </p>
+        )}
+        {action.error && <p role="alert">{action.error}</p>}
+        {task.attempts[0] && (
+          <div className="inline-checks">
+            {task.attempts[0].checks.map((c) => (
+              <span key={c.label} className={c.passed ? "passed" : ""}>
+                {c.passed ? <Check size={12} /> : <Circle size={12} />}{" "}
+                {c.label}
+              </span>
+            ))}
+            {task.attempts[0].output && <pre>{task.attempts[0].output}</pre>}
+          </div>
+        )}
+      </div>
+    </details>
+  );
+}
+export function ProjectConsole({
+  api,
+  sessionId,
+  onRunning,
+  onFilesChanged,
+}: {
+  api: Api;
+  sessionId: string;
+  onRunning: (running: boolean) => void;
+  onFilesChanged: () => Promise<unknown>;
+}) {
+  const [open, setOpen] = useState(false),
+    [commands, setCommands] = useState<CommandRecord[]>([]),
+    [command, setCommand] = useState("node --test"),
+    [input, setInput] = useState(""),
+    [port, setPort] = useState("5173");
+  const action = useAction();
+  const [scaffold,setScaffold]=useState<{directory:string;install:string;start:string}>();
+  const load = async () => {
+    const r = await api<{ commands: CommandRecord[] }>(
+      `project-commands?sessionId=${sessionId}`,
+    );
+    setCommands(r.commands);
+    onRunning(r.commands.some((c) => c.state === "running"));
+  };
+  useEffect(() => {
+    let live = true;
+    const poll = () => {
+      if (live) void load().catch(() => {});
+    };
+    poll();
+    const timer = setInterval(poll, open ? 800 : 3000);
+    return () => {
+      live = false;
+      clearInterval(timer);
+      onRunning(false);
+    };
+  }, [sessionId, open]);
+  const latest = commands[0],
+    running = commands.find((c) => c.state === "running");
+  return (
+    <details
+      className="project-console"
+      open={open}
+      onToggle={(e) => setOpen(e.currentTarget.open)}
+    >
+      <summary>
+        <Terminal size={13} />
+        Project console{" "}
+        <small>
+          {running
+            ? "Running"
+            : latest?.state || "Commands, input & app preview"}
+        </small>
+      </summary>
+      <div className="project-console-content">
+        <p>
+          Commands run locally in your project folder. Review the command before
+          running it. Node and Python accept line input; full-screen terminal
+          programs need an external terminal.
+        </p>
+        <div className="command-presets">
+          {["react","python"].map(kind=><button key={kind} disabled={action.busy||!!running} onClick={()=>action.run(async()=>{const result=await api<{directory:string;install:string;start:string}>("project-scaffold",{sessionId,kind});setScaffold(result);setCommand(result.install);await onFilesChanged();})}>Create {kind === "react" ? "React app" : "Python project"}</button>)}
+          {["node --test", "python -m venv .venv"].map((c) => (
+            <button key={c} onClick={() => setCommand(c)}>
+              {c}
+            </button>
+          ))}
+          <button onClick={() => setCommand("npm install")}>
+            Install npm dependencies
+          </button>
+          <button onClick={() => setCommand("npm run dev -- --host 127.0.0.1")}>
+            Start dev server
+          </button>
+        </div>
+        {scaffold&&<p role="status">Created {scaffold.directory}. <button onClick={()=>setCommand(scaffold.install)}>Prepare environment</button> · <button onClick={()=>setCommand(scaffold.start)}>Start project</button>. Web apps require an installed Node.js/npm toolchain.</p>}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void action.run(async () => {
+              await api("project-command", { sessionId, command });
+              await load();
+            });
+          }}
+        >
+          <input
+            aria-label="Project command"
+            value={command}
+            onChange={(e) => setCommand(e.target.value)}
+            maxLength={2000}
+          />
+          <button disabled={action.busy || !!running}>
+            <Play size={13} />
+            Run command
+          </button>
+          {running && (
+            <button
+              type="button"
+              onClick={() =>
+                action.run(async () => {
+                  await api("project-stop", { id: running.id });
+                  await load();
+                })
+              }
+            >
+              <Square size={13} />
+              Stop command
+            </button>
+          )}
+        </form>
+        {latest && (
+          <>
+            <div className="command-status">
+              <code>{latest.command}</code>
+              <span>
+                {latest.state}
+                {latest.exitCode !== null ? ` · exit ${latest.exitCode}` : ""}
+                {latest.truncated ? " · recent output only" : ""}
+              </span>
+            </div>
+            <pre className="command-output" aria-label="Project command output">
+              {latest.output || "Waiting for output…"}
+            </pre>
+          </>
+        )}
+        {running && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void action.run(async () => {
+                await api("project-input", { id: running.id, text: input });
+                setInput("");
+              });
+            }}
+          >
+            <input
+              aria-label="Program input"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Send a line to the running program"
+            />
+            <button>Send input</button>
+          </form>
+        )}
+        <div className="app-preview-control">
+          <label>
+            Local app port
+            <input
+              aria-label="Local application port"
+              type="number"
+              min={1024}
+              max={65535}
+              value={port}
+              onChange={(e) => setPort(e.target.value)}
+            />
+          </label>
+          {Number(port) >= 1024 && Number(port) <= 65535 && (
+            <a
+              href={`http://127.0.0.1:${Number(port)}/`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open local app <ArrowUpRight size={13} />
+            </a>
+          )}
+        </div>
+        {action.error && <p role="alert">{action.error}</p>}
+      </div>
+    </details>
+  );
+}
+export function LiveWorkHub({
+  state,
+  api,
+  onCode,
+  onRefresh,
+}: {
+  state: Status;
+  api: Api;
+  onCode: (id: string) => void;
+  onRefresh: () => Promise<unknown>;
+}) {
+  const [data, setData] = useState<{
+      contributions: Contribution[];
+      shortlist: Candidate[];
+      lastSearch?: { at: string; rationale: string };
+    }>(),
+    [language, setLanguage] = useState("JavaScript"),
+    [courseId, setCourseId] = useState(
+      state.session?.courseId || state.courses[0]?.id || "",
+    ),
+    [url, setUrl] = useState(""),
+    [selected, setSelected] = useState<Contribution>(),
+    [notes, setNotes] = useState(""),
+    [stages, setStages] = useState<string[]>([]),
+    [draft, setDraft] = useState<{ text: string; diff: string }>();
+  const action = useAction();
+  const load = async () => setData(await api("live-work"));
+  useEffect(() => {
+    void load().catch(() => {});
+  }, []);
+  useEffect(() => {
+    setNotes(selected?.notes || "");
+    setStages(selected?.stages || []);
+    setDraft(undefined);
+  }, [selected?.id]);
+  const select = (value: string) =>
+    action.run(async () => {
+      setSelected(await api("live-select", { courseId, url: value }));
+      await load();
+    });
+  return (
+    <div className="learning-hub live-work-hub">
+      <div className="page-heading">
+        <div className="eyebrow">Learn in the real world</div>
+        <h1>Your first useful contribution.</h1>
+        <p>
+          Understand a real issue. Make your own change. Learn through review.
+        </p>
+      </div>
+      <div className="learning-controls">
+        <select
+          aria-label="Contribution learning course"
+          value={courseId}
+          onChange={(e) => setCourseId(e.target.value)}
+        >
+          {state.courses.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.title}
+            </option>
+          ))}
+        </select>
+        <select
+          aria-label="Contribution language"
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+        >
+          {["JavaScript", "Python", "TypeScript"].map((l) => (
+            <option key={l}>{l}</option>
+          ))}
+        </select>
+        <button
+          className="button"
+          disabled={action.busy}
+          onClick={() =>
+            action.run(async () => {
+              setData(await api("live-search", { language }));
+            })
+          }
+        >
+          <RefreshCw size={14} />
+          Find opportunities
+        </button>
+      </div>
+      {action.error && (
+        <div className="alert error" role="alert">
+          {action.error}
+        </div>
+      )}
+      <form
+        className="issue-input"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void select(url);
+        }}
+      >
+        <input
+          aria-label="GitHub issue URL"
+          placeholder="Or bring a github.com/owner/repo/issues/123 URL"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+        />
+        <button disabled={action.busy || !courseId}>
+          Inspect issue <ArrowRight size={14} />
+        </button>
+      </form>
+      {data?.lastSearch && (
+        <div className="learning-reason">
+          <Github size={18} />
+          <div>
+            <p>{data.lastSearch.rationale}</p>
+            <small>
+              Checked {new Date(data.lastSearch.at).toLocaleString()} · public
+              GitHub metadata · suitability needs your review
+            </small>
+          </div>
+        </div>
+      )}
+      <div className="learning-grid">
+        <section className="learning-list">
+          <div className="learning-section-label">Your contribution desk</div>
+          {data?.contributions.map((record) => (
+            <button
+              className="learning-row task-row"
+              key={record.id}
+              onClick={() => setSelected(record)}
+            >
+              <Github size={18} />
+              <div>
+                <h3>{record.candidate.title}</h3>
+                <p>
+                  {record.candidate.repo} ·{" "}
+                  {record.root ? "Workspace ready" : "Brief saved"}
+                </p>
+              </div>
+              <ChevronRight size={14} />
+            </button>
+          ))}
+          <div className="learning-section-label">
+            Explore checked opportunities
+          </div>
+          {data?.shortlist.map((c) => (
+            <div className="opportunity-row" key={c.url}>
+              <small>
+                {c.repo} · {c.language} · {c.license}
+              </small>
+              <h3>
+                <a href={c.url} target="_blank" rel="noreferrer">
+                  {c.title} <ArrowUpRight size={13} />
+                </a>
+              </h3>
+              <p>{c.signals.join(" · ")}</p>
+              <button
+                className="text-button"
+                disabled={action.busy || !courseId}
+                onClick={() => select(c.url)}
+              >
+                Inspect & plan <ArrowRight size={13} />
+              </button>
+            </div>
+          ))}
+          {!data?.shortlist.length && (
+            <div className="learning-empty">
+              <Github size={25} />
+              <h2>Start with understanding.</h2>
+              <p>
+                Find checked issues or bring one yourself. Documentation,
+                reproduction, and tests can be useful practical work early in a
+                course.
+              </p>
+            </div>
+          )}
+        </section>
+        <aside className="learning-detail">
+          {selected ? (
+            <>
+              <small>
+                {selected.candidate.repo} · issue #{selected.candidate.number}
+              </small>
+              <h2>{selected.candidate.title}</h2>
+              <p className="issue-body">{selected.candidate.body}</p>
+              <a href={selected.candidate.url} target="_blank" rel="noreferrer">
+                Read the full issue <ArrowUpRight size={13} />
+              </a>
+              <div className="learning-section-label">Contributor sources</div>
+              {selected.candidate.sources.map((s) => (
+                <details className="contributor-source" key={s.url}>
+                  <summary>{s.title}</summary>
+                  <pre>{s.text}</pre>
+                  <a href={s.url} target="_blank" rel="noreferrer">
+                    Upstream source · {s.revision.slice(0, 8)}
+                  </a>
+                </details>
+              ))}
+              <ul>
+                {selected.candidate.cautions.map((c) => (
+                  <li key={c}>{c}</li>
+                ))}
+              </ul>
+              <div className="learning-section-label">
+                Your contribution path
+              </div>
+              {[
+                ["read", "Read requirements & contribution rules"],
+                ["baseline", "Set up and run baseline checks"],
+                ["reproduce", "Reproduce or understand the issue"],
+                ["implement", "Write your own change"],
+                ["test", "Run relevant checks"],
+                ["review", "Review your diff & limitations"],
+              ].map(([key, label]) => (
+                <label className="contribution-step" key={key}>
+                  <input
+                    type="checkbox"
+                    checked={stages.includes(key)}
+                    onChange={(e) =>
+                      setStages(
+                        e.target.checked
+                          ? [...stages, key]
+                          : stages.filter((s) => s !== key),
+                      )
+                    }
+                  />
+                  {label}
+                </label>
+              ))}
+              <small>
+                Checklist progress is your report. Command results remain
+                separate evidence.
+              </small>
+              <label>
+                My plan, findings & review notes
+                <textarea
+                  maxLength={8000}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="What should change? What is uncertain? What did baseline tests show?"
+                />
+              </label>
+              <button
+                className="button"
+                disabled={action.busy}
+                onClick={() =>
+                  action.run(async () => {
+                    setSelected(
+                      await api("live-update", {
+                        id: selected.id,
+                        notes,
+                        stages,
+                      }),
+                    );
+                    await load();
+                  })
+                }
+              >
+                Save my plan
+              </button>
+              {!selected.root && (
+                <p className="clone-review">
+                  Clone https://github.com/{selected.candidate.repo}.git into a
+                  new contributions folder, then create branch gitlearn/issue-
+                  {selected.candidate.number}. Setup scripts run only when you
+                  choose a command.
+                </p>
+              )}
+              <button
+                className="button primary"
+                disabled={action.busy}
+                onClick={() =>
+                  action.run(async () => {
+                    await api(selected.root ? "live-open" : "live-clone", {
+                      id: selected.id,
+                    });
+                    await onRefresh();
+                    await load();
+                    onCode(selected.courseId);
+                  })
+                }
+              >
+                {selected.root
+                  ? "Continue contribution"
+                  : "Clone & open workspace"}
+                <ArrowRight size={14} />
+              </button>
+              {selected.root && (
+                <button
+                  className="text-button"
+                  disabled={action.busy}
+                  onClick={() =>
+                    action.run(async () => {
+                      await api("live-update", {
+                        id: selected.id,
+                        notes,
+                        stages,
+                      });
+                      setDraft(await api("live-draft", { id: selected.id }));
+                    })
+                  }
+                >
+                  Review diff & prepare PR draft <ChevronRight size={14} />
+                </button>
+              )}
+              {draft && (
+                <details open className="contribution-draft">
+                  <summary>Local PR draft</summary>
+                  <pre>{draft.text}</pre>
+                  <button
+                    className="button"
+                    onClick={() =>
+                      action.run(async () => {
+                        await navigator.clipboard.writeText(draft.text);
+                      })
+                    }
+                  >
+                    Copy draft
+                  </button>
+                  <details>
+                    <summary>Inspect current diff</summary>
+                    <pre>{draft.diff || "No uncommitted diff."}</pre>
+                  </details>
+                </details>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="learning-detail-mark">
+                <Github size={30} />
+              </div>
+              <h2>A teacher beside your work.</h2>
+              <p>
+                Inspect an issue and its contributor rules. GitLearn guides your
+                reasoning, setup, reproduction, testing, and review while you
+                own the implementation.
+              </p>
+              <p>
+                Finding an issue creates no fork, comment, push, or pull
+                request. A contribution starts in its own local folder.
+              </p>
+            </>
+          )}
+        </aside>
+      </div>
+    </div>
+  );
+}

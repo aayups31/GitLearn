@@ -32,6 +32,15 @@ export class Workspace {
   isRunning(id: string) {
     return this.jobs.has(id);
   }
+  track(id: string, job: ChildProcess) {
+    if (this.jobs.has(id)) { job.kill(); throw new UserError("A program is already running.", 409); }
+    this.stopped.delete(id);
+    this.jobs.set(id, job);
+  }
+  untrack(id: string, job: ChildProcess) {
+    if (this.jobs.get(id) === job) this.jobs.delete(id);
+    this.stopped.delete(id);
+  }
   session(id: string) {
     const session = this.app.configured().session;
     if (!session || session.id !== id)

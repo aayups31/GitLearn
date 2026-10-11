@@ -1,0 +1,112 @@
+import { afterEach, beforeEach, expect, it } from "vitest";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { Store } from "../src/server/store";
+import { Application } from "../src/server/application";
+import { Workspace } from "../src/server/workspace";
+import { Practice } from "../src/server/practice";
+let folder: string,
+  store: Store,
+  app: Application,
+  workspace: Workspace,
+  practice: Practice;
+beforeEach(async () => {
+  folder = await mkdtemp(path.join(tmpdir(), "gitlearn-practice-"));
+  store = new Store(path.join(folder, "data"));
+  app = new Application(store);
+  workspace = new Workspace(app);
+  practice = new Practice(app, workspace);
+  await app.setup(path.join(folder, "history"), false);
+  for (const id of ["js", "python"])
+    app.observe({
+      eventId: id,
+      courseId: id,
+      title: id === "js" ? "JavaScript functions" : "Python functions",
+      url: `https://www.udemy.com/course/${id}/learn/lecture/1`,
+      lessons: [{ id: "1", title: "Functions", section: "Basics", order: 0 }],
+    });
+});
+afterEach(async () => {
+  workspace.stopAll();
+  store.close();
+  await rm(folder, { recursive: true, force: true });
+});
+it("suggests practice before course completion, supports deferral, and never invents evidence", async () => {
+  expect(practice.dashboard().opportunities).toEqual([]);
+  await app.start("js", "1");
+  const id = store.state().session!.id;
+  await workspace.save(
+    id,
+    "main.js",
+    "console.log('learned a function')",
+    null,
+  );
+  await workspace.run(id, "main.js");
+  const suggestion = practice.dashboard().opportunities[0];
+  expect(suggestion.courseId).toBe("js");
+  expect(suggestion.evidence).toBeTruthy();
+  practice.defer(suggestion.key, 1);
+  expect(practice.dashboard().opportunities).toEqual([]);
+});
+it("fails an unfinished task, records hint use, verifies saved behavior, and survives restart", async () => {
+  const task = await practice.start("js", "javascript-validation");
+  const id = store.state().session!.id;
+  expect((await practice.check(task.id, id)).attempts[0].passed).toBe(false);
+  const hint = practice.hint(task.id);
+  expect(hint.level).toBe(1);
+  expect(hint.hint).not.toContain("return");
+  const file = await workspace.read(id, task.path);
+  await workspace.save(
+    id,
+    task.path,
+    "export function discountedPrice(price, discount) { if (price<0 || discount<0 || discount>100) throw Error('invalid'); return Math.round(price*(1-discount/100)*100)/100; }",
+    file.version,
+  );
+  const complete = await practice.check(task.id, id);
+  expect(complete.status).toBe("completed");
+  expect(complete.attempts[0].checks.every((c) => c.passed)).toBe(true);
+  expect(practice.dashboard().skills[0].assistance).toContain("help");
+  store.close();
+  store = new Store(path.join(folder, "data"));
+  app = new Application(store);
+  workspace = new Workspace(app);
+  practice = new Practice(app, workspace);
+  expect(practice.task(task.id).attempts).toHaveLength(2);
+  expect(practice.dashboard().reviews[0].evidenceId).toBe(
+    complete.attempts[0].id,
+  );
+  const review = await practice.start("js", "javascript-validation", task.id);
+  expect(review.path).not.toBe(task.path);
+  expect(review.hints).toBe(0);
+});
+it("verifies Python behavior and protects another course from task evidence", async () => {
+  const task = await practice.start("python", "python-collections");
+  const id = store.state().session!.id;
+  const file = await workspace.read(id, task.path);
+  await workspace.save(
+    id,
+    task.path,
+    "def completed_minutes(sessions):\n    return sum(s['minutes'] for s in sessions if s.get('completed') is True and isinstance(s.get('minutes'), (int,float)) and s['minutes'] > 0)\n",
+    file.version,
+  );
+  expect((await practice.check(task.id, id)).attempts[0].passed).toBe(true);
+  await app.sessionAction("discard");
+  await app.start("js", "1");
+  await expect(
+    practice.check(task.id, store.state().session!.id),
+  ).rejects.toThrow("original course folder");
+  expect(practice.dashboard("js").tasks).toHaveLength(0);
+});
+it("allows only one active task per course and keeps a paused attempt", async () => {
+  const first = await practice.start("js", "javascript-validation");
+  await expect(practice.start("js", "javascript-collections")).rejects.toThrow(
+    "pause",
+  );
+  practice.update(first.id, "pause");
+  const second = await practice.start("js", "javascript-collections");
+  expect(practice.task(first.id).status).toBe("paused");
+  expect(() => practice.update(first.id, "resume")).toThrow("Pause");
+  practice.update(second.id, "pause");
+  expect(practice.update(first.id, "resume").status).toBe("active");
+});

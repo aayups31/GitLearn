@@ -33,6 +33,7 @@ import "./style.css";
 import "./studio.css";
 import { Onboarding, DesktopKeySettings } from "./onboarding";
 import { ContinueLearning, SetupDiagnostics } from "./learning";
+import { LearningHub, LiveWorkHub, PracticePrompt } from "./practical";
 const Studio = lazy(() =>
   import("./studio").then((module) => ({ default: module.Studio })),
 );
@@ -55,7 +56,8 @@ async function request<T>(route: string, body?: unknown): Promise<T> {
     throw new Error(result.error || "Could not complete this action.");
   return result as T;
 }
-type Page = "overview" | "courses" | "history" | "setup" | "studio";
+type Page =
+  "overview" | "courses" | "history" | "setup" | "studio" | "practice" | "live";
 function App() {
   const [theme, setTheme] = useState<Theme>(initialTheme);
   useEffect(() => {
@@ -71,9 +73,15 @@ function App() {
   const [onboarding, setOnboarding] = useState(false);
   const [page, setPage] = useState<Page>(() => {
     const view = new URLSearchParams(location.search).get("view");
-    return ["overview", "courses", "history", "setup", "studio"].includes(
-      view || "",
-    )
+    return [
+      "overview",
+      "courses",
+      "history",
+      "setup",
+      "studio",
+      "practice",
+      "live",
+    ].includes(view || "")
       ? (view as Page)
       : "overview";
   });
@@ -229,6 +237,8 @@ function App() {
               { id: "overview", label: "Overview", icon: LayoutGrid },
               { id: "studio", label: "Code & learn", icon: Code2 },
               { id: "courses", label: "My courses", icon: BookOpen },
+              { id: "practice", label: "Learn by doing", icon: Sparkles },
+              { id: "live", label: "Live work", icon: Github },
               { id: "history", label: "Checkpoints", icon: History },
             ] as const
           ).map((item) => (
@@ -312,7 +322,11 @@ function App() {
                     ? "Checkpoints"
                     : page === "studio"
                       ? "Code & learn"
-                      : "Settings"}
+                      : page === "practice"
+                        ? "Learn by doing"
+                        : page === "live"
+                          ? "Live work"
+                          : "Settings"}
             </span>
           </div>
           <div className="topbar-actions">
@@ -401,6 +415,8 @@ function App() {
                     sessionNote={note}
                     onNoteChange={setNote}
                     busy={!!busy}
+                    onPractice={() => navigate("practice")}
+                    onLive={() => navigate("live")}
                   />
                 </Suspense>
               )}
@@ -660,6 +676,13 @@ function App() {
                       onContinue={(courseId) => void continueLearning(courseId)}
                     />
                   )}
+                  {configured && (
+                    <PracticePrompt
+                      api={request}
+                      changed={state.checkpoints.length}
+                      onOpen={() => navigate("practice")}
+                    />
+                  )}
                   <div className="section-heading">
                     <h2>{configured ? "Your courses" : "The workflow"}</h2>
                     {configured && (
@@ -755,6 +778,32 @@ function App() {
                     </>
                   )}
                 </>
+              )}
+              {page === "practice" && (
+                <LearningHub
+                  state={state}
+                  api={request}
+                  onRefresh={refresh}
+                  onCode={(id) => {
+                    void refresh().then((next) => {
+                      setNote(next.session?.note || "");
+                      navigate("studio", id);
+                    });
+                  }}
+                />
+              )}
+              {page === "live" && (
+                <LiveWorkHub
+                  state={state}
+                  api={request}
+                  onRefresh={refresh}
+                  onCode={(id) => {
+                    void refresh().then((next) => {
+                      setNote(next.session?.note || "");
+                      navigate("studio", id);
+                    });
+                  }}
+                />
               )}
               {page === "courses" && (
                 <>

@@ -195,6 +195,7 @@ export class Application {
       lessonId: session.lessonId,
       workspace: session.workspace,
       projectId: session.projectId,
+      contributionId: session.contributionId,
       note: session.note,
       lastAction,
       updatedAt: new Date().toISOString(),
@@ -325,6 +326,7 @@ export class Application {
     await this.start(courseId, anchor.lessonId, anchor.workspace);
     const next = this.configured();
     next.session!.note = anchor.note;
+    next.session!.contributionId = anchor.contributionId;
     this.store.save(next);
     this.remember(next.session!, "started");
     return next;
@@ -544,6 +546,10 @@ export class Application {
     const session = state.session;
     if (!session)
       throw new UserError("Start a session before saving a checkpoint.");
+    if (session.contributionId)
+      throw new UserError(
+        "For open source work, review your contribution diff and prepare a PR draft in Live work. The learning archive does not copy the upstream repository.",
+      );
     await this.cleanTarget(state);
     const files = await this.candidate(state, session);
     const expectedHead = await git.head(state.settings.repoPath);
