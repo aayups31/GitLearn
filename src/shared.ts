@@ -14,6 +14,7 @@ export const observationSchema = z.object({
   url: z.string().url().max(2000),
   currentLessonId: z.string().max(200).optional(),
   lessons: z.array(lessonSchema).max(500).default([]),
+  videoSeconds: z.number().finite().min(0).max(86400).optional(),
 });
 export type Observation = z.infer<typeof observationSchema>;
 export type Lesson = z.infer<typeof lessonSchema> & {
@@ -29,6 +30,7 @@ export interface Course {
   currentLessonId?: string;
   mirrored: boolean;
   observedAt: string;
+  videoSeconds?: number;
   workspaceMode?: "lesson" | "project";
   project?: { id: string; root: string };
 }
@@ -81,6 +83,8 @@ export interface RunEvidence {
   startedAt: string;
   finishedAt: string;
   changedDuringRun: boolean;
+  workspaceVersions?: Record<string, string>;
+  regression?: { baselineId: string; lessonId: string; changedFiles: string[] };
 }
 export interface RunContext extends RunEvidence {
   stale: boolean;
@@ -108,6 +112,9 @@ export interface Checkpoint {
   sha: string;
   files: string[];
   sync: "local" | "pending" | "synced";
+  lessonId?: string;
+  video?: { url: string; seconds: number; capturedAt: string };
+  reflection?: string;
 }
 export interface Settings {
   configured: boolean;
@@ -144,6 +151,8 @@ export interface Preview {
   aiUsed: boolean;
   aiNotice?: string;
   createdAt: string;
+  video?: Checkpoint["video"];
+  reflection?: string;
 }
 export type PublicPreview = Omit<
   Preview,

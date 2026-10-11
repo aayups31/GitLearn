@@ -18,6 +18,14 @@ export interface CommandRecord {
   output: string;
   exitCode: number | null;
   truncated: boolean;
+  lessonId?: string;
+  versions?: Record<string, string>;
+  changedDuringRun?: boolean;
+  regression?: {
+    baselineId: string;
+    lessonId?: string;
+    changedFiles: string[];
+  };
 }
 export class ProjectRuntime {
   private jobs = new Map<
@@ -140,7 +148,14 @@ export class ProjectRuntime {
         (r) =>
           r.courseId === session.courseId && r.workspace === session.workspace,
       )
-      .map((r) => this.jobs.get(r.id)?.record || r);
+      .map((r) => {
+        const record = this.jobs.get(r.id)?.record || r;
+        return {
+          ...record,
+          command: this.clean(record.command),
+          output: this.clean(record.output),
+        };
+      });
   }
   async start(sessionId: string, command: string) {
     assertClean(command, "project command");
@@ -194,6 +209,12 @@ export class ProjectRuntime {
         "A program started while preparing this command.",
         409,
       );
+    const versions = await this.workspace.versions(sessionId);
+    if (this.workspace.isRunning(sessionId))
+      throw new UserError(
+        "A program started while preparing this command.",
+        409,
+      );
     const record: CommandRecord = {
       id: randomUUID(),
       sessionId,
@@ -205,6 +226,8 @@ export class ProjectRuntime {
       output: "",
       exitCode: null,
       truncated: false,
+      lessonId: session.lessonId,
+      versions,
     };
     const child = spawn(executable, args, {
       cwd: root,
@@ -233,12 +256,43 @@ export class ProjectRuntime {
       record.output +=
         "\nThe command could not start. Check your installed tools and project folder.";
     });
-    child.on("close", (code) => {
+    child.on("close", async (code) => {
       clearTimeout(timer);
       this.workspace.untrack(sessionId, child);
       record.exitCode = code;
       record.finishedAt = new Date().toISOString();
       if (record.state === "running") record.state = "finished";
+      const current = await this.workspace
+        .versions(sessionId)
+        .catch(() => undefined);
+      record.changedDuringRun =
+        !current || JSON.stringify(current) !== JSON.stringify(record.versions);
+      const baseline = this.records().find(
+        (r) =>
+          r.command === command &&
+          r.workspace === root &&
+          r.exitCode === 0 &&
+          r.state === "finished" &&
+          !r.changedDuringRun &&
+          r.lessonId !== session.lessonId,
+      );
+      if (
+        baseline &&
+        code !== null &&
+        code !== 0 &&
+        record.state === "finished" &&
+        !record.changedDuringRun
+      )
+        record.regression = {
+          baselineId: baseline.id,
+          lessonId: baseline.lessonId,
+          changedFiles: Object.keys({
+            ...baseline.versions,
+            ...record.versions,
+          })
+            .filter((p) => baseline.versions?.[p] !== record.versions?.[p])
+            .slice(0, 40),
+        };
       this.persist(record);
       this.jobs.delete(record.id);
     });
@@ -248,7 +302,7 @@ export class ProjectRuntime {
     const job = this.jobs.get(id);
     if (!job || job.record.state !== "running" || job.child.stdin?.destroyed)
       throw new UserError("This command is no longer accepting input.", 409);
-    if (text.length > 4000 || /[\x00]/.test(text))
+    if (text.length > 4000 || /[\r\n\x00]/.test(text))
       throw new UserError("Use a short line of input.");
     job.child.stdin!.write(text + "\n");
   }

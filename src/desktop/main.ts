@@ -64,7 +64,11 @@ function external(url: string) {
     return shell.openExternal(target.href);
   if (
     target.protocol !== "https:" ||
-    !allowedExternal.has(target.hostname) ||
+    (!allowedExternal.has(target.hostname) &&
+      !(
+        /^(?:[a-z0-9-]+\.)*udemy\.com$/.test(target.hostname) &&
+        target.pathname.startsWith("/course/")
+      )) ||
     target.username ||
     target.password
   )

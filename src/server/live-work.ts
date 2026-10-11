@@ -328,6 +328,15 @@ export class LiveWork {
       "Inspect setup requirements and run baseline tests before changing code.",
       "Confirm the repository's contributor and AI-assistance rules.",
     ];
+    const direction = courseId
+      ? this.app.store.get<import("./learning-path.js").Direction>(
+          `direction:${courseId}`,
+        )
+      : undefined;
+    if (direction)
+      preparation.unshift(
+        `Keep the first session within ${direction.minutes} minutes: read, reproduce, and record one question. Relate it to your goal: ${direction.goal}`,
+      );
     candidate.fit = {
       reason: evidence.length
         ? "The issue mentions concepts you practiced in recorded attempts. This is a keyword match; scope and difficulty still need review."

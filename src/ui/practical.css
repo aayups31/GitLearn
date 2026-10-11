@@ -695,3 +695,225 @@
     flex-direction: column;
   }
 }
+.personal-path {
+  max-width: 1000px;
+  margin: 32px auto;
+}
+.path-intro {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 30px;
+}
+.path-intro > svg {
+  color: var(--accent, #8aafff);
+  margin-top: 5px;
+}
+.path-intro h2,
+.path-project-heading h2,
+.path-ledger h2 {
+  font-size: 23px;
+  letter-spacing: -0.7px;
+}
+.personal-path p {
+  color: var(--muted, #8996ae);
+  line-height: 1.8;
+}
+.direction-form {
+  padding: 24px;
+  background: var(--surface, #151a23);
+  border: 1px solid var(--line, #2a3342);
+  border-radius: 10px;
+}
+.direction-form label,
+.milestone-body label {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  font-size: 12px;
+}
+.direction-form textarea,
+.milestone-body textarea {
+  min-height: 86px;
+  resize: vertical;
+}
+.direction-form input,
+.direction-form select,
+.direction-form textarea,
+.milestone-body select,
+.milestone-body textarea {
+  background: var(--paper, #10141c);
+  color: var(--ink, #e7ecf6);
+  border: 1px solid var(--line, #364159);
+  border-radius: 6px;
+  padding: 12px;
+  font: inherit;
+  width: 100%;
+}
+.direction-form > div {
+  display: flex;
+  gap: 20px;
+  align-items: end;
+  margin-top: 20px;
+}
+.direction-form > div label {
+  flex: 1;
+}
+.path-project-heading,
+.path-ledger {
+  display: flex;
+  justify-content: space-between;
+  gap: 35px;
+  align-items: center;
+  margin: 42px 0 22px;
+}
+.path-project-heading p,
+.path-ledger p {
+  max-width: 65ch;
+  font-size: 12px;
+}
+.path-milestones details {
+  border-top: 1px solid var(--line, #303a4d);
+}
+.path-milestones summary {
+  display: flex;
+  gap: 17px;
+  align-items: center;
+  padding: 22px 0;
+  cursor: pointer;
+  list-style: none;
+}
+.path-milestones summary > span:nth-child(2) {
+  flex: 1;
+}
+.path-milestones small {
+  display: block;
+  color: var(--muted, #8996ae);
+  font-size: 11px;
+  margin-top: 6px;
+}
+.milestone-index,
+.milestone-done {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line, #33435d);
+  border-radius: 50%;
+  font: 11px monospace;
+  color: #92b1ff;
+}
+.milestone-done {
+  background: #1f365d;
+}
+.milestone-body {
+  padding: 0 0 26px 51px;
+}
+.milestone-body form {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+}
+.milestone-body blockquote {
+  margin: 20px 0;
+  padding: 12px 20px;
+  border-left: 2px solid #7399ff;
+  font-size: 12px;
+}
+.path-next {
+  margin: 25px 0;
+  padding: 20px;
+  border-left: 2px solid #7399ff;
+  background: #406dc010;
+}
+.path-next h3 {
+  margin: 8px 0;
+}
+.path-next p {
+  font-size: 12px;
+}
+.path-ledger {
+  border-top: 1px solid var(--line, #303a4d);
+  padding-top: 28px;
+}
+.path-ledger > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.path-notice {
+  color: #9ab8f8 !important;
+  font-size: 12px;
+}
+.path-memory details {
+  padding: 15px 0;
+  border-bottom: 1px solid var(--line, #303a4d);
+}
+.path-memory summary {
+  cursor: pointer;
+  font-size: 12px;
+}
+.path-memory pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  padding: 16px;
+  background: var(--soft, #0a101a);
+}
+.run-line-input {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+.run-line-input input {
+  background: var(--paper, #111723);
+  color: var(--ink, #eff3fc);
+  border: 1px solid #46526b;
+  border-radius: 5px;
+  padding: 8px;
+  min-width: 120px;
+}
+.run-line-input button {
+  background: #315ca9;
+  color: white;
+  border: 0;
+  border-radius: 5px;
+  padding: 9px;
+}
+.runner-note:has(.run-line-input) {
+  display: block;
+}
+.runner-note [role="alert"] {
+  color: #f3b9a2;
+  padding: 12px;
+}
+.runner-note .run-line-input {
+  margin: 10px 0 16px;
+}
+@media (max-width: 700px) {
+  .direction-form > div,
+  .path-project-heading,
+  .path-ledger {
+    display: block;
+  }
+  .direction-form > div label {
+    margin-bottom: 18px;
+  }
+  .direction-form > div button,
+  .path-project-heading > button {
+    margin-top: 15px;
+  }
+  .path-ledger > div:last-child {
+    margin-top: 18px;
+  }
+  .milestone-body {
+    padding-left: 0;
+  }
+  .personal-path {
+    margin-top: 22px;
+  }
+}

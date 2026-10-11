@@ -26,6 +26,7 @@ export type Exercise = {
   starter: string;
   cases: Case[];
   topics: string[];
+  transferFrom?: string;
 };
 export const exercises: Exercise[] = (
   ["javascript", "python"] as const
@@ -232,6 +233,87 @@ export const exercises: Exercise[] = (
   }));
 });
 
+// Curated changed requirements keep assessment reproducible and independent of AI.
+exercises.push(
+  ...exercises
+    .filter((e) => e.kind === "practice")
+    .map((base) => {
+      const validation = base.id.endsWith("validation");
+      return {
+        ...base,
+        id: `${base.id}-transfer`,
+        transferFrom: base.id,
+        title: validation
+          ? "Handle unexpected price inputs"
+          : "Handle archived activity",
+        minutes: 15,
+        brief: validation
+          ? "Your calculator now receives data from a form. Preserve the original behavior, but reject strings, booleans, and missing numeric values. Explain where the boundary belongs."
+          : "The activity service now keeps archived sessions. Preserve the original behavior, but ignore records with archived set to true. Other completed records still count.",
+        requirements: [
+          ...base.requirements,
+          validation
+            ? "Price and discount must be finite numeric values, never coerced strings or booleans."
+            : "Ignore a record if archived is true, even when completed is true.",
+        ],
+        hints: validation
+          ? [
+              "What types can a form send? Compare a number with a numeric-looking string.",
+              "Check the input boundary before the calculation. Which values must be rejected?",
+              "List a valid number, a boolean, and a missing value. Test each separately.",
+            ]
+          : [
+              "Which new field changes eligibility?",
+              "Write the rule for a record to count before updating the total.",
+              "Try one archived and one active record. What total should remain?",
+            ],
+        cases: [
+          ...base.cases,
+          ...(validation
+            ? [
+                {
+                  label: "Numeric strings are rejected",
+                  args: ["80", 20],
+                  throws: true,
+                },
+                {
+                  label: "Boolean prices are rejected",
+                  args: [true, 20],
+                  throws: true,
+                },
+                {
+                  label: "Missing discounts are rejected",
+                  args: [80, null],
+                  throws: true,
+                },
+                {
+                  label: "String discounts are rejected",
+                  args: [80, "20"],
+                  throws: true,
+                },
+              ]
+            : [
+                {
+                  label: "Archived sessions do not count",
+                  args: [[{ minutes: 15, completed: true, archived: true }]],
+                  expected: 0,
+                },
+                {
+                  label: "Active and archived records are distinguished",
+                  args: [
+                    [
+                      { minutes: 8, completed: true, archived: true },
+                      { minutes: 7, completed: true, archived: false },
+                    ],
+                  ],
+                  expected: 7,
+                },
+              ]),
+        ],
+      };
+    }),
+);
+
 export interface Attempt {
   id: string;
   at: string;
@@ -243,6 +325,7 @@ export interface Attempt {
   hints: number;
   source: string;
   sourceTruncated: boolean;
+  workspaceVersions?: Record<string, string>;
 }
 export interface PracticeTask {
   id: string;
@@ -257,6 +340,8 @@ export interface PracticeTask {
   reflection: string;
   attempts: Attempt[];
   reviewOf?: string;
+  transferOf?: string;
+  lastHint?: { signature: string; at: string };
 }
 const digest = (text: string) =>
   createHash("sha256").update(text).digest("hex");
@@ -351,7 +436,7 @@ export class Practice {
       : state.courses;
     const tasks = this.tasks();
     const reviews = tasks
-      .filter((t) => t.status === "completed" && !t.reviewOf)
+      .filter((t) => t.status === "completed" && !t.reviewOf && !t.transferOf)
       .map((task) => {
         const evidence = task.attempts.find((a) => a.passed && !a.stale)!;
         const repeats = tasks.filter(
@@ -418,8 +503,12 @@ export class Practice {
       const eligible = exercises.filter(
         (e) =>
           e.language === language &&
+          !e.transferFrom &&
           !successful.some((t) => t.exerciseId === e.id),
       );
+      const direction = this.app.store.get<
+        import("./learning-path.js").Direction
+      >(`direction:${course.id}`);
       const spec =
         eligible.find(
           (e) =>
@@ -435,12 +524,14 @@ export class Practice {
         ) ||
         eligible.find((e) => e.kind === "practice");
       if (!spec || (!checkpoints.length && !successfulRun)) return [];
-      const reason =
+      let reason =
         spec.kind === "project"
           ? "You completed two practical tasks. Combine those skills in a small project before moving further through the course."
           : checkpoints.length
             ? `You saved work from “${checkpoints[0].lessonTitle}”. Try applying a related programming skill before the next lesson.`
             : "You ran saved code successfully. This is a useful moment to try a small task of your own.";
+      if (direction)
+        reason += ` A step toward “${direction.goal}”. ${spec.minutes <= direction.minutes ? "Fits" : "May need more than"} your ${direction.minutes}-minute session.`;
       const previousLesson = course.lessons.filter(
         (l) => l.title === checkpoints[0]?.lessonTitle,
       );
@@ -526,11 +617,33 @@ export class Practice {
       [key]: Date.now() + days * 86400000,
     });
   }
-  async start(courseId: string, exerciseId: string, reviewOf?: string) {
+  async start(
+    courseId: string,
+    exerciseId: string,
+    reviewOf?: string,
+    transferOf?: string,
+  ) {
     const spec = this.exercise(exerciseId),
       state = this.app.configured();
     const course = state.courses.find((c) => c.id === courseId);
     if (!course) throw new UserError("Choose a course first.");
+    if (spec.transferFrom) {
+      const original = transferOf ? this.task(transferOf) : undefined;
+      if (
+        !original ||
+        original.courseId !== courseId ||
+        original.exerciseId !== spec.transferFrom ||
+        original.status !== "completed" ||
+        !original.attempts.some((a) => a.passed && !a.stale) ||
+        reviewOf
+      )
+        throw new UserError(
+          "Complete the original task before trying its changed requirement.",
+        );
+    } else if (transferOf)
+      throw new UserError(
+        "Choose the changed requirement for the completed task.",
+      );
     if (
       this.tasks().some((t) => t.courseId === courseId && t.status === "active")
     )
@@ -592,6 +705,7 @@ export class Practice {
       reflection: "",
       attempts: [],
       reviewOf,
+      transferOf,
     };
     this.persist(task);
     await this.workspace.editorAnchor(session.id, file, 0);
@@ -628,11 +742,47 @@ export class Practice {
     this.persist(task);
     return task;
   }
-  hint(id: string) {
+  async assertFresh(courseId: string) {
+    const task = this.tasks().find(
+      (t) => t.courseId === courseId && t.status === "active",
+    );
+    const session = this.app.store.state().session;
+    if (!task || session?.workspace !== task.workspace) return;
+    const signature = JSON.stringify(await this.workspace.versions(session.id));
+    if (
+      task.lastHint &&
+      task.lastHint.signature !== signature &&
+      (!task.attempts[0] || task.attempts[0].at <= task.lastHint.at)
+    )
+      throw new UserError(
+        "Test your changes first. Run your task checks before requesting another hint.",
+        409,
+      );
+    if (!task.attempts.length) return;
+    const file = await this.workspace.read(session.id, task.path);
+    if (
+      task.attempts[0].stale ||
+      file.version !== task.attempts[0].fileVersion ||
+      (task.attempts[0].workspaceVersions &&
+        JSON.stringify(task.attempts[0].workspaceVersions) !== signature)
+    )
+      throw new UserError(
+        "Test your changes first. Run the task checks before requesting another hint.",
+        409,
+      );
+  }
+  async hint(id: string) {
+    await this.assertFresh(this.task(id).courseId);
     const task = this.task(id),
       spec = this.exercise(task.exerciseId);
     const hint = spec.hints[Math.min(task.hints, spec.hints.length - 1)];
     task.hints++;
+    const session = this.app.store.state().session;
+    if (session?.workspace === task.workspace)
+      task.lastHint = {
+        signature: JSON.stringify(await this.workspace.versions(session.id)),
+        at: new Date().toISOString(),
+      };
     this.persist(task);
     return { hint, level: Math.min(task.hints, 3) };
   }
@@ -651,6 +801,15 @@ export class Practice {
       hintsRequested: task.hints,
       path: task.path,
       reviewOf: task.reviewOf,
+      transferOf: task.transferOf,
+      previousAttempts: task.attempts
+        .slice(0, 3)
+        .map((a) => ({
+          at: a.at,
+          checks: a.checks,
+          hints: a.hints,
+          stale: a.stale,
+        })),
       teacherPolicy:
         "Guide this attempt with a diagnostic question and one progressive hint. Do not provide the implementation or complete the task, even if asked. Explain concepts with a different small example. The learner writes and tests the solution.",
     };
@@ -681,6 +840,7 @@ export class Practice {
     this.checking.add(id);
     try {
       const file = await this.workspace.read(sessionId, task.path);
+      const workspaceVersions = await this.workspace.versions(sessionId);
       const { target } = await this.workspace.location(sessionId, task.path);
       const js = spec.language === "javascript";
       const prefix = `GITLEARN_CHECK_${randomUUID()}:`;
@@ -760,7 +920,10 @@ export class Practice {
         }
       }
       const current = await readFile(target, "utf8").catch(() => "");
-      const stale = digest(current) !== file.version;
+      const stale =
+        digest(current) !== file.version ||
+        JSON.stringify(await this.workspace.versions(sessionId)) !==
+          JSON.stringify(workspaceVersions);
       let output = result.output
         .split(/\r?\n/)
         .filter((s) => !s.startsWith(prefix))
@@ -791,6 +954,7 @@ export class Practice {
         hints: latest.hints,
         source,
         sourceTruncated: file.content.length > 16000,
+        workspaceVersions,
       };
       // Read the latest record so a concurrent hint cannot be lost.
       latest.attempts = [attempt, ...latest.attempts].slice(0, 50);

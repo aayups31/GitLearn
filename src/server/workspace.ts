@@ -28,6 +28,10 @@ export class Workspace {
   private jobs = new Map<string, ChildProcess>();
   private stopped = new Set<string>();
   private previews = new Map<string, { html: string; expires: number }>();
+  private liveRuns = new Map<
+    string,
+    { path: string; output: string; inputs: number }
+  >();
   constructor(private app: Application) {}
   isRunning(id: string) {
     return this.jobs.has(id);
@@ -94,7 +98,7 @@ export class Workspace {
       );
     return { session, target };
   }
-  async list(id: string) {
+  async list(id: string, evidence = true) {
     const session = this.session(id);
     const rules = ignore();
     for (const name of [".gitignore", ".gitlearnignore"])
@@ -146,8 +150,65 @@ export class Workspace {
       files: files.sort((a, b) => a.path.localeCompare(b.path)),
       skipped,
       anchor: this.app.store.get<ResumeAnchor>(`resume:${session.courseId}`),
-      lastRun: (await this.runs(id))[0],
+      lastRun: evidence ? (await this.runs(id))[0] : undefined,
     };
+  }
+  async versions(id: string) {
+    const listing = await this.list(id, false);
+    const versions: Record<string, string> = {};
+    for (const file of listing.files)
+      versions[file.path] = (await this.read(id, file.path)).version;
+    return versions;
+  }
+  async assertFresh(id: string, runId?: string) {
+    const latest = (await this.runs(id))[0];
+    if (!latest) return undefined;
+    if (latest.stale)
+      throw new UserError(
+        "Test your changes first. Save and run the current code before asking for another hint.",
+        409,
+      );
+    if (runId && latest.id !== runId)
+      throw new UserError(
+        "A newer run is available. Attach its result before asking about this error.",
+        409,
+      );
+    if (this.isRunning(id))
+      throw new UserError(
+        "Wait for your local run to finish before asking for another hint.",
+        409,
+      );
+    return latest;
+  }
+  runStatus(id: string) {
+    this.session(id);
+    const live = this.liveRuns.get(id);
+    let output = live?.output || "";
+    try {
+      assertClean(output, "live output");
+      if (this.app.apiKey && output.includes(this.app.apiKey)) throw Error();
+    } catch {
+      output = "[Sensitive output excluded]";
+    }
+    return {
+      running: !!live,
+      path: live?.path,
+      output: output.slice(-16000),
+      acceptsInput: !!live && !this.jobs.get(id)?.stdin?.destroyed,
+    };
+  }
+  input(id: string, text: string) {
+    this.session(id);
+    const live = this.liveRuns.get(id),
+      job = this.jobs.get(id);
+    if (!live || !job?.stdin || job.stdin.destroyed)
+      throw new UserError("This run is no longer accepting input.", 409);
+    if (text.length > 4000 || /[\r\n\x00]/.test(text) || live.inputs >= 100)
+      throw new UserError(
+        "Send one short line at a time (up to 100 lines per run).",
+      );
+    live.inputs++;
+    job.stdin.write(text + "\n");
   }
   async editorAnchor(id: string, relative: string, cursor: number) {
     const session = this.session(id);
@@ -174,9 +235,17 @@ export class Workspace {
         404,
       );
     const current = await this.read(id, record.path).catch(() => null);
+    const versions = record.workspaceVersions
+      ? await this.versions(id)
+      : undefined;
     return {
       ...record,
-      stale: record.changedDuringRun || current?.version !== record.fileVersion,
+      stale:
+        record.changedDuringRun ||
+        current?.version !== record.fileVersion ||
+        (!!versions &&
+          JSON.stringify(versions) !==
+            JSON.stringify(record.workspaceVersions)),
     };
   }
   async runs(id: string) {
@@ -321,6 +390,7 @@ export class Workspace {
   async run(id: string, relative: string) {
     const { session, target } = await this.location(id, relative);
     const file = await this.read(id, relative);
+    const workspaceVersions = await this.versions(id);
     if (this.jobs.has(id))
       throw new UserError(
         "A program is already running. Stop it before starting another.",
@@ -375,10 +445,13 @@ export class Workspace {
           windowsHide: true,
           shell: false,
           detached: process.platform !== "win32",
-          stdio: ["ignore", "pipe", "pipe"],
+          stdio: ["pipe", "pipe", "pipe"],
         },
       );
       this.jobs.set(id, job);
+      const live = { path: relative, output: "", inputs: 0 };
+      this.liveRuns.set(id, live);
+      job.stdin?.on("error", () => {});
       let output = "",
         timedOut = false,
         limited = false,
@@ -386,6 +459,7 @@ export class Workspace {
       const append = (chunk: Buffer) => {
         if (limited) return;
         output += chunk.toString();
+        live.output = output;
         if (output.length > 64000) {
           limited = true;
           output = output.slice(0, 64000) + "\n[Output limit reached]";
@@ -402,6 +476,7 @@ export class Workspace {
         failed = true;
         clearTimeout(timer);
         this.jobs.delete(id);
+        this.liveRuns.delete(id);
         reject(
           new UserError(
             extension === ".py"
@@ -414,6 +489,7 @@ export class Workspace {
       job.on("close", async (code) => {
         clearTimeout(timer);
         this.jobs.delete(id);
+        this.liveRuns.delete(id);
         if (failed) return;
         const completeOutput =
           output + (timedOut ? "\n[Stopped after 10 seconds]" : "");
@@ -446,10 +522,46 @@ export class Workspace {
             stopped: this.stopped.delete(id),
             startedAt,
             finishedAt: new Date().toISOString(),
-            changedDuringRun: !current || hash(current) !== file.version,
+            changedDuringRun:
+              !current ||
+              hash(current) !== file.version ||
+              JSON.stringify(await this.versions(id)) !==
+                JSON.stringify(workspaceVersions),
+            workspaceVersions,
           };
           const records =
             this.app.store.get<RunEvidence[]>(`runs:${session.courseId}`) || [];
+          const baseline = records.find(
+            (r) =>
+              r.workspace === session.workspace &&
+              r.path === relative &&
+              r.exitCode === 0 &&
+              !r.stopped &&
+              !r.timedOut &&
+              !r.changedDuringRun &&
+              r.lessonId !== session.lessonId,
+          );
+          if (
+            baseline &&
+            code !== null &&
+            code !== 0 &&
+            !timedOut &&
+            !record.stopped &&
+            !record.changedDuringRun
+          )
+            record.regression = {
+              baselineId: baseline.id,
+              lessonId: baseline.lessonId,
+              changedFiles: Object.keys({
+                ...baseline.workspaceVersions,
+                ...workspaceVersions,
+              })
+                .filter(
+                  (p) =>
+                    baseline.workspaceVersions?.[p] !== workspaceVersions[p],
+                )
+                .slice(0, 40),
+            };
           this.app.store.put(
             `runs:${session.courseId}`,
             [record, ...records].slice(0, 20),

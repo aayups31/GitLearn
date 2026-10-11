@@ -1245,6 +1245,17 @@ function HistoryList({ state, small }: { state: Status; small?: boolean }) {
               <span>·</span> {item.files.length} files <span>·</span>{" "}
               <code>{item.sha.slice(0, 7)}</code>
             </small>
+            {item.video && (
+              <a
+                className="text-button"
+                href={`${item.video.url}?outclassTime=${item.video.seconds}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Sync to video · {Math.floor(item.video.seconds / 60)}:
+                {String(item.video.seconds % 60).padStart(2, "0")} ↗
+              </a>
+            )}
           </div>
           <span
             className={`save-status ${item.sync === "synced" ? "synced" : ""}`}

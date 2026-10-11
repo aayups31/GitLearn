@@ -96,6 +96,12 @@ export function extractUdemy(
     title: title.slice(0, 300),
     url: `${url.origin}${url.pathname}`,
     currentLessonId,
+    videoSeconds: (() => {
+      const video = document.querySelector("video");
+      return video && Number.isFinite(video.currentTime)
+        ? Math.floor(video.currentTime)
+        : undefined;
+    })(),
     lessons: lessons.slice(0, 500),
   };
 }
@@ -157,6 +163,27 @@ if (
     childList: true,
     subtree: true,
   });
-  setInterval(observe, 15000);
+  setInterval(observe, 3000);
   observe();
+  // A user-opened checkpoint link seeks only the visible, authorized player.
+  // No playback starts and no video or protected course content is downloaded.
+  const seconds = Number(
+    new URL(location.href).searchParams.get("outclassTime"),
+  );
+  if (
+    new URL(location.href).searchParams.has("outclassTime") &&
+    Number.isFinite(seconds) &&
+    seconds >= 0 &&
+    seconds <= 86400
+  ) {
+    let tries = 0;
+    const seek = setInterval(() => {
+      const video = document.querySelector("video");
+      if (video && Number.isFinite(video.duration) && video.duration > 0) {
+        video.pause();
+        video.currentTime = Math.min(seconds, video.duration);
+        clearInterval(seek);
+      } else if (++tries >= 60) clearInterval(seek);
+    }, 500);
+  }
 }

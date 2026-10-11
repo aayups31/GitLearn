@@ -16,6 +16,7 @@ import { CourseLibrary } from "./library.js";
 import { Practice } from "./practice.js";
 import { ProjectRuntime } from "./project-runtime.js";
 import { LiveWork } from "./live-work.js";
+import { LearningPath, directionSchema } from "./learning-path.js";
 
 const text = z.string().max(2000);
 function matches(a: string, b: string) {
@@ -33,6 +34,13 @@ export function createApp(
   const practice = new Practice(application, workspace);
   const runtime = new ProjectRuntime(application, workspace);
   const live = new LiveWork(application, workspace, runtime, practice);
+  const learning = new LearningPath(
+    application,
+    workspace,
+    practice,
+    runtime,
+    live,
+  );
   app.locals.stopPrograms = async () => {
     app.locals.closing = true;
     live.stopAll();
@@ -200,6 +208,51 @@ export function createApp(
     res.json({ opened: !!focusDesktop });
   });
   const fileQuery = z.object({ sessionId: text.min(1), path: text.min(1) });
+  app.get("/api/learning-path", (req, res) =>
+    res.json(learning.status(text.min(1).parse(req.query.courseId))),
+  );
+  app.get("/api/learning-impact", async (req, res) =>
+    res.json(await learning.impact(text.min(1).parse(req.query.courseId))),
+  );
+  app.post("/api/learning-direction", (req, res) => {
+    const input = directionSchema
+      .extend({ courseId: text.min(1) })
+      .parse(req.body);
+    res.json(learning.saveDirection(input.courseId, input));
+  });
+  app.post("/api/learning-milestone", (req, res) => {
+    const input = z
+      .object({
+        courseId: text.min(1),
+        milestoneId: text.min(1),
+        reference: z.string().uuid(),
+        reflection: z.string().max(4000),
+      })
+      .parse(req.body);
+    res.json(
+      learning.complete(
+        input.courseId,
+        input.milestoneId,
+        input.reference,
+        input.reflection,
+      ),
+    );
+  });
+  app.post("/api/learning-project-brief", async (req, res) =>
+    res.json(
+      await application.serial(() =>
+        learning.writeBrief(text.min(1).parse(req.body.courseId)),
+      ),
+    ),
+  );
+  app.get("/api/learning-ledger", async (req, res) =>
+    res.json(
+      await learning.ledger(
+        text.min(1).parse(req.query.courseId),
+        z.enum(["markdown", "html"]).parse(req.query.format),
+      ),
+    ),
+  );
   app.get("/api/practice", (req, res) =>
     res.json(
       practice.dashboard(
@@ -216,11 +269,17 @@ export function createApp(
         courseId: text.min(1),
         exerciseId: text.min(1),
         reviewOf: z.string().uuid().optional(),
+        transferOf: z.string().uuid().optional(),
       })
       .parse(req.body);
     res.json(
       await application.serial(() =>
-        practice.start(input.courseId, input.exerciseId, input.reviewOf),
+        practice.start(
+          input.courseId,
+          input.exerciseId,
+          input.reviewOf,
+          input.transferOf,
+        ),
       ),
     );
   });
@@ -230,8 +289,8 @@ export function createApp(
       .parse(req.body);
     res.json(await practice.check(input.taskId, input.sessionId));
   });
-  app.post("/api/practice-hint", (req, res) =>
-    res.json(practice.hint(z.string().uuid().parse(req.body.taskId))),
+  app.post("/api/practice-hint", async (req, res) =>
+    res.json(await practice.hint(z.string().uuid().parse(req.body.taskId))),
   );
   app.post("/api/practice-update", (req, res) => {
     const input = z
@@ -422,6 +481,16 @@ export function createApp(
     const input = fileQuery.parse(req.body);
     res.json(await workspace.run(input.sessionId, input.path));
   });
+  app.get("/api/workspace-run-status", (req, res) =>
+    res.json(workspace.runStatus(text.min(1).parse(req.query.sessionId))),
+  );
+  app.post("/api/workspace-input", (req, res) => {
+    const input = z
+      .object({ sessionId: z.string().uuid(), text: z.string().max(4000) })
+      .parse(req.body);
+    workspace.input(input.sessionId, input.text);
+    res.json({ ok: true });
+  });
   app.post("/api/workspace-preview", async (req, res) => {
     const input = fileQuery.parse(req.body);
     res.json(await workspace.preview(input.sessionId, input.path));
@@ -516,14 +585,17 @@ export function createApp(
       throw new UserError(
         "Use Code help in the active course to explain a run.",
       );
-    const runContext = input.runId
-      ? await workspace.runContext(session!.id, input.runId)
-      : undefined;
+    const runContext =
+      input.mode === "help" && session?.courseId === input.courseId
+        ? await learning.assertFresh(input.courseId, input.runId)
+        : undefined;
     const teaching =
       input.mode === "help"
         ? {
             practice: practice.context(input.courseId),
             contribution: live.context(input.courseId),
+            direction: learning.direction(input.courseId),
+            project: learning.status(input.courseId).milestones,
           }
         : undefined;
     const answer = await library.ask(
@@ -537,6 +609,8 @@ export function createApp(
     );
     if (teaching?.practice && answer.mode !== "retrieval")
       practice.recordHelp(teaching.practice.taskId);
+    if (input.mode === "help" && answer.mode !== "retrieval")
+      await learning.rememberHelp(input.courseId);
     res.json(answer);
   });
   app.post("/api/assistant-clear", (req, res) => {

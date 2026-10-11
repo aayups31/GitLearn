@@ -21,6 +21,7 @@ import type { Exercise, PracticeTask, Practice } from "../server/practice";
 import type { Candidate, Contribution } from "../server/live-work";
 import type { CommandRecord } from "../server/project-runtime";
 import "./practical.css";
+import { PersonalPath } from "./learning-path";
 type Api = <T>(route: string, body?: unknown) => Promise<T>;
 type Dashboard = ReturnType<Practice["dashboard"]>;
 function useAction() {
@@ -167,12 +168,13 @@ export function LearningHub({
     setReflection(selected?.reflection || "");
   }, [selected?.id]);
   const spec = data?.exercises.find((e) => e.id === selected?.exerciseId);
-  const start = (id: string, reviewOf?: string) =>
+  const start = (id: string, reviewOf?: string, transferOf?: string) =>
     action.run(async () => {
       const task = await api<PracticeTask>("practice-start", {
         courseId,
         exerciseId: id,
         reviewOf,
+        transferOf,
       });
       await onRefresh();
       setSelected(task);
@@ -182,7 +184,9 @@ export function LearningHub({
   const tasks = data?.tasks.filter((t) => t.courseId === courseId) || [];
   const catalog =
     data?.exercises.filter(
-      (e) => e.kind === (tab === "projects" ? "project" : "practice"),
+      (e) =>
+        !e.transferFrom &&
+        e.kind === (tab === "projects" ? "project" : "practice"),
     ) || [];
   const opportunity = data?.opportunities.find((o) => o.courseId === courseId);
   return (
@@ -239,7 +243,7 @@ export function LearningHub({
         role="tablist"
         aria-label="Practical learning views"
       >
-        {["practice", "projects", "reviews"].map((t) => (
+        {["path", "practice", "projects", "reviews"].map((t) => (
           <button
             key={t}
             role="tab"
@@ -249,7 +253,7 @@ export function LearningHub({
               setSelected(undefined);
             }}
           >
-            {t[0].toUpperCase() + t.slice(1)}
+            {t === "path" ? "My direction" : t[0].toUpperCase() + t.slice(1)}
           </button>
         ))}
       </div>
@@ -262,7 +266,15 @@ export function LearningHub({
           </p>
         </div>
       )}
-      {!state.courses.length ? (
+      {tab === "path" ? (
+        <PersonalPath
+          courseId={courseId}
+          api={api}
+          onCode={() => onCode(courseId)}
+          onRefresh={onRefresh}
+          active={state.session?.courseId === courseId}
+        />
+      ) : !state.courses.length ? (
         <div className="learning-empty">
           <BookOpen size={26} />
           <h2>Bring a course, then make it yours.</h2>
@@ -458,6 +470,32 @@ export function LearningHub({
                 </small>
                 <h2>{spec.title}</h2>
                 <p>{spec.brief}</p>
+                {selected.status === "completed" &&
+                  !selected.transferOf &&
+                  data?.exercises.some((e) => e.transferFrom === spec.id) && (
+                    <div className="path-next">
+                      <h3>Can you use it differently?</h3>
+                      <p>
+                        Try a fresh file with a changed requirement. Your
+                        earlier solution remains saved.
+                      </p>
+                      <button
+                        className="button primary"
+                        disabled={action.busy}
+                        onClick={() =>
+                          start(
+                            data.exercises.find(
+                              (e) => e.transferFrom === spec.id,
+                            )!.id,
+                            undefined,
+                            selected.id,
+                          )
+                        }
+                      >
+                        Try the changed requirement <ArrowRight size={14} />
+                      </button>
+                    </div>
+                  )}
                 <div className="learning-section-label">
                   Acceptance criteria
                 </div>
@@ -843,6 +881,22 @@ export function ProjectConsole({
               {latest.output.replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, "") ||
                 "Waiting for output…"}
             </pre>
+            {latest.regression && (
+              <div className="alert error" role="alert">
+                <strong>Regression Alert</strong>
+                <p>
+                  This command passed in an earlier lesson and now fails.
+                  Inspect the diff and rerun the earlier checks before adding
+                  more features.
+                </p>
+                <small>
+                  Changed files:{" "}
+                  {latest.regression.changedFiles.join(", ") ||
+                    "No tracked source change detected"}{" "}
+                  · baseline {latest.regression.baselineId.slice(0, 8)}
+                </small>
+              </div>
+            )}
           </>
         )}
         {running && (

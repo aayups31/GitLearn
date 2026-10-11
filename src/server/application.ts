@@ -160,6 +160,7 @@ export class Application {
     course.title = observation.title;
     course.url = url;
     course.observedAt = new Date().toISOString();
+    course.videoSeconds = observation.videoSeconds;
     if (observation.currentLessonId)
       course.currentLessonId = observation.currentLessonId;
     for (const observed of observation.lessons) {
@@ -592,6 +593,19 @@ export class Application {
       diff: result.diff.slice(0, 80000),
       ...ai,
       createdAt: new Date().toISOString(),
+      reflection: session.note,
+      video: (() => {
+        const course = state.courses.find((c) => c.id === session.courseId);
+        return course?.currentLessonId === session.lessonId &&
+          course.videoSeconds !== undefined &&
+          Date.now() - Date.parse(course.observedAt) < 15000
+          ? {
+              url: course.url,
+              seconds: course.videoSeconds,
+              capturedAt: course.observedAt,
+            }
+          : undefined;
+      })(),
     };
     this.store.put(`preview:${preview.id}`, preview);
     return publicPreview(preview);
@@ -638,6 +652,9 @@ export class Application {
       sha: "",
       files: preview.changes.map((change) => change.path),
       sync: state.settings.remote ? "pending" : "local",
+      lessonId: state.session.lessonId,
+      video: preview.video,
+      reflection: preview.reflection,
     };
     this.store.put("commitJournal", {
       record,

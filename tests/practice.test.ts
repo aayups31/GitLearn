@@ -53,7 +53,7 @@ it("fails an unfinished task, records hint use, verifies saved behavior, and sur
   const task = await practice.start("js", "javascript-validation");
   const id = store.state().session!.id;
   expect((await practice.check(task.id, id)).attempts[0].passed).toBe(false);
-  const hint = practice.hint(task.id);
+  const hint = await practice.hint(task.id);
   expect(hint.level).toBe(1);
   expect(hint.hint).not.toContain("return");
   const file = await workspace.read(id, task.path);

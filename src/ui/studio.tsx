@@ -307,6 +307,22 @@ export function Studio({
     [tutorStyle, setTutorStyle] = useState<"hint" | "explain">("hint"),
     [cursor, setCursor] = useState(0);
   const [projectRunning, setProjectRunning] = useState(false);
+  const [runInput, setRunInput] = useState("");
+  useEffect(() => {
+    if (!running || !session) return;
+    let cancelled = false;
+    const timer = setInterval(() => {
+      api<{ output: string }>(`workspace-run-status?sessionId=${session.id}`)
+        .then((r) => {
+          if (!cancelled && r.output) setOutput(r.output);
+        })
+        .catch(() => {});
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [running, session?.id]);
   const [savedNote, setSavedNote] = useState(session?.note || ""),
     [selection, setSelection] = useState("");
   const [library, setLibrary] = useState<Library>(),
@@ -589,6 +605,13 @@ export function Studio({
       const q = preset || question;
       const requestMode = preset && withRun ? "help" : mode;
       if (!course || !q.trim()) return;
+      if (
+        requestMode === "help" &&
+        Object.values(drafts).some((d) => d.content !== d.saved)
+      )
+        throw new Error(
+          "Test your changes first. Save and run your edited code before requesting another hint.",
+        );
       if (session) {
         await api("note", { note, sessionId: session.id });
         setSavedNote(note);
@@ -1122,6 +1145,44 @@ export function Studio({
                   "Run a Python or JavaScript file to see its output here."}
               </pre>
               <div className="runner-note">
+                {lastRun?.regression && (
+                  <div role="alert">
+                    <strong>Regression Alert</strong>
+                    <p>
+                      This file passed in an earlier lesson and now fails.
+                      Review the changed files and earlier checkpoint; a failed
+                      run does not prove the cause.
+                    </p>
+                    <small>{lastRun.regression.changedFiles.join(", ")}</small>
+                  </div>
+                )}
+                {running && (
+                  <form
+                    className="run-line-input"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      void safe("input", async () => {
+                        await api("workspace-input", {
+                          sessionId: session.id,
+                          text: runInput,
+                        });
+                        setRunInput("");
+                      });
+                    }}
+                  >
+                    <label htmlFor="run-line">
+                      Program input · one line · 10s run limit
+                    </label>
+                    <input
+                      id="run-line"
+                      value={runInput}
+                      maxLength={4000}
+                      onChange={(e) => setRunInput(e.target.value)}
+                      autoComplete="off"
+                    />
+                    <button type="submit">Send line</button>
+                  </form>
+                )}
                 <ShieldCheck size={11} />
                 Runs saved code with your computer’s permissions. Your API key
                 is excluded from the runner environment.
