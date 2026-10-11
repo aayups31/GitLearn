@@ -122,7 +122,7 @@ See [current build and architecture](docs/current-build.md), the [longer-term ar
 
 ## Next: from tutorials to independent work
 
-The [active product roadmap](docs/learning-to-contribution-roadmap.md) defines contextual debugging, persistent course projects, practice tasks, evidence-backed learning memory, short reviews, and guided open source contributions. The [learning and contribution architecture](docs/learning-architecture.md) specifies local data, retrieval scopes, runtime boundaries, matching, and verification. The 0.3 preview implements the first daily-workspace stage: persistent course projects, Continue, recorded-run error help, and setup diagnostics. Practical project environments, independent practice, learning memory/reviews, and guided open source discovery/contribution follow in the roadmap. Coding-agent integration is deliberately deferred.
+The [active product roadmap](docs/learning-to-contribution-roadmap.md) defines contextual debugging, persistent course projects, practice tasks, evidence-backed learning memory, short reviews, and guided open source contributions. The [learning and contribution architecture](docs/learning-architecture.md) specifies local data, retrieval scopes, runtime boundaries, matching, and verification. The 0.5 preview connects personal directions, practice breaks, progressive teaching, transfer challenges, evolving projects, evidence memory and guided contributions. The 0.6 preview adds language-specific project environments, TypeScript and native execution, and Python package installation. Coding-agent integration is deliberately deferred.
 
 ## Active learning in 0.5
 
@@ -130,7 +130,7 @@ Use **Learn by doing → My direction** to set a goal and session budget, keep a
 
 ## Languages and project environments in 0.6
 
-**Code & learn → Project console → Create project** offers React, React with TypeScript, Next.js with TypeScript, Node.js, standalone TypeScript, Python, C and C++. Each starter supplies prepare, dependency, check/build and start commands. React/Next.js open on loopback ports 5173/3000. JSX and TSX need the project dev server; TypeScript saved-file execution strips types and requires a separate project check for type safety.
+**Code & learn → Project console → Create project** offers React, React with TypeScript, Next.js with TypeScript, Node.js, standalone TypeScript, Python, C and C++. Each starter supplies prepare, dependency, check/build and start commands. React/Next.js open on loopback ports 5173/3000. JSX and TSX need the project dev server; TypeScript saved-file execution strips erasable types and requires a separate project check for type safety. The standalone project’s Start command uses tsx for transformations, including enums.
 
 Python projects can select NumPy/pandas, FastAPI, Flask, scikit-learn, PyTorch or an empty requirements file for other libraries. Create the project environment, then install packages explicitly. Saved-file runs and generated commands select the nearest `.venv`. Any compatible package can be added; native/GPU/OS requirements are not supplied by OutClass.
 
