@@ -1850,3 +1850,362 @@ body.motion-paused *:after {
     align-items: center;
   }
 }
+
+/* OutClass editorial system: luminous blue, quiet surfaces, generous type. */
+:root {
+  --canvas: #080a0f;
+  --panel: #11151d;
+  --line: #242a35;
+  --secondary: #a7afbe;
+  --muted: #828da1;
+}
+.environment {
+  background: radial-gradient(ellipse at 78% 8%, #19357925, transparent 44%);
+}
+.site-header {
+  max-width: 1280px;
+  height: 78px;
+}
+.site-header nav {
+  margin-left: auto;
+  font-size: 12px;
+}
+.site-header > .button {
+  margin-left: 15px;
+  background: #e8edf7;
+  color: #151b28;
+  border-color: #fff3;
+  box-shadow: inset 0 1px #fff;
+}
+.hero {
+  min-height: 710px;
+  padding-top: 106px;
+}
+.hero h1 {
+  font-size: clamp(80px, 8.6vw, 120px);
+  font-weight: 500;
+  letter-spacing: -0.075em;
+}
+.hero h1 .headline-line:last-child {
+  color: #b7c8ed;
+}
+.hero .eyebrow {
+  color: #c5d7ff;
+  font-size: 10px;
+  letter-spacing: 1.8px;
+}
+.hero-lede {
+  font-size: 19px;
+  max-width: 31ch;
+}
+.hero-description {
+  font-size: 14px;
+  max-width: 41ch;
+}
+.hero-actions {
+  margin-top: 32px;
+}
+.button.primary {
+  background: linear-gradient(180deg, #527df5, #3560d4);
+  border-color: #83a4ff77;
+  box-shadow:
+    inset 0 1px #ffffff36,
+    0 4px 22px #245bea26;
+}
+.hero-art {
+  width: 740px;
+  height: 700px;
+  top: 0;
+  right: -100px;
+}
+.orbit-glow {
+  inset: 20% 0;
+}
+.label-before {
+  left: 160px;
+  bottom: 112px;
+}
+.label-after {
+  right: 68px;
+  top: 70px;
+}
+.hero-bottom {
+  bottom: 32px;
+  font-size: 9px;
+}
+.learning-principles {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  padding-top: 28px;
+  padding-bottom: 36px;
+  border-top: 1px solid var(--line);
+}
+.learning-principles p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.learning-principles strong {
+  color: #d2d9e6;
+  font-weight: 400;
+}
+.learning-principles > span {
+  font-size: 13px;
+  color: #c6cfde;
+  white-space: nowrap;
+}
+.learning-principles i {
+  font: normal 10px monospace;
+  margin-right: 16px;
+  color: #7b9ae2;
+}
+.product-proof {
+  padding-top: 95px;
+  padding-bottom: 110px;
+}
+.proof-top {
+  color: #8999b5;
+}
+.product-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 48px;
+  margin: 30px 0 48px;
+}
+.product-heading h2 {
+  font-size: 52px;
+}
+.product-heading h2 span {
+  color: #8693ad;
+}
+.product-heading p {
+  max-width: 36ch;
+  color: var(--secondary);
+  font-size: 14px;
+  line-height: 1.9;
+}
+.workspace-frame {
+  border-color: #45597c;
+  border-radius: 12px;
+  box-shadow:
+    0 -20px 110px -52px #5288ff88,
+    0 45px 100px -30px #000;
+}
+.workspace-top {
+  background: linear-gradient(100deg, #1b2436, #121721);
+  height: 42px;
+}
+.problem {
+  isolation: isolate;
+  padding-top: 100px;
+  padding-bottom: 100px;
+  border: 0;
+}
+.problem::before {
+  content: "";
+  position: absolute;
+  inset: 0 calc((1280px - 100vw) / 2);
+  min-width: 100%;
+  background: #e9edf4;
+  z-index: -1;
+}
+.problem h2 {
+  color: #141c2b;
+  font-size: clamp(38px, 5.3vw, 72px);
+}
+.problem h2 > span {
+  color: #7b8598;
+}
+.problem .section-index {
+  color: #556075;
+}
+.problem-bottom > p {
+  color: #4c586d;
+}
+.loop-words {
+  color: #3c4b66;
+}
+.problem-turn {
+  color: #2e59af;
+}
+.escape-section {
+  padding-top: 120px;
+  border: 0;
+}
+.escape-step {
+  min-height: 405px;
+}
+.chapter-example {
+  background: linear-gradient(110deg, #16213688, #10172244);
+  border-left: 2px solid #658ce3;
+  border-radius: 0 8px 8px 0;
+}
+.teacher-section {
+  position: relative;
+}
+.assistant-demo {
+  background:
+    radial-gradient(ellipse at 100% 0, #25457e29, transparent 65%), #10151e;
+  box-shadow: 0 28px 75px -35px #000;
+  border-color: #3a4964;
+}
+.download {
+  isolation: isolate;
+}
+.download::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(ellipse at 12% 100%, #234faa40, transparent 70%);
+  pointer-events: none;
+}
+.footer-statement {
+  color: #a4b9e2;
+}
+@media (max-width: 1280px) {
+  .problem::before {
+    inset: 0;
+  }
+}
+@media (max-width: 1100px) {
+  .hero-art {
+    width: 640px;
+    right: -110px;
+    top: 25px;
+  }
+  .hero-copy {
+    max-width: 540px;
+  }
+  .learning-principles {
+    gap: 18px;
+  }
+  .learning-principles i {
+    margin-right: 8px;
+  }
+}
+@media (max-width: 900px) {
+  .hero {
+    padding-top: 80px;
+    min-height: 650px;
+  }
+  .hero h1 {
+    font-size: 88px;
+  }
+  .hero-art {
+    right: -210px;
+    opacity: 0.6;
+  }
+  .hero-copy {
+    max-width: 510px;
+  }
+  .hero-description {
+    max-width: 34ch;
+  }
+  .learning-principles {
+    flex-wrap: wrap;
+  }
+  .learning-principles p {
+    flex-basis: 100%;
+  }
+  .product-heading h2 {
+    font-size: 40px;
+  }
+  .product-heading p {
+    font-size: 12px;
+  }
+}
+@media (max-width: 640px) {
+  .site-header {
+    height: 72px;
+  }
+  .site-header > .button {
+    margin-left: auto;
+  }
+  .hero {
+    padding-top: 58px;
+    min-height: auto;
+    padding-bottom: 32px;
+  }
+  .hero h1 {
+    font-size: clamp(64px, 16vw, 94px);
+  }
+  .hero .eyebrow {
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+  .hero-lede {
+    font-size: 18px;
+  }
+  .hero-description {
+    font-size: 13px;
+    max-width: 37ch;
+  }
+  .hero-art {
+    position: relative;
+    width: calc(100% + 46px);
+    height: auto;
+    right: auto;
+    top: auto;
+    margin: -15px -23px -25px;
+    opacity: 1;
+  }
+  .label-before {
+    left: 70px;
+    bottom: 70px;
+  }
+  .label-after {
+    right: 25px;
+    top: 35px;
+  }
+  .hero-bottom {
+    bottom: auto;
+    font-size: 7px;
+  }
+  .learning-principles {
+    padding-top: 24px;
+    padding-bottom: 24px;
+    gap: 15px 24px;
+  }
+  .learning-principles p {
+    font-size: 12px;
+  }
+  .learning-principles > span {
+    font-size: 11px;
+  }
+  .product-proof {
+    padding-top: 55px;
+    padding-bottom: 60px;
+  }
+  .product-heading {
+    display: block;
+    margin: 24px 0 30px;
+  }
+  .product-heading h2 {
+    font-size: 36px;
+  }
+  .product-heading p {
+    margin-top: 20px;
+    font-size: 13px;
+    max-width: 36ch;
+  }
+  .problem {
+    padding-top: 60px;
+    padding-bottom: 60px;
+  }
+  .problem h2 {
+    font-size: 37px;
+  }
+  .problem-bottom > p {
+    font-size: 13px;
+  }
+  .escape-section {
+    padding-top: 60px;
+  }
+  .escape-step {
+    min-height: auto;
+  }
+}

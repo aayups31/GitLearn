@@ -37,3 +37,9 @@ One subtle entrance for the workspace proof; static content remains visible with
 Plain static HTML/CSS/JS in src/site, independently deployable dist/site. Workspace React build remains local. Relative assets support root or subdirectory hosting. Self-hosted licensed fonts. Sources and download URLs are release metadata, separate from local workspace API. App and extension archives contain no developer .env or local data.
 
 Verify desktop 1280/1440 and mobile 375/390, keyboard navigation, no-JS completion, live reduced motion, every link/action, contrast, console errors, overflow, installer launch, native directory picker/API-key boundary, local editor execution, first-run wizard, and existing course/checkpoint/RAG regressions. Scan copy for em dashes and stock language. Record measured artifact sizes and checks in release notes. Public deployment follows review of the finished artifact.
+
+## OutClass visual refresh — October 11, 2026
+
+The public landing now uses an original blue ribbon that rises out of a loop, oversized two-line typography, a quieter navigation bar, a larger workspace introduction, and a pale editorial section for the tutorial-loop problem. Inspiration: Linear's software detail, Framer's visual confidence, and Scale's generous editorial pacing. No reference assets or customer claims are copied.
+
+The SVG artwork is local and lightweight. Existing GSAP entrance, scroll parallax, workspace perspective, chapter progress, and reduced-motion handling are retained. All download/setup details and preview availability remain explicit. Verified at 1440px and 390px visually; the three site Playwright tests pass, including narrow viewports, keyboard tabs, no JavaScript, blocked GSAP, and changing reduced-motion preferences.
