@@ -8,6 +8,7 @@ import {
   utilityProcess,
 } from "electron";
 import path from "node:path";
+import { mkdirSync } from "node:fs";
 import { mkdir, readFile, writeFile, unlink } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
@@ -16,9 +17,11 @@ import type { DesktopEnvironment } from "./bridge";
 
 app.setName("OutClass");
 // Keep the encrypted key and saved workspace in the existing installation.
-app.setPath("userData", path.join(app.getPath("appData"), "GitLearn"));
-if (process.env.GITLEARN_DESKTOP_USER_DATA)
-  app.setPath("userData", process.env.GITLEARN_DESKTOP_USER_DATA);
+const profilePath =
+  process.env.GITLEARN_DESKTOP_USER_DATA ||
+  path.join(app.getPath("appData"), "GitLearn");
+mkdirSync(profilePath, { recursive: true });
+app.setPath("userData", profilePath);
 const root = app.getAppPath();
 const extensionSource = app.isPackaged
   ? path.join(process.resourcesPath, "extension")
