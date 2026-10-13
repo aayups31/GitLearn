@@ -49,6 +49,7 @@ const allowedExternal = new Set([
   "chromewebstore.google.com",
   "developer.chrome.com",
   "checkout.stripe.com",
+  "billing.stripe.com",
   "code.visualstudio.com",
   "vscodium.com",
 ]);

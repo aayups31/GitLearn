@@ -139,7 +139,11 @@ export function AIAccessSettings({
                       const u = new URL(r.url);
                       if (
                         u.protocol !== "https:" ||
-                        u.hostname !== "checkout.stripe.com"
+                        !["checkout.stripe.com", "billing.stripe.com"].includes(
+                          u.hostname,
+                        ) ||
+                        u.username ||
+                        u.password
                       )
                         throw new Error("The billing link was not valid.");
                       if (window.gitLearnDesktop)
