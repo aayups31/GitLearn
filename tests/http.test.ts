@@ -70,6 +70,34 @@ it("rejects foreign pages and DNS rebinding hosts", async () => {
     ).status,
   ).toBe(200);
 });
+it("connects AI guides before folder setup while still requiring a ready provider", async () => {
+  const post = (route: string, body: unknown) =>
+    fetch(`${base}/api/${route}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localToken}`,
+      },
+      body: JSON.stringify(body),
+    });
+  expect((await post("assistant-enable", { enabled: true })).status).toBe(400);
+  expect(
+    (
+      await post("ai-config", {
+        mode: "local",
+        service: "",
+        localEndpoint: "http://127.0.0.1:11434/v1",
+        localModel: "fixture",
+      })
+    ).status,
+  ).toBe(200);
+  const enabled = await post("assistant-enable", { enabled: true });
+  expect(enabled.status).toBe(200);
+  expect((await enabled.json()).settings).toMatchObject({
+    configured: false,
+    assistantEnabled: true,
+  });
+});
 it("requires authentication and never publishes the API key", async () => {
   expect((await fetch(`${base}/api/state`)).status).toBe(401);
   const result = await fetch(`${base}/api/state`, {

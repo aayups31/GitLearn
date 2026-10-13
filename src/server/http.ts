@@ -747,7 +747,8 @@ export function createApp(
       );
     res.json(
       await application.serial(async () => {
-        const state = application.configured();
+        // AI preferences can be set before the learner chooses a history folder.
+        const state = application.store.state();
         state.settings.assistantEnabled = input.enabled;
         application.store.save(state);
         return state;
