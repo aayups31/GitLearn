@@ -53,6 +53,12 @@ test("packaged account sessions use Windows encryption, restore and sign out wit
   try {
     const page = await desktop.firstWindow();
     await page.waitForLoadState();
+    const version = JSON.parse(await readFile("package.json", "utf8")).version;
+    const bundledGuide = await page.evaluate(async () =>
+      (await fetch("/welcome/assets/release.json")).json(),
+    );
+    expect(bundledGuide.version).toBe(version);
+    expect(bundledGuide.windows.url).toContain(`OutClass-Setup-${version}.exe`);
     await page.evaluate(
       async (root) => {
         const { token } = await (

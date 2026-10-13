@@ -12,11 +12,13 @@ Built assets:
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| OutClass-Setup-0.7.1.exe | 120,076,999 | `36f6817fe930419a8dd794b56a9ad701f687adfbe4cd13506d1e99e79c4f8e54` |
+| OutClass-Setup-0.7.1.exe | 120,418,861 | `8c7a5b46867f516e20bc131c6181661d098c53313e859c3adf3d25c72cf633c1` |
 | OutClass-Chrome-0.7.1.zip | 135,298 | `7cd9627a4f8eb1da56415b3b4c8a50c0b492dfe40a73d4315fb6a6e1f4af3055` |
 | OutClass-Editor-0.7.1.vsix | 8,732 | `a14b6094a65bf6b07672a1c7c5bff01339d3dd80d2694c69e10e06a9b583a74a` |
 
 The [0.7.1 preview release](https://github.com/aayups31/OutClass/releases/tag/v0.7.1) is published. All three public asset links returned HTTP 200; GitHub's asset digests and byte sizes match the table. The downloaded public SHA256SUMS file matches the tested local checksum file. The Chrome ZIP is a preview package; publishing it on GitHub does not establish Chrome Web Store approval.
+
+The final installer also aligns the bundled setup guide with the public 0.7.1 downloads. Its packaged account test passed again and verified the guide's version and installer link. The live Vercel homepage and release metadata returned HTTP 200 with version 0.7.1 and the correct fallback download link.
 
 ## October 11: repository and Chrome listing rename
 
