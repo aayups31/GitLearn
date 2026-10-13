@@ -16,7 +16,17 @@ One provider abstraction routes structured teaching and architect requests to a 
 
 Projects have a title, problem, course links and original notes. Notes can be edited or deleted. Optional automatic notes record explicit learner session reflections and checkpoints, with source IDs and deduplication; no background monitoring of arbitrary files or activity. Reviews derive connections from linked courses and dated notes. A review is explicitly requested or offered after several days, without a paid model call on every launch. Architect conversations and decision records are isolated per project. Launch capture is optional and dismissible.
 
-## Validation
+## 0.7.1 workflow refinement
+
+The studio keeps the personal direction beside the active course and starts a suggested task in its correct file. The learner moves through attempt, checks, reflection and a changed requirement in place. Completed-task evidence is expandable; competing suggestions stay quiet and output can collapse to keep the code visible. The personal-path action selects My direction directly.
+
+`ai-contract.ts` supplies one teacher policy to personal, local and hosted inference. `teacher-guidance.ts` derives the help stage from recorded attempts, distinguishes incomplete evidence and a newer failure, protects against obvious replacement code, and supplies a diagnostic question if the model omits one. A rejected replacement uses the failed check or recorded error to offer an experiment. This bounded guard does not prove semantic solution detection or learning outcomes. Course claims retain validated passage citations. Project-command output is supplied by the server, not invented by the client.
+
+AI settings distinguish draft configuration, saved readiness and consent. The connection check reads model or account metadata without generating an answer. Verification is tied to the requested email; rejected/expired codes can be retried. Allowance failure does not erase account status. A generation counter and serialized encrypted-vault writes prevent delayed refresh or sign-in from undoing sign-out. Malformed hosted output refunds allowance and produces a retryable service failure. Public Supabase/PostgreSQL/Stripe activation is still a separate owner infrastructure step.
+
+An opt-in synthetic live evaluation is available with `node --import tsx scripts/evaluate-teacher.ts --live`; it makes up to eight billed requests and saves the answers under ignored `.local/evaluations`. Evaluate raw answers as well as the response guard. The rubric checks citations, replacement code, fabricated actions, injection handling and diagnostic questions; it is not a learner-outcomes study. See [release notes](releases/0.7.1.md) and [release validation](release-validation.md).
+
+## 0.7.0 validation
 
 Test course/project isolation, permission changes and deletion, teacher freshness, provider routing, hosted authentication/allowance failures, terminal cwd and process shutdown, layout accessibility/persistence, actual desktop terminal input, the editor bridge, and production packaging. Keep existing Udemy, practice, project and contribution checks passing. Push completed increments to main. Publish only artifacts that passed their checks; report hosted deployment prerequisites clearly.
 

@@ -639,7 +639,7 @@
   padding: 6px 0;
 }
 .studio .task-guide-content {
-  max-height: 32dvh;
+  max-height: 24dvh;
   overflow: auto;
   scrollbar-width: thin;
 }
@@ -748,7 +748,7 @@
     gap: 12px;
   }
   .studio .task-guide-content {
-    max-height: 35dvh;
+    max-height: 30dvh;
   }
 }
 .contribution-context {

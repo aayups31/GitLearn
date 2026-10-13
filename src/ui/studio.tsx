@@ -313,6 +313,7 @@ export function Studio({
   const [newFile, setNewFile] = useState(false),
     [fileName, setFileName] = useState("main.py");
   const [output, setOutput] = useState(""),
+    [outputOpen, setOutputOpen] = useState(false),
     [exitCode, setExitCode] = useState<number | null>(null),
     [running, setRunning] = useState(false),
     [previewUrl, setPreviewUrl] = useState("");
@@ -509,6 +510,7 @@ export function Studio({
           setFiles(result.files);
           setLastRun(result.lastRun);
           setOutput(result.lastRun?.output || "");
+          setOutputOpen(!!result.lastRun);
           setExitCode(result.lastRun?.exitCode ?? null);
           const first =
             result.files.find((item) => item.path === result.anchor?.file) ||
@@ -594,6 +596,7 @@ export function Studio({
         return;
       }
       setRunning(true);
+      setOutputOpen(true);
       setOutput("Running locally…");
       setLastRun(undefined);
       setAttachedRun(false);
@@ -686,7 +689,11 @@ export function Studio({
   };
   const taskChanged = async (path?: string) => {
     await loadFiles();
-    if (path) await openFile(path);
+    if (path) {
+      await openFile(path);
+      setOutputOpen(false);
+      setAttachedRun(false);
+    }
     setWorkspaceRevision((v) => v + 1);
     await onRefresh();
   };
@@ -1195,7 +1202,22 @@ export function Studio({
               <div className="output-header">
                 <span>
                   <Terminal size={13} />
-                  Output
+                  <button
+                    aria-label={
+                      outputOpen
+                        ? "Collapse program output"
+                        : "Expand program output"
+                    }
+                    onClick={() => setOutputOpen(!outputOpen)}
+                  >
+                    Output{" "}
+                    <ChevronRight
+                      size={11}
+                      style={{
+                        transform: outputOpen ? "rotate(90deg)" : undefined,
+                      }}
+                    />
+                  </button>
                   {exitCode !== null && (
                     <small className={exitCode === 0 ? "success" : "failure"}>
                       Exit {exitCode}
@@ -1264,7 +1286,7 @@ export function Studio({
                   <small>Local runtime · 10s limit</small>
                 )}
               </div>
-              {lastRun && (
+              {outputOpen && lastRun && (
                 <div className="run-evidence-note">
                   {lastRun.path} ·{" "}
                   {new Date(lastRun.finishedAt).toLocaleTimeString([], {
@@ -1279,53 +1301,59 @@ export function Studio({
                   {lastRun.outputTruncated ? " · Stored output shortened" : ""}
                 </div>
               )}
-              <pre className="program-output" aria-label="Program output">
-                {output ||
-                  "Run a JavaScript, TypeScript, Python, C or C++ file. Start React/Next.js apps from Project console."}
-              </pre>
-              <div className="runner-note">
-                {lastRun?.regression && (
-                  <div role="alert">
-                    <strong>Regression Alert</strong>
-                    <p>
-                      This file passed in an earlier lesson and now fails.
-                      Review the changed files and earlier checkpoint; a failed
-                      run does not prove the cause.
-                    </p>
-                    <small>{lastRun.regression.changedFiles.join(", ")}</small>
+              {outputOpen && (
+                <>
+                  <pre className="program-output" aria-label="Program output">
+                    {output ||
+                      "Run a JavaScript, TypeScript, Python, C or C++ file. Start React/Next.js apps from Project console."}
+                  </pre>
+                  <div className="runner-note">
+                    {lastRun?.regression && (
+                      <div role="alert">
+                        <strong>Regression Alert</strong>
+                        <p>
+                          This file passed in an earlier lesson and now fails.
+                          Review the changed files and earlier checkpoint; a
+                          failed run does not prove the cause.
+                        </p>
+                        <small>
+                          {lastRun.regression.changedFiles.join(", ")}
+                        </small>
+                      </div>
+                    )}
+                    {running && (
+                      <form
+                        className="run-line-input"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          void safe("input", async () => {
+                            await api("workspace-input", {
+                              sessionId: session.id,
+                              text: runInput,
+                            });
+                            setRunInput("");
+                          });
+                        }}
+                      >
+                        <label htmlFor="run-line">
+                          Program input · one line · 10s run limit
+                        </label>
+                        <input
+                          id="run-line"
+                          value={runInput}
+                          maxLength={4000}
+                          onChange={(e) => setRunInput(e.target.value)}
+                          autoComplete="off"
+                        />
+                        <button type="submit">Send line</button>
+                      </form>
+                    )}
+                    <ShieldCheck size={11} />
+                    Runs saved code with your computer’s permissions. Your API
+                    key is excluded from the runner environment.
                   </div>
-                )}
-                {running && (
-                  <form
-                    className="run-line-input"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      void safe("input", async () => {
-                        await api("workspace-input", {
-                          sessionId: session.id,
-                          text: runInput,
-                        });
-                        setRunInput("");
-                      });
-                    }}
-                  >
-                    <label htmlFor="run-line">
-                      Program input · one line · 10s run limit
-                    </label>
-                    <input
-                      id="run-line"
-                      value={runInput}
-                      maxLength={4000}
-                      onChange={(e) => setRunInput(e.target.value)}
-                      autoComplete="off"
-                    />
-                    <button type="submit">Send line</button>
-                  </form>
-                )}
-                <ShieldCheck size={11} />
-                Runs saved code with your computer’s permissions. Your API key
-                is excluded from the runner environment.
-              </div>
+                </>
+              )}
             </div>
           </>
         )}

@@ -3,6 +3,7 @@ import {
   teacherGuidance,
   protectsLearnerWork,
   ensureDiagnosticQuestion,
+  fallbackTeacherHint,
 } from "../src/teacher-guidance";
 
 it("advances hints from a concept to an experiment and inspection, then fades help after actual passing checks", () => {
@@ -55,6 +56,23 @@ it("does not let an old passing attempt conceal a newer failure or incomplete ex
 });
 it("labels the initial attempt honestly", () => {
   expect(teacherGuidance().reason).toContain("no recorded execution");
+});
+it("a rejected replacement remains useful by teaching from the actual failed check or error", () => {
+  expect(
+    fallbackTeacherHint({
+      latestAttempt: {
+        checks: [{ label: "Negative prices are rejected", passed: false }],
+      },
+    } as any),
+  ).toContain("Negative prices are rejected");
+  const hint = fallbackTeacherHint(undefined, {
+    path: "main.js",
+    output: "TypeError: Cannot read properties of undefined (reading 'name')",
+    exitCode: 1,
+  });
+  expect(hint).toContain("Which value should exist");
+  expect(hint).toContain("Log that value");
+  expect(hint).not.toContain("const profile");
 });
 it("keeps replacement code out of hints and distinguishes a separate explanation example from a rewritten learner script", () => {
   expect(

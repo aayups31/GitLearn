@@ -71,7 +71,7 @@ test("a during-course suggestion becomes learner-written work, real checks, hint
     .filter({ hasText: "javascript" })
     .getByRole("button", { name: "Start", exact: true })
     .click();
-  await expect(page.locator(".task-guide summary")).toContainText(
+  await expect(page.locator(".task-guide > summary")).toContainText(
     "price calculator",
   );
   await page
@@ -90,7 +90,7 @@ test("a during-course suggestion becomes learner-written work, real checks, hint
   await page
     .getByRole("button", { name: "Check my work", exact: true })
     .click();
-  await expect(page.locator(".task-guide summary")).toContainText(
+  await expect(page.locator(".task-guide > summary")).toContainText(
     "Checks passed",
   );
   await page
@@ -120,7 +120,7 @@ test("a during-course suggestion becomes learner-written work, real checks, hint
     fullPage: true,
   });
   await page.getByRole("button", { name: "Try again", exact: true }).click();
-  await expect(page.locator(".task-guide summary")).toContainText(
+  await expect(page.locator(".task-guide > summary")).toContainText(
     "practical task",
   );
   expect(store.get<any[]>("practice:tasks")).toHaveLength(2);

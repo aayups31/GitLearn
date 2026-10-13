@@ -75,9 +75,9 @@ test("course project → actual error → hint → fix → reviewed checkpoints 
   const editor = page.getByRole("textbox", { name: "Code editor" });
   await editor.fill("console.log(greeting);\n");
   await page.getByRole("button", { name: "Run", exact: true }).click();
-  await expect(page.getByLabel("Program output")).toContainText(
-    "ReferenceError",
-  );
+  await expect(
+    page.getByLabel("Program output", { exact: true }),
+  ).toContainText("ReferenceError");
   const run = store.get<any[]>("runs:javascript")![0];
   await page
     .getByRole("button", { name: "Enable learning assistant", exact: true })
@@ -124,9 +124,9 @@ test("course project → actual error → hint → fix → reviewed checkpoints 
     fullPage: true,
   });
   await page.getByRole("button", { name: "Run", exact: true }).click();
-  await expect(page.getByLabel("Program output")).toContainText(
-    "Built independently",
-  );
+  await expect(
+    page.getByLabel("Program output", { exact: true }),
+  ).toContainText("Built independently");
   await page.locator(".studio-notes summary").click();
   await page
     .getByLabel("Studio session notes")
@@ -152,7 +152,9 @@ test("course project → actual error → hint → fix → reviewed checkpoints 
     "const validate = name => typeof name === 'string'; console.log(validate('GitLearn'));\n",
   );
   await page.getByRole("button", { name: "Run", exact: true }).click();
-  await expect(page.getByLabel("Program output")).toContainText("true");
+  await expect(
+    page.getByLabel("Program output", { exact: true }),
+  ).toContainText("true");
   await page.locator(".studio-notes summary").click();
   await page
     .getByLabel("Studio session notes")
@@ -177,7 +179,9 @@ test("course project → actual error → hint → fix → reviewed checkpoints 
     .getByRole("button", { name: "Continue", exact: true })
     .click();
   await expect(editor).toContainText("const validate");
-  await expect(page.getByLabel("Program output")).toContainText("true");
+  await expect(
+    page.getByLabel("Program output", { exact: true }),
+  ).toContainText("true");
   expect(store.state().session!.lessonId).toBe("2");
   await page.getByRole("button", { name: "Overview", exact: true }).click();
   const movedRoot = project.root + "-moved";

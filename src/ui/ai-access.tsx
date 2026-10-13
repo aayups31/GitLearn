@@ -361,7 +361,7 @@ export function AIAccessSettings({
             })
           }
         >
-          Check connection
+          Check AI connection
         </button>
       </div>
       <p className="hint">

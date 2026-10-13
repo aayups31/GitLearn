@@ -6,6 +6,7 @@ import {
   teacherGuidance,
   protectsLearnerWork,
   ensureDiagnosticQuestion,
+  fallbackTeacherHint,
 } from "../teacher-guidance.js";
 import type { Application } from "./application.js";
 import { assertClean, child, collect, UserError } from "./safety.js";
@@ -640,8 +641,11 @@ export class CourseLibrary {
               taskFunction,
             )
           )
-            text =
-              "Let's work through your approach. Which input or check is failing, and what do you expect it to return? Explain your first step and I’ll help you reason about it without writing the solution for you.";
+            text = fallbackTeacherHint(
+              learningContext?.practice,
+              runContext,
+              learningContext?.projectCommand,
+            );
           if (mode === "help")
             text = ensureDiagnosticQuestion(
               text,

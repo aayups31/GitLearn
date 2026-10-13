@@ -60,9 +60,9 @@ test("language-aware studio creates React/Next/Python/native projects and runs T
     page.getByRole("textbox", { name: "Code editor" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Run", exact: true }).click();
-  await expect(page.getByLabel("Program output")).toContainText(
-    "TypeScript works",
-  );
+  await expect(
+    page.getByLabel("Program output", { exact: true }),
+  ).toContainText("TypeScript works");
   await page.locator(".project-console summary").click();
   for (const kind of ["react-ts", "next", "python", "cpp"]) {
     await page.getByLabel("Project technology").selectOption(kind);
@@ -98,10 +98,9 @@ test("language-aware studio creates React/Next/Python/native projects and runs T
         .locator(`.file-explorer button[title="${folder}/main.cpp"]`)
         .click();
       await page.getByRole("button", { name: "Run", exact: true }).click();
-      await expect(page.getByLabel("Program output")).toContainText(
-        "My learning project",
-        { timeout: 15000 },
-      );
+      await expect(
+        page.getByLabel("Program output", { exact: true }),
+      ).toContainText("My learning project", { timeout: 15000 });
     }
   }
   await page.screenshot({

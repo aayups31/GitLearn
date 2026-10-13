@@ -177,9 +177,9 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
     await expect(
       reopened.getByRole("textbox", { name: "Code editor" }),
     ).toBeVisible();
-    await expect(reopened.getByLabel("Program output")).toContainText(
-      "Bundled desktop runtime 42",
-    );
+    await expect(
+      reopened.getByLabel("Program output", { exact: true }),
+    ).toContainText("Bundled desktop runtime 42");
     await desktop.close();
     await expect
       .poll(() =>
@@ -194,9 +194,9 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
     await expect(
       reopened.getByRole("textbox", { name: "Code editor" }),
     ).toContainText("Bundled desktop runtime");
-    await expect(reopened.getByLabel("Program output")).toContainText(
-      "Bundled desktop runtime 42",
-    );
+    await expect(
+      reopened.getByLabel("Program output", { exact: true }),
+    ).toContainText("Bundled desktop runtime 42");
     await reopened.locator(".studio-notes summary").click();
     await expect(reopened.getByLabel("Studio session notes")).toHaveValue(
       "Next: add an input check.",

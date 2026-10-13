@@ -1,6 +1,26 @@
 import type { Practice } from "./server/practice.js";
 import type { RunContext } from "./shared.js";
 
+export function fallbackTeacherHint(
+  practice?: ReturnType<Practice["context"]>,
+  run?: Pick<RunContext, "path" | "output" | "exitCode">,
+  command?: { command: string; output: string; exitCode: number | null },
+) {
+  const failed = practice?.latestAttempt?.checks.find((check) => !check.passed);
+  if (failed)
+    return `Your recorded check “${failed.label}” did not pass. Which input or condition would you inspect first, and what result do you predict?\n\nRun that case on its own and compare your prediction with the output before making another change.`;
+  const output = run?.output || command?.output || "";
+  if (/Cannot read (?:properties|property).*?(?:undefined|null)/i.test(output))
+    return "The recorded run tried to read a property from an undefined or null value. Which value should exist at that point, and where should it be created?\n\nLog that value immediately before the failing expression, then rerun and compare it with your prediction.";
+  if (
+    /(?:ReferenceError|NameError).*?(?:not defined|is not defined)/i.test(
+      output,
+    )
+  )
+    return "The recorded run could not find a name when it was used. Where do you expect that name to be created, and is it in the same scope?\n\nTrace the declarations and imports before the failing line, then test one small case.";
+  return "Let's work through your approach. Which input or check is failing, and what do you expect it to return?\n\nRun the smallest case that demonstrates the problem, then explain the difference between your prediction and its actual output.";
+}
+
 export function protectsLearnerWork(
   text: string,
   style: "hint" | "explain",

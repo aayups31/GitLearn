@@ -77,9 +77,9 @@ test("local studio edits, runs, preserves external edits, imports course materia
     .poll(() => readFile(path.join(source, "main.js"), "utf8"))
     .toContain("21 * 2");
   await page.getByRole("button", { name: "Run", exact: true }).click();
-  await expect(page.getByLabel("Program output")).toContainText(
-    "Local studio result 42",
-  );
+  await expect(
+    page.getByLabel("Program output", { exact: true }),
+  ).toContainText("Local studio result 42");
   await writeFile(
     path.join(source, "main.js"),
     "console.log('External edit preserved');\n",
@@ -156,9 +156,9 @@ test("local studio edits, runs, preserves external edits, imports course materia
   );
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await page.getByRole("button", { name: "Run", exact: true }).click();
-  await expect(page.getByLabel("Program output")).toContainText(
-    "Tool result: 42",
-  );
+  await expect(
+    page.getByLabel("Program output", { exact: true }),
+  ).toContainText("Tool result: 42");
   await page
     .getByRole("button", { name: "Ask the course", exact: true })
     .click();

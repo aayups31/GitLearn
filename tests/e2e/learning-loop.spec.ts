@@ -148,13 +148,14 @@ test("included sign-in, lesson practice, actual failure, teacher, stale guard, r
   );
   await expect(access).toContainText("5 of 5 answers remaining");
   expect(store.state().settings.assistantEnabled).toBe(true);
-  await page
-    .getByRole("button", { name: "Code & learn", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Code & learn", exact: true }).click();
   await expect(page.getByLabel("Your learning direction")).toContainText(
     "shop price calculator",
   );
   await page.getByRole("button", { name: "Try it here", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Expand program output" }),
+  ).toBeVisible();
   const editor = page.getByRole("textbox", { name: "Code editor" });
   await expect(editor).toContainText("discountedPrice");
   await page
@@ -186,9 +187,27 @@ test("included sign-in, lesson practice, actual failure, teacher, stale guard, r
     "Test your changes first",
   );
   expect(questions).toHaveLength(1);
+  let resumeCheck!: () => void;
+  await page.route("**/api/practice-check", async (route) => {
+    await new Promise<void>((resolve) => {
+      resumeCheck = resolve;
+    });
+    await route.continue();
+  });
   await page
     .getByRole("button", { name: "Check my work", exact: true })
     .click();
+  await expect(
+    page.getByRole("button", { name: "Send question", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Run", exact: true }),
+  ).toBeDisabled();
+  resumeCheck();
+  await expect(
+    page.getByRole("button", { name: "Check my work", exact: true }),
+  ).toBeEnabled();
+  await page.unroute("**/api/practice-check");
   failNext = true;
   await page
     .getByRole("button", { name: "Send question", exact: true })
@@ -240,9 +259,7 @@ test("included sign-in, lesson practice, actual failure, teacher, stale guard, r
   await expect(
     page.getByRole("tab", { name: "My direction", exact: true }),
   ).toHaveAttribute("aria-selected", "true");
-  await page
-    .getByRole("button", { name: "Code & learn", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Code & learn", exact: true }).click();
   await page.setViewportSize({ width: 390, height: 844 });
   expect(
     await page.evaluate(

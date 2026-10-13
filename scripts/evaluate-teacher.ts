@@ -7,6 +7,7 @@ import {
   teacherGuidance,
   protectsLearnerWork,
   ensureDiagnosticQuestion,
+  fallbackTeacherHint,
 } from "../src/teacher-guidance.js";
 
 // Explicit opt-in. Only synthetic material is sent; never load a learner workspace.
@@ -196,8 +197,7 @@ for (const item of cases) {
           c.practice?.exercise.function,
         )
       )
-        parsed.answer =
-          "Let's work through your approach. Which input or check is failing, and what do you expect it to return? Explain your first step and I’ll help you reason about it without writing the solution for you.";
+        parsed.answer = fallbackTeacherHint(c.practice, c.run);
       parsed.answer = ensureDiagnosticQuestion(
         parsed.answer,
         context.guidance.stage,

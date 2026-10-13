@@ -1,4 +1,6 @@
-# OutClass current build — 0.7 Windows preview
+# OutClass current build — 0.7.1 Windows preview
+
+October 13, 2026: [0.7.1](releases/0.7.1.md) connects course goals, in-editor practice, saved-code checks, teacher guidance, reflection and transfer. AI modes share the teaching policy and actual execution context; account changes and failures have explicit recovery. Task evidence expands on demand and program output can collapse to keep space for coding. Included AI works against the local integration fixture; public infrastructure remains deferred. The sections below retain the historical implementation foundation.
 
 October 13, 2026: [OutClass 0.7](releases/0.7.0.md) supersedes the older delivery snapshot below. It adds OffCourse, the Architect notebook, adjustable layouts, a full desktop terminal, provider selection and an editor companion. [Workspace evolution](workspace-evolution.md) records the architecture and current validation. Hosted included AI is prepared for accounts to be connected later.
 The active-learning preview adds personal directions, changed-requirement tasks, project milestones, guarded hints, bounded input, video-linked checkpoints, impact review and Learning Ledgers. See [implemented scope](active-learning-release.md) and [0.5.0 release notes](releases/0.5.0.md). The following 0.4 descriptions provide the compatible foundation.
