@@ -4,7 +4,7 @@ Previously GitLearn. Break free from tutorial hell. OutClass the lesson.
 
 A local learning workspace that turns Udemy lessons into your own code, practical attempts, sourced guidance, and reviewed work.
 
-The **0.7.1 preview** connects lesson practice, saved-code checks, OffCourse guidance, reflection and changed requirements in one workspace. Your goal stays visible, tasks start in the editor, program output can collapse, and AI failures have useful recovery actions. It also includes the separate Architect notebook, adjustable panels, a full local terminal, local-model support and a VS Code/VSCodium companion. Supabase + Stripe included AI is prepared for account connection; public sign-in and subscriptions are not activated. See [features and setup](docs/releases/0.7.1.md) and [hosted AI deployment](services/ai/README.md).
+The **0.7.1 preview** connects lesson practice, saved-code checks, OffCourse guidance, reflection and changed requirements in one workspace. Your goal stays visible, tasks start in the editor, program output can collapse, and AI failures have useful recovery actions. It also includes the separate Architect notebook, adjustable panels, a full local terminal, local-model support and a VS Code/VSCodium companion. Supabase + Stripe included AI is connected for owner testing on Vercel; email uses Resend's test sender and payments remain in Stripe test mode. Public sign-in and sales are not activated. See [features and setup](docs/releases/0.7.1.md) and [hosted AI deployment](services/ai/README.md).
 
 [Next release priorities](docs/next-release.md): validate real Udemy use, improve relevant during-course practice, verify transfer with changed requirements, and guide a small project into responsible contribution work.
 

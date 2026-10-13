@@ -112,6 +112,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@types/vscode": "^1.140.0",
+    "@vercel/functions": "3.10.0",
     "@vscode/vsce": "^4.0.0",
     "electron": "^44.7.0",
     "electron-builder": "^26.15.3",

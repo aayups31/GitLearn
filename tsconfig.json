@@ -15,6 +15,7 @@
   "include": [
     "src",
     "services",
+    "api",
     "extension",
     "tests",
     "playwright.config.ts",

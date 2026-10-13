@@ -11,4 +11,4 @@ playwright-report/
 *.vsix
 .vercel/
 editor-extension/dist/
-
+supabase/.temp/

@@ -1,17 +1,15 @@
-# Deploy the public site on Vercel
+# OutClass on Vercel
 
-The public site is deployed at https://git-learn-black.vercel.app/. Vercel project `git-learn` is connected to https://github.com/aayups31/OutClass and deploys `main`. The committed vercel.json sets:
+The landing page and optional included AI service share https://git-learn-black.vercel.app/. Project `git-learn` is connected to https://github.com/aayups31/OutClass and deploys `main`. The desktop editor, terminal, courses and retrieval continue to run on the learner's computer.
 
-- Framework: Other / no framework.
-- Install command: empty; the static website needs no npm dependencies.
-- Build command: node scripts/build-site.mjs.
-- Output directory: dist/site.
-- Environment variables: none. Do not add your OpenAI API key to Vercel.
+Committed `vercel.json` builds the static site with `node scripts/build-site.mjs` into `dist/site`, and installs server dependencies with `npm ci --include=dev --ignore-scripts`. Node 24 runs `api/ai.ts`; rewrites forward `/v1/*`, `/health`, `/ready` and `/billing/*` to that function. Express owns JSON parsing and the untouched Stripe webhook bytes. Static assets keep the existing restrictive CSP.
 
-The OutClass static site has product information, setup steps, privacy, real GitHub release links, and the pending Chrome store state. GSAP and ScrollTrigger are committed as local website assets, so production needs no npm install or external script CDN. The editor and authenticated companion APIs are excluded from the output. Vercel does not run the desktop app.
+Only server environment settings hold the OpenAI service key, restricted database URI/CA, Supabase publishable key and Stripe key/price/portal/webhook secret. They are never injected into site JavaScript or downloads. `.vercelignore` excludes local credentials, generated output and development state. Do not deploy an administrative database credential or Supabase service-role key.
 
-Preview downloads are published through GitHub Releases. The page and `src/site/assets/release.json` reference the tested release; Chrome Web Store links stay pending until an approved listing is available. The Vercel deployment needs no API key or desktop data.
+Use `scripts/upload-ai-environment.mjs` after linking the intended project and preparing ignored `.local/ai-service.env` and `.local/service-deployment.json`. The helper validates the project/team/public origin and uploads an allowlist through CLI stdin. It never prints values. Schema migrations and restricted-login provisioning are separate administrative steps; function startup only verifies tables.
 
-If the dashboard retains automatic settings from a previous import, override them with the values above. A custom domain is optional. If you add one, update the canonical URL, og:url, and absolute og:image in src/site/index.html and push the change. Future main pushes redeploy through Vercel's Git integration.
+Verify the public `/ready` endpoint, unauthenticated `/v1/usage` rejection, billing pages/CSS and original webhook signature bytes with `scripts/verify-ai-runtime.ts`. The stable public origin must accept Stripe requests without a Vercel login. Preview deployment protection can stay enabled. A Stripe test endpoint, Resend test SMTP and a capped AI budget support owner testing; they do not activate public sales or sign-in for arbitrary addresses.
 
-Verify the final public page on desktop and phone, click both download links, inspect the privacy page, and confirm the site makes no requests to /api or 127.0.0.1. Chrome store approval is a separate step; publishing the landing page does not publish the extension.
+The marketing site contains product information, setup steps, privacy and real GitHub download links. It does not sign learners in or load desktop APIs. GSAP assets are local. Published downloads are tracked in `src/site/assets/release.json`; deploying account-service code does not replace an existing desktop release. Chrome review remains separate.
+
+Before public activation: verify a sender domain, configure authentication abuse protection and host-level limits, test real email sign-in and completed Stripe test Checkout, publish account retention/support/billing terms, then provision a separate live Stripe catalog and provider budget. See [service setup](../services/ai/README.md) and [billing plan](stripe-integration.md).

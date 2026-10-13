@@ -1,10 +1,17 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "installCommand": "",
+  "installCommand": "npm ci --include=dev --ignore-scripts",
   "buildCommand": "node scripts/build-site.mjs",
   "outputDirectory": "dist/site",
   "cleanUrls": true,
+  "functions": { "api/ai.ts": { "maxDuration": 60 } },
+  "rewrites": [
+    { "source": "/v1/:path*", "destination": "/api/ai" },
+    { "source": "/health", "destination": "/api/ai" },
+    { "source": "/ready", "destination": "/api/ai" },
+    { "source": "/billing/:path*", "destination": "/api/ai" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
