@@ -27,18 +27,22 @@ async function directory(root) {
     }
   }
 }
-for (const root of [
-  "dist/site",
-  "dist/web",
-  "dist/extension",
-  "dist/releases/win-unpacked/resources/extension",
-])
-  await directory(root);
-const archive = "dist/releases/win-unpacked/resources/app.asar";
-await scan(archive);
-const { listPackage } = await import("@electron/asar");
-if (listPackage(archive).some((name) => /[/\\]\.env(?:[/\\.]|$)/.test(name)))
-  throw Error("Environment file found in app archive.");
+if (!process.argv.includes("--source-only")) {
+  for (const root of [
+    "dist/site",
+    "dist/web",
+    "dist/extension",
+    "dist/editor",
+    "dist/releases/win-unpacked/resources/editor",
+    "dist/releases/win-unpacked/resources/extension",
+  ])
+    await directory(root);
+  const archive = "dist/releases/win-unpacked/resources/app.asar";
+  await scan(archive);
+  const { listPackage } = await import("@electron/asar");
+  if (listPackage(archive).some((name) => /[/\\]\.env(?:[/\\.]|$)/.test(name)))
+    throw Error("Environment file found in app archive.");
+}
 if (process.argv.includes("--staged")) {
   const { stdout } = await execute(
     "git",

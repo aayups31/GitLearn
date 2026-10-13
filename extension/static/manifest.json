@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "OutClass \u2014 Udemy learning companion",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",

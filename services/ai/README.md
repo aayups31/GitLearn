@@ -1,0 +1,21 @@
+# Included AI deployment
+
+Prepared service, not a public paid offering until accounts are connected. Users need an OutClass account, not an OpenAI key. The desktop app never contains the service provider secret.
+
+## Connect infrastructure
+
+1. Create a Supabase project. Enable email OTP authentication; use an email template containing the numeric `{{ .Token }}` code, configure a production SMTP sender and account abuse controls. The gateway validates each account token with Supabase's user endpoint. Do not expose a service-role key to clients.
+2. Configure the server's `SUPABASE_URL`, public `SUPABASE_ANON_KEY`, and a least-privilege PostgreSQL `DATABASE_URL` permitted to create/access the private `outclass_service` schema. Use the provider's verified TLS connection. The tables are not in the Supabase public API schema.
+3. Create a separate production OpenAI project/service key. Configure it only on the host, plus the model and your provider spend limit. See https://developers.openai.com/api/docs/guides/production-best-practices . No provider secret is returned to users. Prompt contents are not stored by the service; Responses uses `store:false`.
+4. Choose allowances and commercial pricing. Defaults are 20 free and 600 paid bounded requests per calendar month, not promised retail pricing. Each structured answer consumes one request; failed inference refunds it. Context/output limits constrain each call. Atomic PostgreSQL account-month reservations prevent concurrent overspending. A separate atomic global monthly request allowance limits total service exposure, including across accounts. Per-process request/concurrency limits supplement these database bounds. Add host-level abuse protection before public launch.
+5. Optional billing: configure a Stripe recurring price, secret key and webhook signing secret. Send subscription created/updated/deleted events to `/v1/stripe/webhook`. Enable the customer billing portal. Verified webhooks fetch the current subscription to avoid out-of-order entitlement updates. Checkout redirects alone never grant access. The configured price must match the subscription item.
+6. Deploy with a persistent service host and HTTPS (for example a container host). From the repository root: `docker build -f services/ai/Dockerfile -t outclass-ai .` . Inject `.env.example` values through the host's secret settings, never the image. `OUTCLASS_PUBLIC_URL` is this service's public origin, used for payment return pages. `/health` is readiness. The marketing site remains on Vercel.
+7. In OutClass → Settings → Included AI, set that HTTPS service URL, save, enter an email and the verification code, then enable AI guides. Windows uses encrypted account storage. Source-development sessions stay in memory; sign in again after restart.
+
+## Boundaries and operations
+
+The service exposes three purpose-limited answer tasks: teacher, architect and optional checkpoint description. It supplies the role instructions and validates structured output; it is not a general API-key proxy or autonomous coding agent. Filesystem execution, original notebooks, retrieval indexes and checkpoints stay on the learner's computer. Each requested answer sends the relevant bounded context. Local keyword retrieval avoids a paid embedding requirement for included/local AI.
+
+No public sign-in or subscription is advertised until Supabase/Stripe/provider/hosting are configured and a real staging smoke test passes. Unit/integration tests use injected accounts/allowances/model responses and never charge a provider. Before accepting real payments, test the actual configured PostgreSQL service, email delivery, refunds, concurrent reservations, webhook signature rejection, subscription cancellation and Stripe test-mode checkout end to end. Use a reverse proxy/host with explicit trusted forwarding configuration rather than trusting arbitrary forwarded IP headers.
+
+Requests/usage contain account IDs and timestamps, not prompt text. Decide and publish account/usage retention and deletion policy before opening a public service. Notebook deletions and editing clear locally derived history; already transmitted context cannot be recalled from a provider.

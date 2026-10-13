@@ -10,4 +10,5 @@ playwright-report/
 *.log
 *.vsix
 .vercel/
+editor-extension/dist/
 

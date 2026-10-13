@@ -63,6 +63,7 @@ if (args[0] === "status") {
   const assets = [
     `dist/releases/OutClass-Setup-${version}.exe`,
     `dist/releases/OutClass-Chrome-${version}.zip`,
+    `dist/releases/OutClass-Editor-${version}.vsix`,
     "dist/releases/SHA256SUMS.txt",
   ];
   await command(

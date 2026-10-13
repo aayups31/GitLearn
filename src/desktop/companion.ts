@@ -3,15 +3,46 @@ import express from "express";
 import { Store } from "../server/store";
 import { Application } from "../server/application";
 import { createApp } from "../server/http";
+import { randomUUID } from "node:crypto";
+import type { AccountSession } from "../server/ai-provider";
 const parentPort = process.parentPort;
 
 parentPort!.once("message", async ({ data }) => {
   const { root, dataDirectory, port, apiKey } = data;
   const store = new Store(dataDirectory);
   const application = new Application(store, apiKey || undefined);
+  if (data.accountSession)
+    application.ai.session = data.accountSession as AccountSession;
+  const pendingAccounts = new Map<string, (ok: boolean) => void>();
+  application.ai.persist = (session) =>
+    new Promise<void>((resolve, reject) => {
+      const id = randomUUID();
+      const timer = setTimeout(() => {
+        pendingAccounts.delete(id);
+        reject(
+          new Error(
+            "Your sign-in could not be saved securely. Reopen OutClass.",
+          ),
+        );
+      }, 5000);
+      pendingAccounts.set(id, (ok) => {
+        clearTimeout(timer);
+        ok
+          ? resolve()
+          : reject(
+              new Error(
+                "Your account was not saved. Windows encryption is unavailable.",
+              ),
+            );
+      });
+      parentPort.postMessage({ type: "account-save", id, session });
+    });
   await application.recover();
-  const web = createApp(application, port, () =>
-    parentPort.postMessage({ type: "focus" }),
+  const web = createApp(
+    application,
+    port,
+    () => parentPort.postMessage({ type: "focus" }),
+    data.editorVsix,
   );
   web.use((_req, res, next) => {
     res.setHeader(
@@ -38,6 +69,10 @@ parentPort!.once("message", async ({ data }) => {
     process.exit(1);
   });
   parentPort!.on("message", async ({ data: message }) => {
+    if (message.type === "account-saved") {
+      pendingAccounts.get(message.id)?.(message.ok);
+      pendingAccounts.delete(message.id);
+    }
     if (message.type === "key") {
       application.apiKey = message.key || undefined;
       parentPort!.postMessage({ type: "key-saved", id: message.id });

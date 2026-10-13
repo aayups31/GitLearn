@@ -2,6 +2,8 @@ import OpenAI from "openai";
 import { z } from "zod";
 import { zodTextFormat } from "openai/helpers/zod";
 import { assertClean } from "./safety.js";
+import type { AIProvider } from "./ai-provider.js";
+import { checkpointAnswer, checkpointInstructions } from "../ai-contract.js";
 
 const messageSchema = z.object({
   title: z.string(),
@@ -12,8 +14,9 @@ export async function describe(
   enabled: boolean,
   context: { course: string; lesson: string; note: string; diff: string },
   fallback: string,
+  provider?: AIProvider,
 ) {
-  if (!enabled || !apiKey)
+  if (!enabled || (!apiKey && !provider?.ready()))
     return {
       message: fallback,
       aiUsed: false,
@@ -31,6 +34,18 @@ export async function describe(
         "This checkpoint is large. Using a default message to keep your API costs down.",
     };
   try {
+    if (provider?.ready()) {
+      const result = await provider.structured({
+        task: "checkpoint",
+        schema: checkpointAnswer,
+        name: "checkpoint_message",
+        instructions: checkpointInstructions,
+        context: input,
+      });
+      const message = `${result.title.replace(/[\r\n]/g, " ")}${result.bullets.length ? "\n\n" + result.bullets.map((b) => `- ${b}`).join("\n") : ""}`;
+      assertClean(message, "generated commit message");
+      return { message, aiUsed: true };
+    }
     const client = new OpenAI({ apiKey, timeout: 12000, maxRetries: 0 });
     const response = await client.responses.parse({
       model: process.env.OPENAI_MODEL || "gpt-4o-mini",

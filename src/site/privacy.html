@@ -19,9 +19,10 @@
       <p class="eyebrow">PRIVACY / UPDATED 10 OCTOBER 2026</p>
       <h1>Your learning stays yours.</h1>
       <p>
-        OutClass, previously GitLearn, is a local Windows learning workspace with a Chrome extension
-        for Udemy. It does not require a OutClass account, run a hosted coding
-        workspace, sell personal information, or collect product analytics.
+        OutClass, previously GitLearn, is a local Windows learning workspace
+        with a Chrome extension for Udemy. Local features do not require an
+        OutClass account. It does not run a hosted coding workspace, sell
+        personal information, or collect product analytics.
       </p>
       <h2>Browser extension</h2>
       <p>
@@ -53,10 +54,10 @@
         complies with the Chrome Web Store User Data Policy, including its
         Limited Use requirements. Data supports the disclosed learning and
         pairing features only. It is not sold, used for advertising or lending,
-        or transferred for unrelated purposes. OutClass provides no developer
-        service that collects or reads your course content. Optional OpenAI and
-        GitHub processing in the companion is described below and controlled by
-        the features you choose to use.
+        or transferred for unrelated purposes. An optional included-AI service,
+        when configured, processes the context you explicitly send for learning
+        help. Optional AI and GitHub processing in the companion is described
+        below and controlled by the features you choose to use.
       </p>
       <h2>Local files and saved state</h2>
       <p>
@@ -64,43 +65,60 @@
         vectors, chat history, course project bindings, resume positions, and
         bounded local run evidence, practical task attempts and saved source
         snapshots, reflections, review schedules, project command records, and
-        contribution briefs are stored in OutClass’s SQLite database. Your
-        working code and reviewed checkpoints live in the learning folders you
-        choose. You can remove imported sources in the app. Your course folders
-        and app data are retained when you uninstall so your learning is not
-        discarded; you can delete them yourself after exporting anything you
-        need.
+        contribution briefs, idea notebooks, project decisions and Architect
+        conversations are stored in OutClass’s SQLite database. Automatic
+        notebook notes are opt-in and use saved reflections from explicitly
+        linked courses. Your working code and reviewed checkpoints live in the
+        learning folders you choose. You can remove imported sources in the app.
+        Your course folders and app data are retained when you uninstall so your
+        learning is not discarded; you can delete them yourself after exporting
+        anything you need.
       </p>
-      <h2>OpenAI</h2>
+      <h2>AI connections and project ideas</h2>
       <p>
-        AI is optional. The desktop app stores your OpenAI API key using Windows
-        encryption, outside course folders. The source-development companion can
-        read its own local .env instead. Keys are never shipped in downloads,
-        sent to GitHub, or passed to the extension.
+        AI is optional. Choose a personal OpenAI key, an explicitly configured
+        local model, or included AI through a configured hosted service.
+        Included AI's public sign-in and billing are awaiting account setup in
+        this preview. The desktop app stores your personal OpenAI key and
+        included-AI account session using Windows encryption, outside course
+        folders. The source-development companion can read its own local .env
+        instead. Keys are never shipped in downloads, sent to GitHub, or passed
+        to the extension.
       </p>
       <p>
-        When enabled, code help can send your question, selected code, relevant
-        local code or notes, and bounded chat context to OpenAI. Course mode
-        sends your question and relevant imported course passages. When you
-        explicitly attach a recorded run or choose error help, its saved
-        entry-file source and bounded output are included. During a practical
-        task, Code help also includes its brief, checks, reflection, and
-        recorded help use. During contribution work it includes the selected
-        public issue, contributor instructions, your notes, and bounded recorded
-        command results. Personal learning search across courses is a local,
-        explicit search; it does not automatically add other courses to chat.
-        Semantic indexing sends uncached source passages for embeddings when you
-        explicitly refresh the index; question retrieval may send the question
-        for an embedding. AI commit messages use a small scanned diff when
-        separately enabled. The app scans sources for recognizable secrets
-        before indexing or sending them. This does not replace reviewing your
-        own content.
+        When enabled, OffCourse can send your question, selected code, relevant
+        local code or notes, and bounded chat context to your selected AI
+        connection. Course mode sends your question and relevant imported course
+        passages. When you explicitly attach a recorded run or choose error
+        help, its saved entry-file source and bounded output are included.
+        During a practical task, Code help also includes its brief, checks,
+        reflection, and recorded help use. During contribution work it includes
+        the selected public issue, contributor instructions, your notes, and
+        bounded recorded command results. Personal learning search across
+        courses is a local, explicit search; it does not automatically add other
+        courses to chat. The Architect sends the selected project's notes and
+        linked course goals for requested conversations or reviews. Sharing a
+        notebook with OffCourse is optional and requires selecting it in a
+        question. Original thoughts remain separate from AI interpretations.
+        Editing or deleting a note clears derived local project history;
+        previously transmitted context cannot be recalled from a provider.
+        Semantic indexing in personal-key mode sends uncached source passages
+        for embeddings when you explicitly refresh the index; question retrieval
+        may send the question for an embedding. AI commit messages use a small
+        scanned diff when separately enabled. The app scans sources for
+        recognizable secrets before indexing or sending them. This does not
+        replace reviewing your own content.
       </p>
       <p>
         OutClass requests no response storage when using the OpenAI Responses
         API. OpenAI’s processing and retention are governed by its own terms and
-        your account settings. API charges are billed to your OpenAI account.
-        See
+        the provider account settings. Personal-key charges are billed to your
+        OpenAI account. Included AI uses the service's account and allowance;
+        its service records account identity, request/usage counters and
+        subscription identifiers, without storing prompt text. A local model
+        receives context at the configured localhost endpoint. Local and
+        included modes use local keyword retrieval instead of sending embeddings
+        through a personal key. See
         <a
           href="https://platform.openai.com/docs/guides/your-data"
           target="_blank"
@@ -109,6 +127,23 @@
         >.
       </p>
       <h2>GitHub</h2>
+      <p>
+        The desktop terminal is a full local shell with your account's
+        permissions. It can modify files, install packages and contact services
+        through commands you run. OutClass excludes its own provider/account
+        credentials from the shell environment. Shell sessions and their bounded
+        display history stay in memory and stop when the application closes.
+        Arbitrary terminal output is not automatically treated as verified
+        learning evidence.
+      </p>
+      <p>
+        The optional VS Code / Code OSS companion uses a separately paired,
+        course-scoped local credential held in the editor's SecretStorage. It
+        sends saved selected code and explicit questions to the local companion.
+        It cannot access local setup, notebook management or terminal APIs. Your
+        editor and other extensions have their own permissions and privacy
+        policies. You can revoke its pairing in OutClass.
+      </p>
       <p>
         GitHub is optional. OutClass uses Git and GitHub CLI to connect your
         account and a repository you choose. Reviewed code and notes are

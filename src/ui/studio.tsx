@@ -41,6 +41,9 @@ import type { Course, Status, ResumeAnchor, RunContext } from "../shared";
 import type { ChatMessage, Evidence } from "../server/library";
 import "./studio.css";
 import { ProjectConsole, TaskGuide, PracticePrompt } from "./practical";
+import { Divider, useWorkspaceLayout } from "./workspace-layout";
+import { IntegratedTerminal } from "./terminal";
+import { ArchitectNotebook, type NotebookState } from "./notebook";
 
 type Api = <T>(route: string, body?: unknown) => Promise<T>;
 type File = {
@@ -291,6 +294,11 @@ export function Studio({
     state.courses.find((item) => item.id === selectedCourse) ||
     state.courses.find((item) => item.id === state.session?.courseId) ||
     state.courses[0];
+  const {
+    layout,
+    update: updateLayout,
+    reset: resetLayout,
+  } = useWorkspaceLayout();
   const session = state.session?.courseId === course?.id ? state.session : null;
   const note = session ? sessionNote : "";
   const [files, setFiles] = useState<{ path: string; size: number }[]>([]),
@@ -309,6 +317,10 @@ export function Studio({
     [tutorStyle, setTutorStyle] = useState<"hint" | "explain">("hint"),
     [cursor, setCursor] = useState(0);
   const [projectRunning, setProjectRunning] = useState(false);
+  const [sharedProjects, setSharedProjects] = useState<
+      NotebookState["projects"]
+    >([]),
+    [sharedProject, setSharedProject] = useState("");
   const [runInput, setRunInput] = useState("");
   useEffect(() => {
     if (!running || !session) return;
@@ -334,8 +346,23 @@ export function Studio({
     [notice, setNotice] = useState("");
   const [mode, setMode] = useState<"help" | "course">("help"),
     [attachCode, setAttachCode] = useState(true),
-    [rightTab, setRightTab] = useState<"chat" | "sources">("chat"),
+    [rightTab, setRightTab] = useState<"chat" | "sources" | "architect">(
+      "chat",
+    ),
     [mobileTab, setMobileTab] = useState<"editor" | "assistant">("editor");
+  useEffect(() => {
+    setSharedProject("");
+    void api<NotebookState>("notebook")
+      .then((d) =>
+        setSharedProjects(
+          d.projects.filter(
+            (p) =>
+              p.shareWithOffCourse && p.courseIds.includes(course?.id || ""),
+          ),
+        ),
+      )
+      .catch(() => {});
+  }, [course?.id, rightTab]);
   const [importing, setImporting] = useState(false),
     [sourceTitle, setSourceTitle] = useState(""),
     [sourceText, setSourceText] = useState(""),
@@ -625,6 +652,8 @@ export function Studio({
         mode: requestMode,
         runId: requestMode === "help" && withRun ? lastRun?.id : undefined,
         tutorStyle: style,
+        projectId:
+          requestMode === "help" ? sharedProject || undefined : undefined,
         selectedCode:
           requestMode === "help" && attachCode && file
             ? {
@@ -671,8 +700,52 @@ export function Studio({
     );
   return (
     <div
-      className={`studio ${mobileTab === "assistant" ? "mobile-assistant" : "mobile-editor"}`}
+      className={`studio adjustable-studio ${layout.assistantSide === "left" ? "assistant-left" : ""} ${layout.hideAssistant ? "assistant-hidden" : ""} ${layout.hideExplorer ? "explorer-hidden" : ""} ${layout.terminalMax && layout.terminalOpen ? "terminal-focus" : ""} ${mobileTab === "assistant" ? "mobile-assistant" : "mobile-editor"}`}
+      style={
+        {
+          "--assistant-size": `${layout.assistant}px`,
+          "--explorer-size": `${layout.explorer}px`,
+        } as React.CSSProperties
+      }
     >
+      <div className="layout-tools" aria-label="Workspace layout">
+        <span>YOUR LEARNING WORKSPACE</span>
+        <button
+          data-wide
+          onClick={() => updateLayout({ hideSidebar: !layout.hideSidebar })}
+        >
+          {layout.hideSidebar ? "Show courses" : "Hide courses"}
+        </button>
+        <button
+          data-wide
+          onClick={() => updateLayout({ hideExplorer: !layout.hideExplorer })}
+        >
+          {layout.hideExplorer ? "Show files" : "Hide files"}
+        </button>
+        <button
+          data-wide
+          onClick={() => updateLayout({ hideAssistant: !layout.hideAssistant })}
+        >
+          {layout.hideAssistant ? "Show OffCourse" : "Focus editor"}
+        </button>
+        <button
+          data-wide
+          onClick={() =>
+            updateLayout({
+              assistantSide:
+                layout.assistantSide === "right" ? "left" : "right",
+            })
+          }
+        >
+          Teacher {layout.assistantSide === "right" ? "←" : "→"}
+        </button>
+        <button
+          onClick={() => updateLayout({ terminalOpen: !layout.terminalOpen })}
+        >
+          Terminal
+        </button>
+        <button onClick={resetLayout}>Reset layout</button>
+      </div>
       <div className="studio-mobile-switch">
         <button
           className={mobileTab === "editor" ? "selected" : ""}
@@ -940,6 +1013,16 @@ export function Studio({
                 ))}
                 {!files.length && <p>Create a file to start building.</p>}
               </aside>
+              {!layout.hideExplorer && (
+                <Divider
+                  className="explorer-divider"
+                  label="File explorer width"
+                  value={layout.explorer}
+                  min={120}
+                  max={320}
+                  onChange={(explorer) => updateLayout({ explorer })}
+                />
+              )}
               <div className="editor-wrap">
                 <div className="editor-tabs">
                   {Object.values(drafts).map((item) => (
@@ -1192,13 +1275,25 @@ export function Studio({
             </div>
           </>
         )}
+        {session && <IntegratedTerminal sessionId={session.id} theme={theme} />}
       </section>
+      <Divider
+        className="assistant-divider"
+        label="OffCourse panel width"
+        reverse={layout.assistantSide === "right"}
+        value={layout.assistant}
+        min={280}
+        max={650}
+        onChange={(assistant) => updateLayout({ assistant })}
+      />
       <aside className="studio-assistant" aria-label="Course assistant">
         <div className="assistant-header">
           <div className="assistant-mark">
             <MessageSquare size={15} />
           </div>
-          <strong>Learning assistant</strong>
+          <strong>
+            {rightTab === "architect" ? "The Architect" : "OffCourse"}
+          </strong>
           <span className="assistant-tag">Course aware</span>
           <button
             className="assistant-mobile-close"
@@ -1209,6 +1304,12 @@ export function Studio({
           </button>
         </div>
         <div className="assistant-tabs">
+          <button
+            className={rightTab === "architect" ? "selected" : ""}
+            onClick={() => setRightTab("architect")}
+          >
+            Architect
+          </button>
           <button
             className={rightTab === "chat" ? "selected" : ""}
             onClick={() => setRightTab("chat")}
@@ -1254,14 +1355,21 @@ export function Studio({
             {notice}
           </div>
         )}
-        {rightTab === "sources" ? (
+        {rightTab === "architect" ? (
+          <ArchitectNotebook
+            api={api}
+            courses={state.courses}
+            courseId={course.id}
+            compact
+          />
+        ) : rightTab === "sources" ? (
           <div className="sources-panel">
             <div className="sources-heading">
               <h2>Grounded in your course.</h2>
               <p>
                 Add lecture transcripts, resources, and your own notes. Sources
-                stay on your machine; enabling AI sends indexed excerpts to
-                OpenAI.
+                stay on your machine; enabled AI sends relevant excerpts to your
+                selected connection when you request help.
               </p>
             </div>
             <div className="source-actions">
@@ -1460,14 +1568,13 @@ export function Studio({
                   ) : (
                     <div className="assistant-enable">
                       <p>
-                        AI sends your questions, selected code, and retrieved
-                        excerpts to OpenAI. Semantic indexing sends source
-                        excerpts. API usage is billed to your key; files and the
-                        index remain local.
+                        OffCourse uses your question, selected code and relevant
+                        passages through the AI connection you choose in
+                        Settings. Files and the course index stay local.
                       </p>
                       <button
                         className="button primary"
-                        disabled={chatBusy || !state.hasApiKey}
+                        disabled={chatBusy || !(state.hasAI ?? state.hasApiKey)}
                         onClick={() =>
                           libraryAction(async () => {
                             await api("assistant-enable", { enabled: true });
@@ -1478,10 +1585,10 @@ export function Studio({
                       >
                         Enable learning assistant <ArrowUpRight size={13} />
                       </button>
-                      {!state.hasApiKey && (
+                      {!(state.hasAI ?? state.hasApiKey) && (
                         <small>
-                          Add an API key to the companion’s .env and restart it
-                          first.
+                          Choose included AI, a personal key or a local model in
+                          Settings first.
                         </small>
                       )}
                     </div>
@@ -1545,12 +1652,12 @@ export function Studio({
                 <div className="assistant-enable">
                   <p>
                     AI is off. Enabling it sends questions, selected code, and
-                    retrieved excerpts to OpenAI using your API key.
+                    retrieved excerpts to your selected AI connection.
                   </p>
                   <button
                     type="button"
                     className="button primary"
-                    disabled={chatBusy || !state.hasApiKey}
+                    disabled={chatBusy || !(state.hasAI ?? state.hasApiKey)}
                     onClick={() =>
                       libraryAction(async () => {
                         await api("assistant-enable", { enabled: true });
@@ -1647,6 +1754,20 @@ export function Studio({
                 }}
               />
               <div className="composer-footer">
+                {mode === "help" && !!sharedProjects.length && (
+                  <select
+                    aria-label="Attach Architect project"
+                    value={sharedProject}
+                    onChange={(e) => setSharedProject(e.target.value)}
+                  >
+                    <option value="">No notebook attached</option>
+                    {sharedProjects.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.title}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 {mode === "help" && file ? (
                   <label>
                     <input
@@ -1673,7 +1794,7 @@ export function Studio({
               </div>
               <small className="assistant-footnote">
                 {library?.enabled
-                  ? "OpenAI · Your API key stays local. Check cited sources."
+                  ? "OffCourse · Check sources and test your own changes."
                   : "Enable the assistant to start a conversation."}
               </small>
             </form>

@@ -36,8 +36,10 @@ import {
 import * as git from "./git.js";
 import { prepareGithub } from "./github.js";
 import { describe } from "./ai.js";
+import { AIProvider } from "./ai-provider.js";
 
 export class Application {
+  readonly ai = new AIProvider(this);
   private queue: Promise<unknown> = Promise.resolve();
   constructor(
     readonly store: Store,
@@ -92,6 +94,7 @@ export class Application {
     return {
       ...state,
       hasApiKey: !!this.apiKey,
+      hasAI: this.ai.ready(),
       gitAvailable,
       ghAvailable,
       sourceFiles,
@@ -571,7 +574,7 @@ export class Application {
       );
     const fallback = `course: checkpoint ${session.lessonTitle.slice(0, 85)}`;
     const ai = await describe(
-      this.apiKey,
+      this.ai.config().mode === "personal" ? this.apiKey : undefined,
       state.settings.aiEnabled,
       {
         course: session.courseTitle,
@@ -580,6 +583,7 @@ export class Application {
         diff: result.diff,
       },
       fallback,
+      this.ai,
     );
     const preview: Preview = {
       id: randomUUID(),

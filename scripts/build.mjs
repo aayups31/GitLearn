@@ -2,6 +2,7 @@ import { build as bundle } from "esbuild";
 import { build as viteBuild } from "vite";
 import { cp, mkdir } from "node:fs/promises";
 import path from "node:path";
+await import("./build-editor.mjs");
 await viteBuild({
   build: {
     outDir: "dist/web",

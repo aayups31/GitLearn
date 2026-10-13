@@ -1,0 +1,440 @@
+.idea-launch {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--soft);
+  margin-bottom: 26px;
+}
+.idea-launch > svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.idea-launch > div {
+  flex: 1;
+}
+.idea-launch strong {
+  font-size: 12px;
+}
+.idea-launch p {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+.idea-launch button,
+.notebook-toolbar button,
+.notebook-note button {
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+.architect-notebook {
+  min-width: 0;
+}
+.architect-notebook.compact {
+  flex: 1;
+  overflow: auto;
+  padding: 12px 14px;
+}
+.notebook-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.notebook-toolbar > svg {
+  color: var(--accent);
+}
+.notebook-toolbar strong {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.notebook-toolbar select {
+  flex: 1;
+  min-width: 0;
+  max-width: 380px;
+}
+.architect-notebook input:not([type="checkbox"]),
+.architect-notebook textarea,
+.architect-notebook select,
+.ai-access input {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 5px;
+  padding: 9px 11px;
+  font: inherit;
+  font-size: 12px;
+}
+.architect-notebook label,
+.ai-access label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.architect-notebook textarea {
+  min-height: 92px;
+  resize: vertical;
+  line-height: 1.7;
+}
+.architect-notebook select {
+  width: auto;
+}
+.notebook-preferences {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+.notebook-preferences label,
+.notebook-project-form fieldset label,
+.notebook-project-form .check-label {
+  flex-direction: row;
+  align-items: center;
+}
+.notebook-preferences small {
+  width: 100%;
+}
+.notebook-project-form {
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 750px;
+}
+.notebook-project-form fieldset {
+  border: 1px solid var(--line);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.notebook-project-form legend {
+  font-size: 11px;
+  color: var(--muted);
+  padding: 0 5px;
+}
+.notebook-project-form small {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.notebook-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.notebook-actions .danger {
+  color: var(--danger);
+}
+.notebook-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 42px;
+  padding-top: 24px;
+}
+.notebook-project-heading h3 {
+  font-size: 23px;
+  letter-spacing: -0.5px;
+}
+.notebook-project-heading p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 10px 0;
+  white-space: pre-wrap;
+}
+.notebook-course-links {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.notebook-course-links span {
+  color: var(--accent);
+  font-size: 10px;
+  border-bottom: 1px solid var(--line);
+  padding: 5px 0;
+}
+.notebook-note-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 22px 0;
+}
+.notebook-originals h4 {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin: 26px 0 9px;
+}
+.notebook-note {
+  border-bottom: 1px solid var(--line);
+  padding: 17px 0;
+}
+.notebook-note header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 9px;
+}
+.notebook-note header span {
+  flex: 1;
+}
+.notebook-note p {
+  white-space: pre-wrap;
+  font-size: 12px;
+  line-height: 1.8;
+  margin-top: 11px;
+  overflow-wrap: anywhere;
+}
+.notebook-note small {
+  display: block;
+  color: var(--muted);
+  font-size: 9px;
+  margin-top: 9px;
+  overflow-wrap: anywhere;
+}
+.architect-review {
+  background: var(--soft);
+  border-top: 1px solid var(--line);
+  padding: 18px;
+}
+.architect-review > div:first-child {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--accent);
+}
+.architect-review p,
+.architect-message p {
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 12px 0;
+}
+.architect-review span,
+.architect-review small {
+  font-size: 9px;
+  color: var(--muted);
+}
+.architect-review small {
+  display: block;
+  margin: 14px 0;
+}
+.architect-review h3 {
+  font-size: 15px;
+}
+.architect-review li,
+.architect-message li {
+  font-size: 12px;
+  line-height: 1.8;
+}
+.architect-review ul,
+.architect-review ol,
+.architect-message ul,
+.architect-message ol {
+  padding-left: 18px;
+}
+.architect-review .architect-connection {
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 10px;
+  padding-top: 12px;
+}
+.architect-messages {
+  margin-top: 22px;
+}
+.architect-message {
+  padding: 15px 0;
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.architect-message > small {
+  color: var(--accent);
+  font-size: 10px;
+}
+.architect-message.user > small {
+  color: var(--muted);
+}
+.architect-message pre {
+  max-width: 100%;
+  overflow: auto;
+  background: var(--soft);
+  padding: 12px;
+  font-size: 11px;
+}
+.architect-composer {
+  margin: 22px 0 9px;
+  position: relative;
+}
+.architect-composer textarea {
+  padding-right: 40px;
+  margin-top: 8px;
+}
+.architect-composer button {
+  position: absolute;
+  bottom: 12px;
+  right: 9px;
+  padding: 6px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--action);
+  color: white;
+}
+.architect-conversation > small {
+  display: block;
+  line-height: 1.8;
+}
+.architect-conversation > button {
+  margin-top: 12px;
+}
+.notebook-empty {
+  padding: 60px 10px;
+  text-align: center;
+}
+.notebook-empty svg {
+  color: var(--accent);
+}
+.notebook-empty h3 {
+  margin-top: 16px;
+  font-size: 22px;
+}
+.notebook-empty p {
+  margin: 15px auto 22px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.8;
+  max-width: 440px;
+}
+.compact .notebook-body {
+  display: block;
+  padding-top: 12px;
+}
+.compact .notebook-project-heading h3 {
+  font-size: 18px;
+}
+.compact .architect-conversation {
+  margin-top: 28px;
+}
+.compact .notebook-toolbar strong {
+  display: none;
+}
+.compact .notebook-empty {
+  padding: 30px 4px;
+}
+.ai-options {
+  display: flex;
+  gap: 8px;
+  margin: 20px 0;
+}
+.ai-options button {
+  padding: 10px 15px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  border-radius: 5px;
+  font-size: 12px;
+}
+.ai-options button.selected {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.ai-access > p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted);
+  margin: 14px 0;
+}
+.ai-access > label {
+  margin: 16px 0;
+}
+.ai-access > .onboarding-actions {
+  margin-top: 18px;
+}
+@media (max-width: 900px) {
+  .notebook-body {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .idea-launch {
+    flex-wrap: wrap;
+  }
+  .idea-launch > div {
+    min-width: 180px;
+  }
+  .notebook-preferences {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+.editor-integration {
+  border-top: 1px solid var(--line);
+  padding: 20px 0;
+  font-size: 13px;
+}
+.architect-notebook input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  padding: 0;
+  margin: 0;
+  accent-color: var(--accent);
+}
+.notebook-preferences label {
+  white-space: nowrap;
+}
+.editor-extension-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+  max-height: 260px;
+  overflow: auto;
+}
+.editor-extension-list li {
+  display: flex;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 11px;
+}
+.editor-steps {
+  padding-left: 20px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 2;
+}
+.editor-code {
+  font-size: 24px;
+  letter-spacing: 5px;
+  color: var(--accent);
+}
+.editor-connection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+}
+.composer-footer select {
+  min-width: 0;
+  max-width: 150px;
+  background: var(--paper);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  padding: 5px;
+  font-size: 9px;
+}

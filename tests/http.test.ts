@@ -78,6 +78,68 @@ it("requires authentication and never publishes the API key", async () => {
   expect(result.status).toBe(200);
   expect(await result.text()).not.toContain("localToken");
 });
+it("pairs an editor with one course, excludes local privileges and supports revocation", async () => {
+  const post = (route: string, body: unknown, token = localToken) =>
+    fetch(`${base}/api/${route}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
+  await post("setup", {
+    repoPath: path.join(directory, "history"),
+    aiEnabled: false,
+  });
+  for (const id of ["one", "two"])
+    await post("observations", {
+      eventId: id,
+      courseId: id,
+      title: id,
+      url: `https://www.udemy.com/course/${id}/learn/lecture/1`,
+      lessons: [{ id: "1", title: "Functions", section: "Basics", order: 0 }],
+    });
+  await post("start", { courseId: "one", lessonId: "1" });
+  const { code } = await (await post("editor-code", {})).json();
+  const pair = await post("editor-pair", { code }, "");
+  expect(pair.status).toBe(200);
+  const { token } = await pair.json();
+  expect(
+    (
+      await fetch(`${base}/api/editor-context`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+    ).status,
+  ).toBe(200);
+  expect(
+    (
+      await fetch(`${base}/api/state`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+    ).status,
+  ).toBe(403);
+  expect(
+    (
+      await post(
+        "assistant-chat",
+        { courseId: "two", question: "Unrelated", mode: "help" },
+        token,
+      )
+    ).status,
+  ).toBe(403);
+  expect((await post("ai-config", { mode: "local" }, token)).status).toBe(403);
+  expect((await post("editor-pair", { code }, "")).status).toBe(401);
+  const connection = store.get<any[]>("editorConnections")![0];
+  await post("editor-revoke", { id: connection.id });
+  expect(
+    (
+      await fetch(`${base}/api/editor-context`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+    ).status,
+  ).toBe(401);
+});
 it("rejects invented and cross-course run IDs before requesting any AI help", async () => {
   const headers = {
     "Content-Type": "application/json",

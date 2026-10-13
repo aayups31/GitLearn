@@ -162,6 +162,7 @@ export type PublicPreview = Omit<
   "files" | "treeId" | "expectedBranch"
 >;
 export interface Status extends AppState {
+  hasAI?: boolean;
   hasApiKey: boolean;
   gitAvailable: boolean;
   ghAvailable: boolean;

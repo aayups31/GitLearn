@@ -1,0 +1,23 @@
+{
+  "name": "outclass-learning",
+  "displayName": "OutClass — OffCourse learning guide",
+  "description": "Connect your course workspace, OffCourse teacher and local OutClass companion to VS Code or Code OSS.",
+  "version": "0.7.0",
+  "publisher": "outclass",
+  "license": "MIT",
+  "repository": {"type":"git","url":"https://github.com/aayups31/OutClass"},
+  "engines": {"vscode":"^1.95.0"},
+  "categories": ["Education","Other"],
+  "main": "./dist/extension.cjs",
+  "activationEvents": ["onView:outclass.guide"],
+  "contributes": {
+    "commands": [
+      {"command":"outclass.connect","title":"OutClass: Connect course workspace"},
+      {"command":"outclass.ask","title":"OutClass: Ask OffCourse about my attempt"},
+      {"command":"outclass.open","title":"OutClass: Open learning workspace"},
+      {"command":"outclass.disconnect","title":"OutClass: Disconnect this editor"}
+    ],
+    "viewsContainers":{"activitybar":[{"id":"outclass","title":"OutClass","icon":"media/mark.svg"}]},
+    "views":{"outclass":[{"id":"outclass.guide","name":"OffCourse","type":"webview"}]}
+  }
+}

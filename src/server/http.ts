@@ -18,6 +18,9 @@ import { Practice } from "./practice.js";
 import { ProjectRuntime } from "./project-runtime.js";
 import { LiveWork } from "./live-work.js";
 import { LearningPath, directionSchema } from "./learning-path.js";
+import { IdeaNotebook } from "./notebook.js";
+import { workspaceFeatures } from "./workspace-features.js";
+import { EditorIntegration } from "./editor-integration.js";
 
 const text = z.string().max(2000);
 function matches(a: string, b: string) {
@@ -29,6 +32,8 @@ export function createApp(
   application: Application,
   port: number,
   focusDesktop?: () => void,
+  editorVsix = process.env.OUTCLASS_EDITOR_VSIX ||
+    path.resolve("dist/editor/OutClass-Editor-0.7.0.vsix"),
 ) {
   const app = express();
   const workspace = new Workspace(application);
@@ -49,6 +54,8 @@ export function createApp(
     await workspace.stopAll();
   };
   const library = new CourseLibrary(application);
+  const notebook = new IdeaNotebook(application);
+  const editorIntegration = new EditorIntegration(editorVsix);
   app.disable("x-powered-by");
   const localOrigins = new Set([
     `http://127.0.0.1:${port}`,
@@ -165,6 +172,55 @@ export function createApp(
     });
     res.json({ token });
   });
+  app.post("/api/editor-pair", (req, res) => {
+    if (req.headers.origin && !localOrigins.has(req.headers.origin)) {
+      res.status(403).json({ error: "Connect from your local code editor." });
+      return;
+    }
+    const key = "editor",
+      now = Date.now(),
+      attempt = pairAttempts.get(key);
+    if (attempt && now - attempt.at < 60000 && attempt.count >= 5) {
+      res
+        .status(429)
+        .json({ error: "Wait one minute before trying another editor code." });
+      return;
+    }
+    pairAttempts.set(key, {
+      at: attempt && now - attempt.at < 60000 ? attempt.at : now,
+      count: attempt && now - attempt.at < 60000 ? attempt.count + 1 : 1,
+    });
+    const code = z
+        .string()
+        .regex(/^\d{6}$/)
+        .parse(req.body.code),
+      pair = application.store.get<{
+        code: string;
+        expires: number;
+        courseId: string;
+      }>("editorPairCode");
+    if (!pair || pair.expires < now || !matches(code, pair.code)) {
+      res
+        .status(401)
+        .json({ error: "Generate a new editor connection code in OutClass." });
+      return;
+    }
+    const connections =
+      application.store.get<{ id: string; token: string; courseId: string }[]>(
+        "editorConnections",
+      ) || [];
+    if (connections.length >= 12)
+      throw new UserError("Disconnect an old editor before pairing another.");
+    const token = randomBytes(32).toString("hex");
+    connections.push({
+      id: randomBytes(12).toString("hex"),
+      token,
+      courseId: pair.courseId,
+    });
+    application.store.put("editorConnections", connections);
+    application.store.remove("editorPairCode");
+    res.json({ token });
+  });
   app.use("/api", (req, res, next) => {
     const bearer = req.headers.authorization?.replace(/^Bearer /, "") || "";
     const origin = req.headers.origin;
@@ -180,9 +236,39 @@ export function createApp(
     const isLocal =
       (!origin || localOrigins.has(origin)) &&
       matches(bearer, application.store.get<string>("localToken")!);
-    if (!isLocal && !isExtension) {
+    const editor =
+      !origin || localOrigins.has(origin)
+        ? (
+            application.store.get<
+              { id: string; token: string; courseId: string }[]
+            >("editorConnections") || []
+          ).find((e) => matches(bearer, e.token))
+        : undefined;
+    if (!isLocal && !isExtension && !editor) {
       res.status(401).json({ error: "Reconnect to the local companion." });
       return;
+    }
+    if (editor) {
+      if (
+        !["/editor-context", "/assistant-chat", "/library-index"].includes(
+          req.path,
+        )
+      ) {
+        res
+          .status(403)
+          .json({ error: "Use OutClass for this workspace action." });
+        return;
+      }
+      if (
+        req.path !== "/editor-context" &&
+        req.body?.courseId !== editor.courseId
+      ) {
+        res
+          .status(403)
+          .json({ error: "This editor is paired with a different course." });
+        return;
+      }
+      res.locals.editorCourseId = editor.courseId;
     }
     if (
       isExtension &&
@@ -204,6 +290,90 @@ export function createApp(
   app.get("/api/state", async (_req, res) =>
     res.json(await application.status()),
   );
+  workspaceFeatures(app, application, notebook);
+  app.get("/api/editor-context", (req, res) => {
+    const state = application.store.state(),
+      session = state.session;
+    if (
+      !session ||
+      (res.locals.editorCourseId &&
+        session.courseId !== res.locals.editorCourseId)
+    )
+      throw new UserError(
+        "Continue this editor's paired course in OutClass before asking for help.",
+        409,
+      );
+    const course = state.courses.find((c) => c.id === session.courseId)!;
+    res.json({
+      course: { id: course.id, title: course.title },
+      session: {
+        id: session.id,
+        workspace: session.workspace,
+        lessonTitle: session.lessonTitle,
+      },
+      aiReady: application.ai.ready(),
+    });
+  });
+  app.get("/api/editors", async (_req, res) =>
+    res.json({
+      ...(await editorIntegration.status()),
+      connections: (
+        application.store.get<
+          { id: string; token: string; courseId: string }[]
+        >("editorConnections") || []
+      ).map(({ id, courseId }) => ({ id, courseId })),
+    }),
+  );
+  app.post("/api/editor-code", (_req, res) => {
+    const session = application.configured().session;
+    if (!session)
+      throw new UserError(
+        "Start or continue a course before connecting its editor.",
+      );
+    const code = randomInt(100000, 1000000).toString();
+    application.store.put("editorPairCode", {
+      code,
+      expires: Date.now() + 300000,
+      courseId: session.courseId,
+    });
+    res.json({ code });
+  });
+  app.post("/api/editor-revoke", (req, res) => {
+    const id = z
+      .string()
+      .regex(/^[a-f0-9]{24}$/)
+      .parse(req.body.id);
+    application.store.put(
+      "editorConnections",
+      (
+        application.store.get<
+          { id: string; token: string; courseId: string }[]
+        >("editorConnections") || []
+      ).filter((c) => c.id !== id),
+    );
+    res.json({ ok: true });
+  });
+  app.post("/api/editor-install", async (req, res) =>
+    res.json(
+      await editorIntegration.install(
+        z.enum(["vscode", "codium"]).parse(req.body.id),
+      ),
+    ),
+  );
+  app.post("/api/editor-extensions", async (req, res) =>
+    res.json(
+      await editorIntegration.extensions(
+        z.enum(["vscode", "codium"]).parse(req.body.id),
+      ),
+    ),
+  );
+  app.post("/api/editor-open", async (req, res) => {
+    const id = z.enum(["vscode", "codium"]).parse(req.body.id),
+      session = application.configured().session;
+    if (!session) throw new UserError("Start a course first.");
+    await workspace.list(session.id);
+    res.json(await editorIntegration.open(id, session.workspace));
+  });
   app.post("/api/open-desktop", (_req, res) => {
     focusDesktop?.();
     res.json({ opened: !!focusDesktop });
@@ -548,9 +718,9 @@ export function createApp(
   });
   app.post("/api/assistant-enable", async (req, res) => {
     const input = z.object({ enabled: z.boolean() }).parse(req.body);
-    if (input.enabled && !application.apiKey)
+    if (input.enabled && !application.ai.ready())
       throw new UserError(
-        "Add an OpenAI API key in the desktop app's Workspace settings, or in .env for the source-development companion.",
+        "Choose included AI, a personal key, or a local model in Settings first.",
       );
     res.json(
       await application.serial(async () => {
@@ -569,6 +739,7 @@ export function createApp(
         mode: z.enum(["help", "course"]),
         runId: z.string().uuid().optional(),
         tutorStyle: z.enum(["hint", "explain"]).default("explain"),
+        projectId: z.string().uuid().optional(),
         selectedCode: z
           .object({ path: z.string().max(300), content: z.string().max(16000) })
           .optional(),
@@ -600,6 +771,9 @@ export function createApp(
             contribution: live.context(input.courseId),
             direction: learning.direction(input.courseId),
             project: learning.status(input.courseId).milestones,
+            architect: input.projectId
+              ? notebook.context(input.projectId, input.courseId)
+              : undefined,
           }
         : undefined;
     const answer = await library.ask(

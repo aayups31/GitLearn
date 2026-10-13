@@ -6,5 +6,22 @@ const bridge: DesktopBridge = {
   setApiKey: (key) => ipcRenderer.invoke("desktop:key", key),
   openExternal: (url) => ipcRenderer.invoke("desktop:external", url),
   openExtensionFolder: () => ipcRenderer.invoke("desktop:extension"),
+  terminals: {
+    list: () => ipcRenderer.invoke("terminal:list"),
+    create: (sessionId) => ipcRenderer.invoke("terminal:create", sessionId),
+    snapshot: (id) => ipcRenderer.invoke("terminal:snapshot", id),
+    input: (id, data) => ipcRenderer.invoke("terminal:input", id, data),
+    resize: (id, cols, rows) =>
+      ipcRenderer.invoke("terminal:resize", id, cols, rows),
+    close: (id) => ipcRenderer.invoke("terminal:close", id),
+    subscribe: (listener) => {
+      const receive = (
+        _event: Electron.IpcRendererEvent,
+        event: Parameters<typeof listener>[0],
+      ) => listener(event);
+      ipcRenderer.on("terminal:event", receive);
+      return () => ipcRenderer.removeListener("terminal:event", receive);
+    },
+  },
 };
 contextBridge.exposeInMainWorld("gitLearnDesktop", bridge);

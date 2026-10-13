@@ -4,6 +4,7 @@ const { version } = JSON.parse(await readFile("package.json", "utf8"));
 const names = [
   `OutClass-Setup-${version}.exe`,
   `OutClass-Chrome-${version}.zip`,
+  `OutClass-Editor-${version}.vsix`,
 ];
 const lines = [];
 for (const name of names)

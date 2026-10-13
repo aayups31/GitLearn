@@ -33,6 +33,10 @@ import "./style.css";
 import "./studio.css";
 import { Onboarding, DesktopKeySettings } from "./onboarding";
 import { ContinueLearning, SetupDiagnostics } from "./learning";
+import { Divider, useWorkspaceLayout } from "./workspace-layout";
+import { ArchitectNotebook, LaunchIdeaPrompt } from "./notebook";
+import { AIAccessSettings } from "./ai-access";
+import { EditorsAndExtensions } from "./editors";
 import { LearningHub, LiveWorkHub, PracticePrompt } from "./practical";
 const Studio = lazy(() =>
   import("./studio").then((module) => ({ default: module.Studio })),
@@ -57,8 +61,18 @@ async function request<T>(route: string, body?: unknown): Promise<T> {
   return result as T;
 }
 type Page =
-  "overview" | "courses" | "history" | "setup" | "studio" | "practice" | "live";
+  | "overview"
+  | "courses"
+  | "history"
+  | "setup"
+  | "studio"
+  | "practice"
+  | "live"
+  | "ideas"
+  | "editors";
 function App() {
+  const { layout } = useWorkspaceLayout();
+  const layoutControl = useWorkspaceLayout();
   const [theme, setTheme] = useState<Theme>(initialTheme);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -81,6 +95,8 @@ function App() {
       "studio",
       "practice",
       "live",
+      "ideas",
+      "editors",
     ].includes(view || "")
       ? (view as Page)
       : "overview";
@@ -215,7 +231,8 @@ function App() {
     );
   return (
     <div
-      className={`shell ${!configured ? "first-visit" : ""} ${page === "studio" ? "studio-shell" : ""}`}
+      className={`shell adjustable ${layout.hideSidebar && page === "studio" ? "sidebar-hidden" : ""} ${!configured ? "first-visit" : ""} ${page === "studio" ? "studio-shell" : ""}`}
+      style={{ "--sidebar-size": `${layout.sidebar}px` } as React.CSSProperties}
     >
       <aside className="sidebar">
         <a
@@ -239,6 +256,8 @@ function App() {
               { id: "courses", label: "My courses", icon: BookOpen },
               { id: "practice", label: "Learn by doing", icon: Sparkles },
               { id: "live", label: "Live work", icon: Github },
+              { id: "ideas", label: "Ideas & architecture", icon: Sparkles },
+              { id: "editors", label: "Editors & extensions", icon: Code2 },
               { id: "history", label: "Checkpoints", icon: History },
             ] as const
           ).map((item) => (
@@ -304,10 +323,20 @@ function App() {
           <div className="connection">
             <span className={state ? "dot" : "dot offline"} />
             {state ? "Companion connected" : "Connecting…"}
-            <span className="version">v0.6</span>
+            <span className="version">v0.7</span>
           </div>
         </div>
       </aside>
+      {!layout.hideSidebar && page === "studio" && (
+        <Divider
+          className="sidebar-divider"
+          label="Course sidebar width"
+          value={layout.sidebar}
+          min={180}
+          max={340}
+          onChange={(sidebar) => layoutControl.update({ sidebar })}
+        />
+      )}
       <main>
         <header className="topbar">
           <div>
@@ -326,7 +355,11 @@ function App() {
                         ? "Learn by doing"
                         : page === "live"
                           ? "Live work"
-                          : "Settings"}
+                          : page === "ideas"
+                            ? "Ideas & architecture"
+                            : page === "editors"
+                              ? "Editors & extensions"
+                              : "Settings"}
             </span>
           </div>
           <div className="topbar-actions">
@@ -390,6 +423,18 @@ function App() {
             </div>
           ) : (
             <>
+              {page === "ideas" && (
+                <ArchitectNotebook api={request} courses={state.courses} />
+              )}
+              {page === "editors" && (
+                <EditorsAndExtensions api={request} state={state} />
+              )}
+              {page === "overview" && configured && (
+                <LaunchIdeaPrompt
+                  api={request}
+                  onOpen={() => navigate("ideas")}
+                />
+              )}
               {page === "studio" && (
                 <Suspense
                   fallback={
@@ -1800,6 +1845,11 @@ function Setup({
       </div>
       <div className="setup-stack">
         <SetupDiagnostics api={request} />
+        <AIAccessSettings
+          api={request}
+          enabled={!!state.settings.assistantEnabled}
+          onRefresh={() => act("ai-refresh", async () => {})}
+        />
         <DesktopKeySettings
           onSaved={() => act("key-refresh", async () => {})}
         />

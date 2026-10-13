@@ -1,0 +1,16 @@
+{
+  "name": "outclass-included-ai",
+  "version": "0.7.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "openai": "^6.0.0",
+    "pg": "^8.23.1",
+    "stripe": "^23.0.0",
+    "zod": "^4.1.12"
+  }
+}

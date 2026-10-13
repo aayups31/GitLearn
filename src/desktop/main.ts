@@ -14,6 +14,7 @@ import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import dotenv from "dotenv";
 import type { DesktopEnvironment } from "./bridge";
+import { LocalTerminals } from "./terminal";
 
 app.setName("OutClass");
 // Keep the encrypted key and saved workspace in the existing installation.
@@ -32,7 +33,12 @@ let window: BrowserWindow | undefined;
 let companion: ReturnType<typeof utilityProcess.fork> | undefined;
 let savedKey = "";
 let quitting = false;
+const terminals = new LocalTerminals((event) => {
+  if (window && !window.isDestroyed())
+    window.webContents.send("terminal:event", event);
+});
 const keyFile = path.join(app.getPath("userData"), "openai-key.encrypted");
+const accountFile = path.join(app.getPath("userData"), "ai-account.encrypted");
 const acknowledgements = new Map<string, () => void>();
 const allowedExternal = new Set([
   "github.com",
@@ -42,6 +48,9 @@ const allowedExternal = new Set([
   "platform.openai.com",
   "chromewebstore.google.com",
   "developer.chrome.com",
+  "checkout.stripe.com",
+  "code.visualstudio.com",
+  "vscodium.com",
 ]);
 function external(url: string) {
   const target = new URL(url);
@@ -97,6 +106,7 @@ async function available(command: string) {
   });
 }
 async function startCompanion() {
+  let accountSession: unknown = null;
   try {
     const response = await fetch(`${origin}/api/health`, {
       signal: AbortSignal.timeout(1500),
@@ -119,6 +129,14 @@ async function startCompanion() {
       throw error;
   }
   if (safeStorage.isEncryptionAvailable()) {
+    const account = await readFile(accountFile).catch(() => null);
+    if (account) {
+      try {
+        accountSession = JSON.parse(safeStorage.decryptString(account));
+      } catch {
+        /* The user can sign in again; never expose the encrypted account data. */
+      }
+    }
     const encrypted = await readFile(keyFile).catch(() => null);
     if (encrypted) {
       try {
@@ -154,6 +172,35 @@ async function startCompanion() {
       20000,
     );
     companion!.on("message", (message) => {
+      if (message.type === "account-save") {
+        void (async () => {
+          if (!safeStorage.isEncryptionAvailable())
+            throw new Error("Account encryption unavailable.");
+          if (message.session)
+            await writeFile(
+              accountFile,
+              safeStorage.encryptString(JSON.stringify(message.session)),
+              { mode: 0o600 },
+            );
+          else
+            await unlink(accountFile).catch((e) => {
+              if (e.code !== "ENOENT") throw e;
+            });
+        })().then(
+          () =>
+            companion?.postMessage({
+              type: "account-saved",
+              id: message.id,
+              ok: true,
+            }),
+          () =>
+            companion?.postMessage({
+              type: "account-saved",
+              id: message.id,
+              ok: false,
+            }),
+        );
+      }
       if (message.type === "ready") {
         clearTimeout(timer);
         resolve();
@@ -185,6 +232,18 @@ async function startCompanion() {
       root,
       port,
       apiKey: savedKey,
+      accountSession,
+      editorVsix: app.isPackaged
+        ? path.join(
+            process.resourcesPath,
+            "editor",
+            `OutClass-Editor-${app.getVersion()}.vsix`,
+          )
+        : path.join(
+            root,
+            "dist/editor",
+            `OutClass-Editor-${app.getVersion()}.vsix`,
+          ),
       dataDirectory:
         process.env.GITLEARN_DATA_DIR ||
         path.join(
@@ -213,6 +272,63 @@ else {
   app.whenReady().then(async () => {
     try {
       await startCompanion();
+      ipcMain.handle("terminal:list", (event) => {
+        trusted(event);
+        return terminals.list();
+      });
+      ipcMain.handle("terminal:create", async (event, sessionId: unknown) => {
+        trusted(event);
+        if (
+          typeof sessionId !== "string" ||
+          !/^[0-9a-f-]{36}$/i.test(sessionId)
+        )
+          throw new Error("Select an active course workspace.");
+        const bootstrap = await fetch(`${origin}/api/bootstrap`, {
+          method: "POST",
+          headers: { Origin: origin },
+        }).then((r) => r.json());
+        const headers = {
+          Authorization: `Bearer ${bootstrap.token}`,
+          Origin: origin,
+        };
+        const state = await fetch(`${origin}/api/state`, { headers }).then(
+          (r) => r.json(),
+        );
+        if (state.session?.id !== sessionId)
+          throw new Error(
+            "Select the active course before starting its terminal.",
+          );
+        // The file API revalidates the saved filesystem grant, including junctions.
+        const check = await fetch(
+          `${origin}/api/workspace-files?sessionId=${sessionId}`,
+          { headers },
+        );
+        if (!check.ok)
+          throw new Error(
+            "Your course workspace is unavailable. Reopen it first.",
+          );
+        return terminals.create(
+          sessionId,
+          state.session.workspace,
+          state.session.courseTitle,
+        );
+      });
+      ipcMain.handle("terminal:snapshot", (event, id) => {
+        trusted(event);
+        return terminals.snapshot(String(id));
+      });
+      ipcMain.handle("terminal:input", (event, id, data) => {
+        trusted(event);
+        terminals.input(String(id), data);
+      });
+      ipcMain.handle("terminal:resize", (event, id, cols, rows) => {
+        trusted(event);
+        terminals.resize(String(id), cols, rows);
+      });
+      ipcMain.handle("terminal:close", (event, id) => {
+        trusted(event);
+        terminals.close(String(id));
+      });
       ipcMain.handle("desktop:environment", async (event) => {
         trusted(event);
         return {
@@ -353,6 +469,7 @@ else {
   });
   app.on("window-all-closed", () => app.quit());
   app.on("before-quit", (event) => {
+    terminals.closeAll();
     if (companion && !quitting) {
       event.preventDefault();
       quitting = true;
