@@ -16,6 +16,8 @@ Built assets:
 | OutClass-Chrome-0.7.1.zip | 135,298 | `7cd9627a4f8eb1da56415b3b4c8a50c0b492dfe40a73d4315fb6a6e1f4af3055` |
 | OutClass-Editor-0.7.1.vsix | 8,732 | `a14b6094a65bf6b07672a1c7c5bff01339d3dd80d2694c69e10e06a9b583a74a` |
 
+The [0.7.1 preview release](https://github.com/aayups31/OutClass/releases/tag/v0.7.1) is published. All three public asset links returned HTTP 200; GitHub's asset digests and byte sizes match the table. The downloaded public SHA256SUMS file matches the tested local checksum file. The Chrome ZIP is a preview package; publishing it on GitHub does not establish Chrome Web Store approval.
+
 ## October 11: repository and Chrome listing rename
 
 - GitHub renamed the existing repository to `aayups31/OutClass`; its repository ID and Git history match the original. The local origin, site download links and allowlist, release tooling, and publisher metadata use the new URL.
