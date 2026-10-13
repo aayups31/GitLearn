@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { randomBytes } from "node:crypto";
+import { randomBytes, createHash } from "node:crypto";
 import { realpath } from "node:fs/promises";
 import path from "node:path";
 type Context = {
@@ -9,12 +9,22 @@ type Context = {
 };
 const base = "http://127.0.0.1:47831";
 export function activate(context: vscode.ExtensionContext) {
+  const secretKey = () =>
+    "outclass-token:" +
+    createHash("sha256")
+      .update(
+        (vscode.workspace.workspaceFolders || [])
+          .map((f) => f.uri.toString())
+          .sort()
+          .join("\n"),
+      )
+      .digest("hex");
   let view: vscode.WebviewView | undefined,
     busy = false;
   const output = vscode.window.createOutputChannel("OutClass executions");
   context.subscriptions.push(output);
   async function request<T>(route: string, body?: unknown): Promise<T> {
-    const token = await context.secrets.get("outclass-token");
+    const token = await context.secrets.get(secretKey());
     if (!token)
       throw new Error(
         "Connect this editor with a code from OutClass → Editors & extensions.",
@@ -77,7 +87,7 @@ export function activate(context: vscode.ExtensionContext) {
     const result = (await response.json()) as any;
     if (!response.ok)
       throw new Error(result.error || "The code was not accepted.");
-    await context.secrets.store("outclass-token", result.token);
+    await context.secrets.store(secretKey(), result.token);
     await current();
     void vscode.window.showInformationMessage(
       "OutClass is connected to this course workspace.",
@@ -231,7 +241,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "outclass.disconnect",
       safe(async () => {
-        await context.secrets.delete("outclass-token");
+        await context.secrets.delete(secretKey());
         await refresh();
       }),
     ),
