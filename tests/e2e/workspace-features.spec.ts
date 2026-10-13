@@ -92,6 +92,59 @@ test("adjustable layout supports keyboard, pointer, persistence, focus and reset
   expect(errors).toEqual([]);
   await page.screenshot({ path: ".local/design/outclass-07-studio.png" });
 });
+test("a delayed OffCourse answer stays with its course when switching courses", async ({
+  page,
+}) => {
+  await page.route("**/api/library-index", async (route) => {
+    const response = await route.fetch();
+    const body = await response.json();
+    await route.fulfill({ response, json: { ...body, enabled: true } });
+  });
+  let finish!: (v?: unknown) => void,
+    requested = false;
+  await page.route("**/api/assistant-chat", async (route) => {
+    requested = true;
+    await new Promise((resolve) => {
+      finish = resolve;
+    });
+    await route.fulfill({
+      json: {
+        messages: [
+          {
+            id: "private-reply",
+            role: "assistant",
+            text: "PYTHON_ONLY_DELAYED_REPLY",
+            mode: "general",
+            at: new Date().toISOString(),
+          },
+        ],
+      },
+    });
+  });
+  await page.goto(base + "/?view=studio");
+  await page
+    .getByLabel("Ask learning assistant")
+    .fill("Explain this saved Python attempt.");
+  await page
+    .getByRole("button", { name: "Send question", exact: true })
+    .click();
+  await expect.poll(() => requested).toBe(true);
+  await page
+    .getByRole("button", { name: /React for useful interfaces/ })
+    .click();
+  await expect(
+    page.getByRole("heading", {
+      name: "React for useful interfaces",
+      exact: true,
+    }),
+  ).toBeVisible();
+  finish();
+  await page.waitForResponse("**/api/assistant-chat");
+  await expect(
+    page.getByText("PYTHON_ONLY_DELAYED_REPLY", { exact: true }),
+  ).toHaveCount(0);
+  await page.unrouteAll({ behavior: "wait" });
+});
 test("original ideas, project decisions and local architect reviews work without an API key", async ({
   page,
 }) => {

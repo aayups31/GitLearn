@@ -250,9 +250,12 @@ export function createApp(
     }
     if (editor) {
       if (
-        !["/editor-context", "/assistant-chat", "/library-index"].includes(
-          req.path,
-        )
+        ![
+          "/editor-context",
+          "/assistant-chat",
+          "/library-index",
+          "/editor-run",
+        ].includes(req.path)
       ) {
         res
           .status(403)
@@ -269,6 +272,11 @@ export function createApp(
         return;
       }
       res.locals.editorCourseId = editor.courseId;
+      if (application.store.state().session?.courseId !== editor.courseId)
+        throw new UserError(
+          "Continue the paired course in OutClass before using this editor connection.",
+          409,
+        );
     }
     if (
       isExtension &&
@@ -291,6 +299,21 @@ export function createApp(
     res.json(await application.status()),
   );
   workspaceFeatures(app, application, notebook);
+  app.post("/api/editor-run", async (req, res) => {
+    const input = z
+        .object({
+          courseId: z.string().min(1).max(200),
+          path: z.string().min(1).max(300),
+        })
+        .parse(req.body),
+      session = application.configured().session;
+    if (!session || session.courseId !== input.courseId)
+      throw new UserError(
+        "Select the active course before running its saved file.",
+        409,
+      );
+    res.json(await workspace.run(session.id, input.path));
+  });
   app.get("/api/editor-context", (req, res) => {
     const state = application.store.state(),
       session = state.session;

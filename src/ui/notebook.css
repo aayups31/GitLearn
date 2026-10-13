@@ -11,6 +11,11 @@
   color: var(--accent);
   flex-shrink: 0;
 }
+.studio-shell .idea-launch {
+  margin: 0;
+  padding: 10px 18px;
+  flex-shrink: 0;
+}
 .idea-launch > div {
   flex: 1;
 }

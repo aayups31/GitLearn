@@ -11,6 +11,8 @@ const base = "http://127.0.0.1:47831";
 export function activate(context: vscode.ExtensionContext) {
   let view: vscode.WebviewView | undefined,
     busy = false;
+  const output = vscode.window.createOutputChannel("OutClass executions");
+  context.subscriptions.push(output);
   async function request<T>(route: string, body?: unknown): Promise<T> {
     const token = await context.secrets.get("outclass-token");
     if (!token)
@@ -105,7 +107,16 @@ export function activate(context: vscode.ExtensionContext) {
     try {
       const c = await current();
       const editor = vscode.window.activeTextEditor;
-      if (editor?.document.isDirty)
+      if (
+        vscode.workspace.textDocuments.some(
+          (doc) =>
+            doc.isDirty &&
+            doc.uri.scheme === "file" &&
+            !path
+              .relative(c.session!.workspace, doc.uri.fsPath)
+              .startsWith(".."),
+        )
+      )
         throw new Error(
           "Test your changes first. Save and execute your edited code before asking for another hint.",
         );
@@ -167,6 +178,51 @@ export function activate(context: vscode.ExtensionContext) {
   const safe = (fn: () => Promise<unknown>) => () =>
     void fn().catch((e) => vscode.window.showErrorMessage(e.message));
   context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "outclass.run",
+      safe(async () => {
+        const c = await current(),
+          editor = vscode.window.activeTextEditor;
+        if (!editor || editor.document.uri.scheme !== "file")
+          throw new Error("Select a saved source file in this course.");
+        if (editor.document.isDirty)
+          throw new Error("Save your file before running it.");
+        const relative = path
+          .relative(c.session!.workspace, editor.document.uri.fsPath)
+          .split(path.sep)
+          .join("/");
+        if (relative.startsWith("../") || path.isAbsolute(relative))
+          throw new Error("Select a file inside the approved course folder.");
+        if (!context.workspaceState.get("outclass-run-consent")) {
+          const choice = await vscode.window.showWarningMessage(
+            "Run this saved file locally with your computer's permissions? Quick Run records its source and output, with a 10-second limit. Use your normal terminal for long jobs.",
+            "Run saved file",
+          );
+          if (choice !== "Run saved file") return;
+          await context.workspaceState.update("outclass-run-consent", true);
+        }
+        await vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: "OutClass · running saved code",
+          },
+          async () => {
+            const result = await request<{
+              output: string;
+              exitCode: number | null;
+              timedOut: boolean;
+            }>("editor-run", { courseId: c.course.id, path: relative });
+            output.appendLine(
+              `\n${c.course.title} · ${relative}\n${result.output}\nExit: ${result.exitCode ?? "incomplete"}${result.timedOut ? " (timed out)" : ""}`,
+            );
+            output.show(true);
+            void vscode.window.showInformationMessage(
+              "Execution recorded. You can now ask OffCourse about this attempt.",
+            );
+          },
+        );
+      }),
+    ),
     vscode.commands.registerCommand("outclass.connect", safe(connect)),
     vscode.commands.registerCommand(
       "outclass.ask",
@@ -189,13 +245,15 @@ export function activate(context: vscode.ExtensionContext) {
         view = v;
         v.webview.options = { enableScripts: true };
         const nonce = randomBytes(16).toString("hex");
-        v.webview.html = `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}';"><style nonce="${nonce}">body{font:12px var(--vscode-font-family);padding:14px;color:var(--vscode-foreground)}h2{font-size:17px}p{line-height:1.7}button{background:var(--vscode-button-background);color:var(--vscode-button-foreground);border:0;padding:8px 12px;cursor:pointer;margin:4px 5px 4px 0}textarea{box-sizing:border-box;width:100%;min-height:100px;background:var(--vscode-input-background);color:var(--vscode-input-foreground);border:1px solid var(--vscode-input-border);padding:10px}article{white-space:pre-wrap;overflow-wrap:anywhere;padding:15px 0;border-bottom:1px solid var(--vscode-widget-border);line-height:1.8}.error{color:var(--vscode-errorForeground)}small{opacity:.65}</style></head><body><h2>OffCourse</h2><small>Your course. Your attempt. Your next step.</small><p id="context">Open OutClass and connect this course workspace.</p><button id="connect">Connect</button><button id="refresh">Refresh context</button><button id="open">Open OutClass</button><p id="error" class="error" role="alert"></p><div id="messages" aria-live="polite"></div><textarea id="question" aria-label="Ask OffCourse" placeholder="What have you tried? What did you expect?"></textarea><button id="send">Ask for a hint</button><p><small>Save and test your changes. This guide never edits or executes your code. Uses your selected AI connection and approved course context.</small></p><script nonce="${nonce}">const api=acquireVsCodeApi();for(const id of ['connect','refresh','open'])document.getElementById(id).onclick=()=>api.postMessage({type:id});document.getElementById('send').onclick=()=>api.postMessage({type:'ask',question:document.getElementById('question').value});window.addEventListener('message',({data})=>{if(data.type==='context')document.getElementById('context').textContent=data.title+' · '+data.lesson;if(data.type==='error')document.getElementById('error').textContent=data.text;if(data.type==='busy'){document.getElementById('send').disabled=data.value;if(data.value)document.getElementById('error').textContent='';}if(data.type==='messages'){const root=document.getElementById('messages');root.replaceChildren();for(const m of data.messages){const a=document.createElement('article');a.textContent=(m.role==='user'?'You':'OffCourse')+'\n\n'+m.text;root.append(a);}document.getElementById('question').value='';root.lastElementChild?.scrollIntoView();}});api.postMessage({type:'refresh'});</script></body></html>`;
+        v.webview.html = `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}';"><style nonce="${nonce}">body{font:12px var(--vscode-font-family);padding:14px;color:var(--vscode-foreground)}h2{font-size:17px}p{line-height:1.7}button{background:var(--vscode-button-background);color:var(--vscode-button-foreground);border:0;padding:8px 12px;cursor:pointer;margin:4px 5px 4px 0}textarea{box-sizing:border-box;width:100%;min-height:100px;background:var(--vscode-input-background);color:var(--vscode-input-foreground);border:1px solid var(--vscode-input-border);padding:10px}article{white-space:pre-wrap;overflow-wrap:anywhere;padding:15px 0;border-bottom:1px solid var(--vscode-widget-border);line-height:1.8}.error{color:var(--vscode-errorForeground)}small{opacity:.65}</style></head><body><h2>OffCourse</h2><small>Your course. Your attempt. Your next step.</small><p id="context">Open OutClass and connect this course workspace.</p><button id="connect">Connect</button><button id="refresh">Refresh context</button><button id="open">Open OutClass</button><button id="run">Run saved file</button><p id="error" class="error" role="alert"></p><div id="messages" aria-live="polite"></div><textarea id="question" aria-label="Ask OffCourse" placeholder="What have you tried? What did you expect?"></textarea><button id="send">Ask for a hint</button><p><small>Save and test your changes. OffCourse never edits or executes code. The separate Run saved file command is an explicit local execution action. Uses your selected AI connection and approved course context.</small></p><script nonce="${nonce}">const api=acquireVsCodeApi();for(const id of ['connect','refresh','open','run'])document.getElementById(id).onclick=()=>api.postMessage({type:id});document.getElementById('send').onclick=()=>api.postMessage({type:'ask',question:document.getElementById('question').value});window.addEventListener('message',({data})=>{if(data.type==='context')document.getElementById('context').textContent=data.title+' · '+data.lesson;if(data.type==='error')document.getElementById('error').textContent=data.text;if(data.type==='busy'){document.getElementById('send').disabled=data.value;if(data.value)document.getElementById('error').textContent='';}if(data.type==='messages'){const root=document.getElementById('messages');root.replaceChildren();for(const m of data.messages){const a=document.createElement('article');a.textContent=(m.role==='user'?'You':'OffCourse')+'\n\n'+m.text;root.append(a);}document.getElementById('question').value='';root.lastElementChild?.scrollIntoView();}});api.postMessage({type:'refresh'});</script></body></html>`;
         context.subscriptions.push(
           v.webview.onDidReceiveMessage(async (message) => {
             if (message?.type === "ask" && typeof message.question === "string")
               await ask(message.question);
             else if (message?.type === "connect") await safe(connect)();
             else if (message?.type === "refresh") await refresh();
+            else if (message?.type === "run")
+              await vscode.commands.executeCommand("outclass.run");
             else if (message?.type === "open")
               await vscode.commands.executeCommand("outclass.open");
           }),

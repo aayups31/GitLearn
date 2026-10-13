@@ -222,6 +222,7 @@ function App() {
       <Onboarding
         state={state}
         request={request}
+        onRefresh={refresh}
         onDone={() => {
           setOnboarding(false);
           setPage("courses");
@@ -429,7 +430,7 @@ function App() {
               {page === "editors" && (
                 <EditorsAndExtensions api={request} state={state} />
               )}
-              {page === "overview" && configured && (
+              {configured && (
                 <LaunchIdeaPrompt
                   api={request}
                   onOpen={() => navigate("ideas")}
@@ -445,6 +446,7 @@ function App() {
                   }
                 >
                   <Studio
+                    key={`${selectedCourse || state.session?.courseId || state.courses[0]?.id || "welcome"}:${state.session?.id || "inactive"}`}
                     state={state}
                     selectedCourse={selectedCourse}
                     theme={theme}

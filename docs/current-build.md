@@ -1,5 +1,6 @@
-# OutClass 0.5.0 Windows and Udemy preview
+# OutClass current build — 0.7 Windows preview
 
+October 13, 2026: [OutClass 0.7](releases/0.7.0.md) supersedes the older delivery snapshot below. It adds OffCourse, the Architect notebook, adjustable layouts, a full desktop terminal, provider selection and an editor companion. [Workspace evolution](workspace-evolution.md) records the architecture and current validation. Hosted included AI is prepared for accounts to be connected later.
 The active-learning preview adds personal directions, changed-requirement tasks, project milestones, guarded hints, bounded input, video-linked checkpoints, impact review and Learning Ledgers. See [implemented scope](active-learning-release.md) and [0.5.0 release notes](releases/0.5.0.md). The following 0.4 descriptions provide the compatible foundation.
 
 Previously GitLearn. The 0.4.2 release adds the OutClass identity and a new static homepage with GSAP scroll storytelling. Existing files, history, pairing, and saved-data locations remain compatible. The existing GitHub repository is now [aayups31/OutClass](https://github.com/aayups31/OutClass). On October 11, the same Chrome item was updated and resubmitted as OutClass 0.4.2; Google confirms Pending review. Practical-learning functionality and its bounded v1 scope are unchanged by the rename. [The next-release priorities](next-release.md) describe the proposed follow-up.

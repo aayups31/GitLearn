@@ -45,6 +45,10 @@ export function workspaceFeatures(
   );
   const id = z.string().uuid();
   web.get("/api/notebook", (_req, res) => res.json(notebook.status()));
+  web.get("/api/notebook-launch", (_req, res) => {
+    const d = notebook.status();
+    res.json({ launchPrompt: d.launchPrompt, reviewDue: d.reviewDue });
+  });
   web.post("/api/notebook-preferences", (req, res) =>
     res.json(
       notebook.preferences(

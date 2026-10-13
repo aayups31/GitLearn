@@ -13,16 +13,19 @@ import {
 import type { DesktopEnvironment } from "../desktop/bridge";
 import type { Status } from "../shared";
 import "./onboarding.css";
+import { AIAccessSettings } from "./ai-access";
 
 type Request = <T>(route: string, body?: unknown) => Promise<T>;
 export function Onboarding({
   state,
   request,
   onDone,
+  onRefresh,
 }: {
   state: Status;
   request: Request;
   onDone: () => void;
+  onRefresh: () => Promise<unknown>;
 }) {
   const [step, setStep] = useState(() => {
     try {
@@ -223,9 +226,10 @@ export function Onboarding({
               <div className="eyebrow">OPTIONAL, ON YOUR TERMS</div>
               <h2>A little help when you need it.</h2>
               <p>
-                Add your OpenAI API key for code help and answers from course
-                material you import. Selected context goes to OpenAI when you
-                use AI. API usage is billed to your OpenAI account.
+                OffCourse helps you reason about your code and course material.
+                Use a personal key, a local model, or included AI when its
+                hosted service is connected. You can also keep learning without
+                AI.
               </p>
               {state.hasApiKey || environment?.hasSavedKey ? (
                 <div className="onboarding-ready">
@@ -261,11 +265,10 @@ export function Onboarding({
                         await window.gitLearnDesktop!.setApiKey(key.trim());
                         setKey("");
                       }
-                      if (
-                        key.trim() ||
-                        state.hasApiKey ||
-                        environment?.hasSavedKey
-                      )
+                      const connection = await request<{ ready: boolean }>(
+                        "ai-access",
+                      );
+                      if (connection.ready)
                         await request("assistant-enable", { enabled: true });
                       setStep(3);
                     })
@@ -273,7 +276,7 @@ export function Onboarding({
                 >
                   {busy
                     ? "Saving…"
-                    : key.trim() || state.hasApiKey
+                    : key.trim() || (state.hasAI ?? state.hasApiKey)
                       ? "Continue with AI help"
                       : "Continue without AI"}
                   <ArrowRight size={16} />
@@ -283,6 +286,14 @@ export function Onboarding({
                 You can add or remove your key later in Workspace settings.
                 Commit-message AI has its own separate switch.
               </p>
+              <details className="onboarding-ai-options">
+                <summary>Use a local model or connect included AI</summary>
+                <AIAccessSettings
+                  api={request}
+                  enabled={!!state.settings.assistantEnabled}
+                  onRefresh={onRefresh}
+                />
+              </details>
             </>
           )}
           {step === 3 && (

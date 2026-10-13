@@ -28,12 +28,20 @@ export function LaunchIdeaPrompt({
   api: Api;
   onOpen: () => void;
 }) {
-  const [data, setData] = useState<NotebookState>(),
+  const [data, setData] =
+      useState<Pick<NotebookState, "launchPrompt" | "reviewDue">>(),
     [dismissed, setDismissed] = useState(false);
   useEffect(() => {
-    void api<NotebookState>("notebook")
-      .then(setData)
-      .catch(() => {});
+    const refresh = () =>
+      void api<Pick<NotebookState, "launchPrompt" | "reviewDue">>(
+        "notebook-launch",
+      )
+        .then(setData)
+        .catch(() => {});
+    refresh();
+    window.addEventListener("outclass-notebook-changed", refresh);
+    return () =>
+      window.removeEventListener("outclass-notebook-changed", refresh);
   }, []);
   if (!data?.launchPrompt || dismissed) return null;
   return (
@@ -47,7 +55,14 @@ export function LaunchIdeaPrompt({
             : "Capture a new thought, or take an existing idea a little further."}
         </p>
       </div>
-      <button onClick={onOpen}>Open idea notebook ↗</button>
+      <button
+        onClick={() => {
+          setDismissed(true);
+          onOpen();
+        }}
+      >
+        Open idea notebook ↗
+      </button>
       <button
         aria-label="Dismiss launch idea prompt"
         onClick={() => setDismissed(true)}
@@ -114,6 +129,7 @@ export function ArchitectNotebook({
     try {
       await fn();
       await load();
+      window.dispatchEvent(new Event("outclass-notebook-changed"));
     } catch (e) {
       setError(
         e instanceof Error
@@ -152,6 +168,7 @@ export function ArchitectNotebook({
         <strong>The Architect</strong>
         <select
           aria-label="Idea project"
+          disabled={busy}
           value={selected}
           onChange={(e) => setSelected(e.target.value)}
         >

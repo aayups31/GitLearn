@@ -4,13 +4,15 @@ Previously GitLearn. Break free from tutorial hell. OutClass the lesson.
 
 A local learning workspace that turns Udemy lessons into your own code, practical attempts, sourced guidance, and reviewed work.
 
+The **0.7 preview** adds OffCourse, a separate software Architect with project notebooks and idea reviews, adjustable panels, a full local terminal, optional local-model support, and an installable VS Code / Code OSS companion. Supabase + Stripe included AI is prepared for account connection; public sign-in and subscriptions are not activated. See [0.7 features and setup](docs/releases/0.7.0.md) and [hosted AI deployment](services/ai/README.md).
+
 [Next release priorities](docs/next-release.md): validate real Udemy use, improve relevant during-course practice, verify transfer with changed requirements, and guide a small project into responsible contribution work.
 
 ## Start
 
 **Windows desktop preview:** download the installer from [GitHub Releases](https://github.com/aayups31/OutClass/releases), open OutClass, and follow its first-run setup. Choose one parent learning folder; OutClass creates practice and history folders for each course automatically. JavaScript's runtime is bundled. Git for Windows is required for checkpoints; Python is optional for Python lessons. VS Code and GitHub remain optional.
 
-The [public website and setup guide](https://git-learn-black.vercel.app/) are live on Vercel. The actual editor, courses, RAG assistant, and setup live in the Windows desktop app. See [desktop architecture and packaging](docs/desktop-release.md) and [Chrome store release](docs/chrome-web-store.md). The OutClass 0.4.2 store item remains pending review. Use the current preview ZIP with Load unpacked for current preview features until an updated store package is approved.
+The [public website and setup guide](https://git-learn-black.vercel.app/) are live on Vercel. The actual editor, courses, RAG assistant, and setup live in the Windows desktop app. See [desktop architecture and packaging](docs/desktop-release.md) and [Chrome store release](docs/chrome-web-store.md). The last verified store status (October 11) for OutClass 0.4.2 was pending review. Use the current preview ZIP with Load unpacked for current preview features until an updated store package is approved.
 
 On this Windows machine, double-click **Start OutClass.cmd**. It starts the companion in the background and opens the app at [http://127.0.0.1:47831](http://127.0.0.1:47831).
 

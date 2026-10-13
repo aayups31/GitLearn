@@ -54,7 +54,11 @@ export class AIProvider {
   private refreshPromise?: Promise<void>;
   constructor(private app: Application) {}
   config(): AIConfig {
-    return { ...defaults, ...this.app.store.get<AIConfig>("ai:config") };
+    return {
+      ...defaults,
+      service: process.env.OUTCLASS_AI_SERVICE || defaults.service,
+      ...this.app.store.get<AIConfig>("ai:config"),
+    };
   }
   ready() {
     const c = this.config();
@@ -74,6 +78,7 @@ export class AIProvider {
     };
   }
   configure(input: AIConfig) {
+    input.localModel = input.localModel.trim();
     input.service = input.service ? endpoint(input.service) : "";
     input.localEndpoint = endpoint(input.localEndpoint, true);
     assertClean(input.localModel, "model name");

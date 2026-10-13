@@ -131,6 +131,23 @@ it("pairs an editor with one course, excludes local privileges and supports revo
   expect((await post("ai-config", { mode: "local" }, token)).status).toBe(403);
   expect((await post("editor-pair", { code }, "")).status).toBe(401);
   const connection = store.get<any[]>("editorConnections")![0];
+  await post("workspace-file", {
+    sessionId: store.state().session!.id,
+    path: "main.js",
+    content: "console.log('EDITOR_PROOF');",
+    version: null,
+  });
+  const execution = await post(
+    "editor-run",
+    { courseId: "one", path: "main.js" },
+    token,
+  );
+  expect(execution.status).toBe(200);
+  expect((await execution.json()).output).toContain("EDITOR_PROOF");
+  expect(
+    (await post("editor-run", { courseId: "two", path: "main.js" }, token))
+      .status,
+  ).toBe(403);
   await post("editor-revoke", { id: connection.id });
   expect(
     (

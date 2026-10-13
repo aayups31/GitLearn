@@ -61,5 +61,7 @@ if (process.argv.includes("--staged")) {
   }
 }
 console.log(
-  "Verified: configured API keys and environment files are absent from website, extension, desktop archive/resources, and requested staged source.",
+  process.argv.includes("--source-only")
+    ? "Verified: configured API keys are absent from the requested staged source."
+    : "Verified: configured API keys and environment files are absent from website, extension, desktop archive/resources, and requested staged source.",
 );
