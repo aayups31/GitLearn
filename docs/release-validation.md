@@ -1,5 +1,21 @@
 # OutClass preview verification
 
+## October 13: 0.7.1 connected learning
+
+- The full backend candidate passed 122 tests in 19 files. After the final evidence-based fallback refinement, all 34 focused teacher/provider/library/gateway tests passed, including the added fallback case. TypeScript and the final production build passed.
+- Sixteen distinct browser workflows passed across the full regression and final reruns. These include actual extension pairing/replay, course isolation, checkpoint review, language projects, saved/external edits, citations, adjustable panels, notebooks, and the new included-AI learning loop. The latter uses a real local gateway with injected account/model dependencies: wrong-code recovery, no learner API key, actual failed checks, progressive guidance, stale-code refusal, outage refund/retry, reflection, transfer and the personal path. Teacher/Run controls are disabled while a deliberately delayed check request is in progress. UI assertions wait for actual task creation and target the output/header precisely.
+- All three packaged Windows scenarios passed: encrypted included-AI account restore/sign-out; first-run setup, encrypted personal key, JavaScript execution, restart/resume, notes, practice and project commands; and the native terminal's interactive input, resizing, multiple sessions and child-process shutdown. A restart assertion initially raced page startup; it now waits for the actual local URL and restored editor.
+- Eight live synthetic teacher cases passed the final response pipeline's mechanical smoke rubric. The earlier evaluations exposed missing diagnostic questions and replacement code; prompt and application guards were corrected. One final raw response required the replacement guard. The fallback was subsequently strengthened with actual check/error evidence and unit-tested. These checks do not establish learning outcomes or universal semantic solution detection. Live calls used only synthetic material; no learner source was sent. [Official evaluation guidance](https://developers.openai.com/api/docs/guides/evaluation-best-practices) informed the case-based checks.
+- The final website, extension, desktop ASAR/resources, VSIX and tracked source passed configured-key/environment-file exclusion scans. The installer is unsigned. Public Supabase email, PostgreSQL reservations and Stripe checkout/webhook staging remain deferred until owner accounts are connected; fixtures do not verify those external services. Live authenticated Udemy layouts and learner trials remain a product validation step.
+
+Built assets:
+
+| Artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| OutClass-Setup-0.7.1.exe | 120,076,999 | `36f6817fe930419a8dd794b56a9ad701f687adfbe4cd13506d1e99e79c4f8e54` |
+| OutClass-Chrome-0.7.1.zip | 135,298 | `7cd9627a4f8eb1da56415b3b4c8a50c0b492dfe40a73d4315fb6a6e1f4af3055` |
+| OutClass-Editor-0.7.1.vsix | 8,732 | `a14b6094a65bf6b07672a1c7c5bff01339d3dd80d2694c69e10e06a9b583a74a` |
+
 ## October 11: repository and Chrome listing rename
 
 - GitHub renamed the existing repository to `aayups31/OutClass`; its repository ID and Git history match the original. The local origin, site download links and allowlist, release tooling, and publisher metadata use the new URL.

@@ -191,9 +191,26 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
       .toBe(false);
     desktop = await electron.launch({ args, executablePath, env });
     reopened = await desktop.firstWindow();
-    await expect(
-      reopened.getByRole("textbox", { name: "Code editor" }),
-    ).toContainText("Bundled desktop runtime");
+    await expect(reopened).toHaveURL("http://127.0.0.1:47834/", {
+      timeout: 15000,
+    });
+    await expect(reopened.getByRole("textbox", { name: "Code editor" }))
+      .toContainText("Bundled desktop runtime", { timeout: 15000 })
+      .catch(async (error) => {
+        await reopened.screenshot({
+          path: ".local/design/desktop-restart-diagnostic.png",
+        });
+        console.log(
+          "Restart diagnostic",
+          await reopened.evaluate(() => ({
+            url: location.href,
+            title: document.title,
+            text: document.body.innerText.slice(0, 3000),
+            setupStep: localStorage.getItem("gitlearn-setup-step"),
+          })),
+        );
+        throw error;
+      });
     await expect(
       reopened.getByLabel("Program output", { exact: true }),
     ).toContainText("Bundled desktop runtime 42");

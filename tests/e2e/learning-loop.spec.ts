@@ -250,6 +250,9 @@ test("included sign-in, lesson practice, actual failure, teacher, stale guard, r
     fullPage: true,
   });
   await page.getByRole("button", { name: "Try a changed requirement" }).click();
+  await expect(page.locator(".task-guide > summary")).toContainText(
+    "unexpected price inputs",
+  );
   await expect(editor).toContainText("discountedPrice");
   expect(store.get<any[]>("practice:tasks")![0].transferOf).toBeTruthy();
   expect(store.get<any[]>("practice:tasks")![1].reflection).toContain(
