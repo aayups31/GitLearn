@@ -177,12 +177,12 @@ export function SetupDiagnostics({
             ]),
         [
           "Learning assistant",
-          result.hasApiKey && result.assistantEnabled,
-          !result.hasApiKey
-            ? "Add your API key to enable AI. Coding and checkpoints work locally."
+          (result.hasAI ?? result.hasApiKey) && result.assistantEnabled,
+          !(result.hasAI ?? result.hasApiKey)
+            ? "Choose Included AI, your own key or a local model below. Coding and checkpoints work locally."
             : result.assistantEnabled
-              ? "Key configured · assistant enabled"
-              : "Key configured · enable the assistant in Code & Learn",
+              ? "AI connected · guides enabled"
+              : "AI connected · enable guides below",
         ],
         [
           "Udemy extension",

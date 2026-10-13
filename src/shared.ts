@@ -101,6 +101,7 @@ export interface Diagnostics {
   historyWritable: boolean;
   workspaceWritable: boolean | null;
   hasApiKey: boolean;
+  hasAI?: boolean;
   assistantEnabled: boolean;
   extensionConnected: boolean;
 }

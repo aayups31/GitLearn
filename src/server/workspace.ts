@@ -323,6 +323,7 @@ export class Workspace {
       historyWritable,
       workspaceWritable,
       hasApiKey: !!this.app.apiKey,
+      hasAI: this.app.ai.ready(),
       assistantEnabled: !!state.settings.assistantEnabled,
       extensionConnected: !!this.app.store.get("extensionToken"),
     };

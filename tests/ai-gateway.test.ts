@@ -75,6 +75,24 @@ it("requires a verified account, reserves allowance before inference and blocks 
     remaining: 0,
   });
 });
+it("reports email-delivery failures without exposing SMTP credentials", async () => {
+  const f = await fixture({
+    auth: vi.fn(async () => {
+      throw Error("private SMTP password");
+    }),
+  });
+  const invalid = await f.post("/v1/auth/email", { email: "invalid" });
+  expect(invalid.status).toBe(400);
+  expect(f.deps.auth).not.toHaveBeenCalled();
+  const failed = await f.post("/v1/auth/email", {
+    email: "learner@example.com",
+  });
+  expect(failed.status).toBe(503);
+  const body = await failed.text();
+  expect(body).toContain("email could not be sent");
+  expect(body).not.toContain("SMTP");
+  expect(body).not.toContain("password");
+});
 it("passes the exact raw Stripe payload and distinguishes invalid signatures from retryable failures", async () => {
   const webhook = vi.fn(async (_body: Buffer, _signature: string) => {});
   const f = await fixture({ webhook });

@@ -1921,22 +1921,20 @@ function Setup({
                 AI-assisted commit messages
               </strong>
               <p>
-                Send a small, secret-scanned diff to OpenAI. Optional; local
-                saving works without it.
+                Send a small, secret-scanned diff to your selected AI
+                connection. Optional; local saving works without it.
               </p>
               <small>
-                {state.hasApiKey
-                  ? "Your API key is configured in the local companion."
-                  : window.gitLearnDesktop
-                    ? "Add your key above to enable this."
-                    : "No API key configured. Add it to .env and restart to enable this."}
+                {(state.hasAI ?? state.hasApiKey)
+                  ? "Your selected AI connection is ready."
+                  : "Connect Included AI, a personal key or a local model above to enable this."}
               </small>
             </div>
             <input
               role="switch"
               type="checkbox"
               checked={ai}
-              disabled={!state.hasApiKey}
+              disabled={!(state.hasAI ?? state.hasApiKey)}
               onChange={(event) => setAi(event.target.checked)}
             />
           </label>

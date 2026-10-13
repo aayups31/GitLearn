@@ -21,7 +21,7 @@ export async function describe(
       message: fallback,
       aiUsed: false,
       aiNotice: enabled
-        ? "No API key configured. Saved with a clear default message."
+        ? "No AI connection is ready. Saved with a clear default message."
         : undefined,
     };
   const input = JSON.stringify(context);

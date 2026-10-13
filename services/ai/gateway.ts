@@ -210,10 +210,13 @@ export function createGateway(deps: GatewayDependencies) {
         return;
       }
       res.json(await deps.auth(route, body));
-    } catch {
-      res.status(400).json({
-        error:
-          "Sign-in could not be completed. Check the code or request another email.",
+    } catch (error) {
+      const deliveryFailed =
+        req.params.action === "email" && !(error instanceof z.ZodError);
+      res.status(deliveryFailed ? 503 : 400).json({
+        error: deliveryFailed
+          ? "Your sign-in email could not be sent. Retry shortly; if this continues, contact OutClass support."
+          : "Sign-in could not be completed. Check the code or request another email.",
       });
     }
   });

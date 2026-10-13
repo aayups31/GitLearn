@@ -25,12 +25,22 @@ export default async function handler(
     const code = (error as { code?: unknown })?.code;
     const hostname = (error as { hostname?: unknown })?.hostname;
     console.error("OutClass service initialization failed", {
-      code: typeof code === "string" && /^[A-Z0-9_]{1,60}$/.test(code) ? code : "INITIALIZATION",
-      settings: error instanceof Error && error.message.startsWith("Configure AI service settings:")
-        ? error.message.replace("Configure AI service settings: ", "").split(", ")
-        : undefined,
-      databaseHost: typeof hostname === "string" && /^[a-z0-9.-]+\.supabase\.(com|co)$/.test(hostname)
-        ? hostname : undefined,
+      code:
+        typeof code === "string" && /^[A-Z0-9_]{1,60}$/.test(code)
+          ? code
+          : "INITIALIZATION",
+      settings:
+        error instanceof Error &&
+        error.message.startsWith("Configure AI service settings:")
+          ? error.message
+              .replace("Configure AI service settings: ", "")
+              .split(", ")
+          : undefined,
+      databaseHost:
+        typeof hostname === "string" &&
+        /^[a-z0-9.-]+\.supabase\.(com|co)$/.test(hostname)
+          ? hostname
+          : undefined,
     });
     res.statusCode = 503;
     res.setHeader("Content-Type", "application/json");
