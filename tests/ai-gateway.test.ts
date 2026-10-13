@@ -149,3 +149,18 @@ it("handles passwordless sign-in without returning or storing the provider API k
     ).status,
   ).toBe(400);
 });
+it("treats malformed model output as a service failure, refunds it and allows another attempt", async () => {
+  const f = await fixture({
+    answer: vi
+      .fn()
+      .mockResolvedValue({ answer: "Incomplete provider response" }),
+  });
+  const input = { task: "teacher", context: "lesson", history: [] };
+  expect((await f.post("/v1/answer", input)).status).toBe(503);
+  expect(f.deps.allowance.refund).toHaveBeenCalledOnce();
+  vi.mocked(f.deps.answer).mockResolvedValue({
+    answer: "What result do you predict?",
+    citations: [],
+  });
+  expect((await f.post("/v1/answer", input)).status).toBe(200);
+});

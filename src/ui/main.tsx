@@ -112,6 +112,7 @@ function App() {
   const [note, setNote] = useState("");
   const [selectedCourse, setSelectedCourse] = useState<string>();
   const [draftDirty, setDraftDirty] = useState(false);
+  const [practiceTab, setPracticeTab] = useState("practice");
   function navigate(next: Page, courseId?: string) {
     if (
       draftDirty &&
@@ -324,7 +325,7 @@ function App() {
           <div className="connection">
             <span className={state ? "dot" : "dot offline"} />
             {state ? "Companion connected" : "Connecting…"}
-            <span className="version">v0.7</span>
+            <span className="version">v0.7.1</span>
           </div>
         </div>
       </aside>
@@ -462,7 +463,14 @@ function App() {
                     sessionNote={note}
                     onNoteChange={setNote}
                     busy={!!busy}
-                    onPractice={() => navigate("practice")}
+                    onPractice={() => {
+                      setPracticeTab("practice");
+                      navigate("practice");
+                    }}
+                    onPath={() => {
+                      setPracticeTab("path");
+                      navigate("practice");
+                    }}
                     onLive={() => navigate("live")}
                   />
                 </Suspense>
@@ -832,6 +840,7 @@ function App() {
                   state={state}
                   api={request}
                   onRefresh={refresh}
+                  initialTab={practiceTab}
                   onCode={(id) => {
                     void refresh().then((next) => {
                       setNote(next.session?.note || "");

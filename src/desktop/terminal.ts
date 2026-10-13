@@ -34,6 +34,11 @@ export class LocalTerminals {
         "Reopen your approved course workspace before starting a terminal.",
       );
     const { spawn } = await import("node-pty");
+    // Several IPC requests may have passed the first check while resolving cwd.
+    if (this.sessions.size >= 6)
+      throw new Error(
+        "Close a terminal before opening another (six sessions maximum).",
+      );
     const env = Object.fromEntries(
       Object.entries(process.env).filter(
         ([name, value]) =>

@@ -263,12 +263,10 @@ export function createGateway(deps: GatewayDependencies) {
         if (!reserved) {
           const available = await deps.allowance.usage(user);
           if (available.remaining > 0) {
-            res
-              .status(503)
-              .json({
-                error:
-                  "Included AI is at service capacity right now. Your allowance was not charged. Retry later or use a personal key/local model.",
-              });
+            res.status(503).json({
+              error:
+                "Included AI is at service capacity right now. Your allowance was not charged. Retry later or use a personal key/local model.",
+            });
             return;
           }
           res.status(402).json({
@@ -290,7 +288,7 @@ export function createGateway(deps: GatewayDependencies) {
       }
     } catch (e) {
       if (reserved) await deps.allowance.refund(user, id).catch(() => {});
-      if (e instanceof z.ZodError)
+      if (e instanceof z.ZodError && !reserved)
         res.status(400).json({ error: "This learning request was not valid." });
       else next(e);
     }

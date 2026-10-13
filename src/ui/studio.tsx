@@ -44,6 +44,8 @@ import { ProjectConsole, TaskGuide, PracticePrompt } from "./practical";
 import { Divider, useWorkspaceLayout } from "./workspace-layout";
 import { IntegratedTerminal } from "./terminal";
 import { ArchitectNotebook, type NotebookState } from "./notebook";
+import { SessionDirection } from "./session-direction";
+import type { PracticeTask } from "../server/practice";
 
 type Api = <T>(route: string, body?: unknown) => Promise<T>;
 type File = {
@@ -272,6 +274,7 @@ export function Studio({
   onNoteChange,
   busy,
   onPractice,
+  onPath,
   onLive,
 }: {
   state: Status;
@@ -288,6 +291,7 @@ export function Studio({
   onNoteChange: (value: string) => void;
   busy: boolean;
   onPractice: () => void;
+  onPath: () => void;
   onLive: () => void;
 }) {
   const course =
@@ -317,6 +321,8 @@ export function Studio({
     [tutorStyle, setTutorStyle] = useState<"hint" | "explain">("hint"),
     [cursor, setCursor] = useState(0);
   const [projectRunning, setProjectRunning] = useState(false);
+  const [workspaceRevision, setWorkspaceRevision] = useState(0);
+  const [taskWorking, setTaskWorking] = useState(false);
   const [sharedProjects, setSharedProjects] = useState<
       NotebookState["projects"]
     >([]),
@@ -578,7 +584,7 @@ export function Studio({
   const run = () =>
     safe("run", async () => {
       if (!session || !file || running) return;
-      await saveFile();
+      for (const name of Object.keys(drafts)) await saveFile(name);
       if (/\.html?$/i.test(active)) {
         const result = await api<{ url: string }>("workspace-preview", {
           sessionId: session.id,
@@ -602,6 +608,7 @@ export function Studio({
         setOutput(result.output || "Program finished without output.");
         setExitCode(result.exitCode);
         setLastRun(result.run);
+        setWorkspaceRevision((v) => v + 1);
       } finally {
         setRunning(false);
       }
@@ -668,6 +675,21 @@ export function Studio({
       setQuestion("");
       await onRefresh();
     });
+  const guideQuestion = (q: string) => {
+    setMode("help");
+    setTutorStyle("hint");
+    setQuestion(q);
+    setAttachedRun(false);
+    setRightTab("chat");
+    setMobileTab("assistant");
+    updateLayout({ hideAssistant: false });
+  };
+  const taskChanged = async (path?: string) => {
+    await loadFiles();
+    if (path) await openFile(path);
+    setWorkspaceRevision((v) => v + 1);
+    await onRefresh();
+  };
   if (!state.settings.configured)
     return (
       <div className="studio-welcome">
@@ -860,29 +882,45 @@ export function Studio({
               </div>
             ) : (
               <>
+                <SessionDirection
+                  api={api}
+                  courseId={course.id}
+                  changed={workspaceRevision}
+                  onWorking={setTaskWorking}
+                  blocked={running || projectRunning}
+                  onOpen={onPath}
+                />
                 <PracticePrompt
                   api={api}
                   courseId={course.id}
-                  changed={lastRun?.id}
+                  changed={`${lastRun?.id}:${workspaceRevision}`}
+                  quietAfterTask
                   onOpen={onPractice}
                   onLive={onLive}
+                  onStart={async (exerciseId) => {
+                    for (const name of Object.keys(drafts))
+                      await saveFile(name);
+                    const task = await api<PracticeTask>("practice-start", {
+                      courseId: course.id,
+                      exerciseId,
+                    });
+                    await taskChanged(task.path);
+                  }}
                 />
                 <TaskGuide
                   api={api}
                   sessionId={session.id}
                   courseId={course.id}
                   workspace={session.workspace}
+                  changed={workspaceRevision}
+                  onChanged={taskChanged}
+                  onOpenFile={(path) => void safe("open", () => openFile(path))}
+                  onPath={onPath}
                   beforeCheck={async () => {
                     for (const name of Object.keys(drafts))
                       await saveFile(name);
                   }}
-                  onAsk={(q) => {
-                    setMode("help");
-                    setTutorStyle("hint");
-                    setQuestion(q);
-                    setRightTab("chat");
-                    setMobileTab("assistant");
-                  }}
+                  onAsk={guideQuestion}
                 />
               </>
             )}
@@ -900,7 +938,13 @@ export function Studio({
                   New file
                 </button>
                 <button
-                  disabled={!file || !!action || running || projectRunning}
+                  disabled={
+                    !file ||
+                    !!action ||
+                    running ||
+                    projectRunning ||
+                    taskWorking
+                  }
                   onClick={() =>
                     safe("save", async () => {
                       await saveFile();
@@ -916,7 +960,13 @@ export function Studio({
                 </button>
                 <button
                   className="run-button"
-                  disabled={!file || !!action || running || projectRunning}
+                  disabled={
+                    !file ||
+                    !!action ||
+                    running ||
+                    projectRunning ||
+                    taskWorking
+                  }
                   onClick={run}
                 >
                   <Play size={13} />
@@ -1117,6 +1167,10 @@ export function Studio({
                 sessionId={session.id}
                 onRunning={setProjectRunning}
                 onFilesChanged={loadFiles}
+                beforeCommand={async () => {
+                  for (const name of Object.keys(drafts)) await saveFile(name);
+                }}
+                onAsk={guideQuestion}
               />
               <details className="studio-notes">
                 <summary>
@@ -1601,7 +1655,7 @@ export function Studio({
                   className={`chat-message ${message.role}`}
                 >
                   <div className="message-label">
-                    {message.role === "user" ? "You" : "OutClass"}
+                    {message.role === "user" ? "You" : "OffCourse"}
                     {message.role === "assistant" && (
                       <small>
                         {message.mode === "grounded"
@@ -1615,6 +1669,30 @@ export function Studio({
                     )}
                   </div>
                   <Answer text={message.text} />
+                  {message.recovery && (
+                    <div className="assistant-recovery">
+                      {message.recovery === "ai-settings" ? (
+                        <button onClick={onSetup}>
+                          Review AI connection <ArrowUpRight size={12} />
+                        </button>
+                      ) : (
+                        <button
+                          disabled={chatBusy}
+                          onClick={() => {
+                            const index = library.messages.findIndex(
+                              (m) => m.id === message.id,
+                            );
+                            const previous = library.messages[index - 1];
+                            if (previous?.role === "user") {
+                              guideQuestion(previous.text);
+                            }
+                          }}
+                        >
+                          Try this question again <RefreshCw size={12} />
+                        </button>
+                      )}
+                    </div>
+                  )}
                   {!!message.sources?.length && (
                     <div className="answer-sources">
                       {message.sources.map((source, i) => (
@@ -1645,7 +1723,7 @@ export function Studio({
               className="chat-composer"
               onSubmit={(event) => {
                 event.preventDefault();
-                if (!chatBusy && library?.enabled) ask();
+                if (!chatBusy && !taskWorking && library?.enabled) ask();
               }}
             >
               {!library?.enabled && !!library?.messages.length && (
@@ -1746,6 +1824,7 @@ export function Studio({
                     event.key === "Enter" &&
                     !event.shiftKey &&
                     !chatBusy &&
+                    !taskWorking &&
                     library?.enabled
                   ) {
                     event.preventDefault();
@@ -1783,7 +1862,14 @@ export function Studio({
                 <button
                   type="submit"
                   aria-label="Send question"
-                  disabled={!library?.enabled || chatBusy || !question.trim()}
+                  disabled={
+                    !library?.enabled ||
+                    chatBusy ||
+                    taskWorking ||
+                    running ||
+                    projectRunning ||
+                    !question.trim()
+                  }
                 >
                   {chatBusy ? (
                     <Loader2 className="spin" size={16} />

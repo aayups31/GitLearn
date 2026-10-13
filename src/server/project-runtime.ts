@@ -57,6 +57,22 @@ export class ProjectRuntime {
   records() {
     return this.app.store.get<CommandRecord[]>("project:commands") || [];
   }
+  context(courseId: string) {
+    const session = this.app.store.state().session;
+    if (session?.courseId !== courseId) return undefined;
+    const record = this.records().find(
+      (r) => r.courseId === courseId && r.workspace === session.workspace,
+    );
+    if (!record) return undefined;
+    return {
+      command: record.command,
+      output: record.output.slice(-6000),
+      exitCode: record.exitCode,
+      state: record.state,
+      truncated: record.truncated || record.output.length > 6000,
+      finishedAt: record.finishedAt,
+    };
+  }
   async scaffold(
     sessionId: string,
     kind: ProjectKind,

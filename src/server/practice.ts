@@ -805,15 +805,23 @@ export class Practice {
     this.persist(task);
     return { hint, level: Math.min(task.hints, 3) };
   }
-  context(courseId: string) {
-    const task = this.tasks().find(
-      (t) => t.courseId === courseId && t.status === "active",
-    );
+  context(courseId: string, selectedPath?: string) {
+    const task =
+      this.tasks().find(
+        (t) => t.courseId === courseId && t.status === "active",
+      ) ||
+      this.tasks().find(
+        (t) =>
+          t.courseId === courseId &&
+          t.status === "completed" &&
+          t.path === selectedPath,
+      );
     const session = this.app.store.state().session;
     if (!task || session?.workspace !== task.workspace) return undefined;
     const { starter, hints, ...exercise } = this.exercise(task.exerciseId);
     return {
       taskId: task.id,
+      status: task.status,
       exercise,
       reflection: task.reflection,
       latestAttempt: task.attempts[0],

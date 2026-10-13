@@ -18,18 +18,30 @@ export function AIAccessSettings({
   enabled: boolean;
 }) {
   const [access, setAccess] = useState<Access>(),
+    [savedAccess, setSavedAccess] = useState<Access>(),
     [usage, setUsage] = useState<AIUsage>(),
     [email, setEmail] = useState(""),
     [code, setCode] = useState(""),
     [sent, setSent] = useState(false),
+    [pendingEmail, setPendingEmail] = useState(""),
+    [usageNotice, setUsageNotice] = useState(""),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState("");
   const load = async () => {
     const a = await api<Access>("ai-access");
     setAccess(a);
-    if (a.mode === "included" && a.account)
-      setUsage(await api<AIUsage>("ai-usage"));
-    else setUsage(undefined);
+    setSavedAccess(a);
+    setUsage(undefined);
+    setUsageNotice("");
+    if (a.mode === "included" && a.account) {
+      try {
+        setUsage(await api<AIUsage>("ai-usage"));
+      } catch (e) {
+        setUsageNotice(
+          e instanceof Error ? e.message : "Allowance could not be refreshed.",
+        );
+      }
+    }
   };
   useEffect(() => {
     void load().catch((e) => setNotice(e.message));
@@ -49,7 +61,29 @@ export function AIAccessSettings({
       setBusy(false);
     }
   };
-  if (!access) return null;
+  if (!access)
+    return (
+      <section className="setup-card ai-access">
+        <h2>AI connections</h2>
+        <p role="status">{notice || "Loading your saved connection…"}</p>
+        {notice && (
+          <button
+            className="button secondary"
+            onClick={() => void act(load)}
+            disabled={busy}
+          >
+            Retry connection settings
+          </button>
+        )}
+      </section>
+    );
+  const saved =
+    !!savedAccess &&
+    access.mode === savedAccess.mode &&
+    access.service === savedAccess.service &&
+    access.localEndpoint === savedAccess.localEndpoint &&
+    access.localModel === savedAccess.localModel;
+  const connected = saved && !!savedAccess?.ready;
   return (
     <section className="setup-card ai-access">
       <div className="setup-heading">
@@ -64,6 +98,21 @@ export function AIAccessSettings({
           </p>
         </div>
       </div>
+      <div
+        className={`ai-connection-state ${connected && enabled ? "ready" : ""}`}
+        role="status"
+      >
+        <span />
+        {!saved
+          ? "Unsaved connection changes"
+          : connected
+            ? enabled
+              ? "AI guides are on"
+              : "Connected · guides are off"
+            : access.mode === "included" && !access.service
+              ? "Included AI is awaiting public setup"
+              : "Finish connecting your AI"}
+      </div>
       <div className="ai-options" role="group" aria-label="AI connection type">
         {(
           [
@@ -75,7 +124,14 @@ export function AIAccessSettings({
           <button
             key={mode}
             className={access.mode === mode ? "selected" : ""}
-            onClick={() => setAccess({ ...access, mode })}
+            disabled={busy}
+            aria-pressed={access.mode === mode}
+            onClick={() => {
+              setAccess({ ...access, mode });
+              setSent(false);
+              setCode("");
+              setNotice("");
+            }}
           >
             {label}
           </button>
@@ -87,17 +143,24 @@ export function AIAccessSettings({
             Sign in without owning an AI provider key. The hosted service
             receives the relevant context you send with each question.
           </p>
-          <label>
-            Included AI service
-            <input
-              type="url"
-              value={access.service}
-              onChange={(e) =>
-                setAccess({ ...access, service: e.target.value })
-              }
-              placeholder="https://your-outclass-ai-service.example"
-            />
-          </label>
+          <details
+            className="ai-service-details"
+            open={!access.service || undefined}
+          >
+            <summary>Advanced service connection</summary>
+            <label>
+              Included AI service
+              <input
+                type="url"
+                value={access.service}
+                onChange={(e) =>
+                  setAccess({ ...access, service: e.target.value })
+                }
+                placeholder="https://your-outclass-ai-service.example"
+                disabled={busy || !!access.account || sent}
+              />
+            </label>
+          </details>
           {!access.service && (
             <p className="hint">
               Public included AI is awaiting account setup. Personal keys and
@@ -113,6 +176,11 @@ export function AIAccessSettings({
                 <p>
                   {usage.remaining} of {usage.limit} answers remaining ·{" "}
                   {usage.plan} plan · resets monthly ({usage.period})
+                </p>
+              )}
+              {usageNotice && (
+                <p role="status" className="hint">
+                  {usageNotice}
                 </p>
               )}
               <div className="onboarding-actions">
@@ -165,6 +233,7 @@ export function AIAccessSettings({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
+                  disabled={busy || sent}
                 />
               </label>
               <button
@@ -173,12 +242,17 @@ export function AIAccessSettings({
                 onClick={() =>
                   void act(async () => {
                     await api("ai-config", access);
-                    await api("ai-sign-in", { email });
+                    const address = email.trim();
+                    await api("ai-sign-in", { email: address });
+                    setPendingEmail(address);
                     setSent(true);
+                    setNotice(
+                      `A sign-in code was requested for ${address}. Check your email, including spam.`,
+                    );
                   })
                 }
               >
-                Email a sign-in code
+                {sent ? "Resend sign-in code" : "Email a sign-in code"}
               </button>
               {sent && (
                 <>
@@ -189,7 +263,10 @@ export function AIAccessSettings({
                       inputMode="numeric"
                       autoComplete="one-time-code"
                       maxLength={8}
-                      onChange={(e) => setCode(e.target.value)}
+                      disabled={busy}
+                      onChange={(e) =>
+                        setCode(e.target.value.replace(/\D/g, ""))
+                      }
                     />
                   </label>
                   <button
@@ -197,13 +274,27 @@ export function AIAccessSettings({
                     disabled={busy || !/^\d{6,8}$/.test(code)}
                     onClick={() =>
                       void act(async () => {
-                        await api("ai-verify", { email, code });
+                        await api("ai-verify", { email: pendingEmail, code });
+                        await api("assistant-enable", { enabled: true });
                         setCode("");
                         setSent(false);
+                        setNotice(
+                          "Signed in. OffCourse and the Architect are ready in your workspace.",
+                        );
                       })
                     }
                   >
-                    Sign in
+                    Sign in & enable AI guides
+                  </button>
+                  <button
+                    className="text-button"
+                    disabled={busy}
+                    onClick={() => {
+                      setSent(false);
+                      setCode("");
+                    }}
+                  >
+                    Use a different email
                   </button>
                 </>
               )}
@@ -253,12 +344,24 @@ export function AIAccessSettings({
         </button>
         <button
           className="button secondary"
-          disabled={busy || (!access.ready && !enabled)}
+          disabled={busy || (!connected && !enabled)}
           onClick={() =>
             void act(() => api("assistant-enable", { enabled: !enabled }))
           }
         >
           {enabled ? "Disable AI guides" : "Enable AI guides"}
+        </button>
+        <button
+          className="button secondary"
+          disabled={busy || !connected}
+          onClick={() =>
+            void act(async () => {
+              const r = await api<{ message: string }>("ai-check", {});
+              setNotice(r.message);
+            })
+          }
+        >
+          Check connection
         </button>
       </div>
       <p className="hint">

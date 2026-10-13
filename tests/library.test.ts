@@ -14,6 +14,8 @@ import { Store } from "../src/server/store";
 import { Application } from "../src/server/application";
 import { Workspace } from "../src/server/workspace";
 import { Practice } from "../src/server/practice";
+import { teacherInstructions } from "../src/ai-contract";
+import { UserError } from "../src/server/safety";
 let directory: string, store: Store, app: Application, library: CourseLibrary;
 beforeEach(async () => {
   parse.mockReset();
@@ -89,6 +91,82 @@ it("deduplicates imported sources and removes their search entries", async () =>
   expect(library.status("agents").sources).toHaveLength(1);
   library.remove("agents", id);
   expect(await library.retrieve("agents", "embeddings")).toEqual([]);
+});
+it("gives all AI modes the canonical teaching policy with actual checks, progressive stage and command output", async () => {
+  parse.mockResolvedValue({
+    output_parsed: {
+      answer:
+        "What do you predict for an empty input? Run just that case first.",
+      citations: [],
+    },
+  });
+  await library.ask(
+    "agents",
+    "Explain my failing check",
+    "help",
+    undefined,
+    undefined,
+    "hint",
+    {
+      practice: {
+        taskId: "task",
+        hintsRequested: 1,
+        latestAttempt: {
+          passed: false,
+          stale: false,
+          checks: [{ label: "empty input", passed: false }],
+        },
+      } as any,
+      projectCommand: {
+        command: "node --test",
+        output: "Expected 0, received undefined",
+        state: "finished",
+        exitCode: 1,
+        truncated: false,
+      },
+    },
+  );
+  const call = parse.mock.calls[0][0];
+  expect(call.instructions).toBe(teacherInstructions);
+  const context = JSON.parse(call.input.at(-1).content.split("\nQuestion:")[0]);
+  expect(context.guidance.stage).toBe("experiment");
+  expect(context.learningContext.projectCommand.output).toContain(
+    "received undefined",
+  );
+  expect(context.learningContext.practice.latestAttempt.checks[0].passed).toBe(
+    false,
+  );
+});
+it("keeps actual local passages and a useful recovery action when an account or service fails", async () => {
+  library.document(
+    "agents",
+    "Tool note",
+    "A tool description explains when a function should be used.",
+    "transcript",
+  );
+  vi.spyOn(app.ai, "structured").mockRejectedValue(
+    new UserError("Sign in again to continue.", 401),
+  );
+  const expired = await library.ask(
+    "agents",
+    "Explain tool descriptions",
+    "help",
+  );
+  expect(expired).toMatchObject({ mode: "retrieval", recovery: "ai-settings" });
+  expect(expired.sources).toHaveLength(1);
+  vi.mocked(app.ai.structured).mockRejectedValue(
+    new UserError(
+      "Included AI is at service capacity. Your allowance was not charged.",
+      503,
+    ),
+  );
+  const outage = await library.ask(
+    "agents",
+    "Explain tool descriptions",
+    "help",
+  );
+  expect(outage).toMatchObject({ mode: "retrieval", recovery: "retry" });
+  expect(outage.text).toContain("not charged");
 });
 it("refreshes changed code without stale search results or paid local indexing", async () => {
   await app.start("agents", "1");
@@ -257,7 +335,7 @@ it("keeps practical teaching diagnostic and prevents returning the task implemen
   expect(answer.text).toContain("Which input");
   const request = parse.mock.calls[0][0];
   expect(request.instructions).toContain(
-    "Never provide the learner's complete",
+    "never provide a complete task implementation",
   );
   expect(request.input.at(-1).content).toContain("Functions and validation");
   expect(request.tools).toBeUndefined();
@@ -304,7 +382,9 @@ it("grounds hint-first error help in an actual run and labels evidence stale aft
   expect(input.runContext.fileVersion).toBe(file.version);
   expect(input.runContext.stale).toBe(true);
   expect(input.runContext.workspace).toBeUndefined();
-  expect(request.instructions).toContain("do not supply the full solution");
+  expect(request.instructions).toContain(
+    "never provide a complete task implementation",
+  );
   expect(request.instructions).toContain("tested a fix");
   expect(request.store).toBe(false);
 });

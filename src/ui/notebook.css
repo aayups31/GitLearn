@@ -369,6 +369,41 @@
 .ai-access > .onboarding-actions {
   margin-top: 18px;
 }
+.ai-connection-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  margin: 16px 0 6px;
+}
+.ai-connection-state > span {
+  width: 6px;
+  height: 6px;
+  background: var(--muted);
+  border-radius: 50%;
+}
+.ai-connection-state.ready {
+  color: var(--accent);
+}
+.ai-connection-state.ready > span {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--active);
+}
+.ai-service-details {
+  margin: 14px 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+.ai-service-details summary {
+  cursor: pointer;
+}
+.ai-service-details label {
+  margin: 12px 0;
+}
+.ai-access .onboarding-actions {
+  flex-wrap: wrap;
+}
 @media (max-width: 900px) {
   .notebook-body {
     grid-template-columns: 1fr;

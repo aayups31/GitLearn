@@ -8,6 +8,9 @@ export function workspaceFeatures(
   notebook: IdeaNotebook,
 ) {
   web.get("/api/ai-access", (_req, res) => res.json(app.ai.status()));
+  web.post("/api/ai-check", async (_req, res) =>
+    res.json(await app.ai.checkConnection()),
+  );
   web.post("/api/ai-config", (req, res) =>
     res.json(
       app.ai.configure(

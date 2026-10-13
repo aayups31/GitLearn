@@ -37,16 +37,14 @@ it("routes included AI without a user OpenAI key and never returns session token
     expires_at: Date.now() / 1000 + 600,
     email: "learner@example.com",
   };
-  const fetch = vi
-    .spyOn(globalThis, "fetch")
-    .mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          answer: { answer: "Predict the output first.", citations: [] },
-        }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      ),
-    );
+  const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    new Response(
+      JSON.stringify({
+        answer: { answer: "Predict the output first.", citations: [] },
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    ),
+  );
   const answer = await p.structured({
     task: "teacher",
     schema: teacherAnswer,
@@ -118,4 +116,102 @@ it("fails closed when included AI is unconfigured or allowance is exhausted", as
       context: "lesson",
     }),
   ).rejects.toThrow("allowance");
+});
+it("does not restore an account when sign-out occurs during token refresh", async () => {
+  const p = provider();
+  p.configure({
+    ...p.config(),
+    mode: "included",
+    service: "https://ai.example",
+  });
+  p.session = {
+    access_token: "expired",
+    refresh_token: "old",
+    expires_at: 1,
+    email: "learner@example.com",
+  };
+  p.persist = vi.fn().mockResolvedValue(undefined);
+  let finish!: (response: Response) => void;
+  const request = vi.spyOn(globalThis, "fetch").mockImplementation(
+    () =>
+      new Promise((r) => {
+        finish = r;
+      }),
+  );
+  const usage = p.usage();
+  const rejected = expect(usage).rejects.toThrow("account changed");
+  await vi.waitFor(() => expect(finish).toBeTypeOf("function"));
+  await p.logout();
+  finish(
+    new Response(
+      JSON.stringify({
+        access_token: "new",
+        refresh_token: "new",
+        expires_at: Math.floor(Date.now() / 1000) + 600,
+        email: "learner@example.com",
+      }),
+    ),
+  );
+  await rejected;
+  expect(p.session).toBeUndefined();
+  expect(p.persist).toHaveBeenCalledTimes(1);
+  expect(p.persist).toHaveBeenLastCalledWith(null);
+  expect(request).toHaveBeenCalledTimes(1);
+});
+it("serializes the secret vault so a slow sign-in write cannot survive sign-out", async () => {
+  const p = provider();
+  p.configure({
+    ...p.config(),
+    mode: "included",
+    service: "https://ai.example",
+  });
+  const session = {
+    access_token: "a",
+    refresh_token: "r",
+    expires_at: Math.floor(Date.now() / 1000) + 600,
+    email: "learner@example.com",
+  };
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    new Response(JSON.stringify(session)),
+  );
+  let finish!: () => void;
+  p.persist = vi.fn().mockImplementation((value) =>
+    value
+      ? new Promise<void>((r) => {
+          finish = r;
+        })
+      : Promise.resolve(),
+  );
+  const verification = p.verify(session.email, "123456");
+  const rejected = expect(verification).rejects.toThrow("signed out");
+  await vi.waitFor(() => expect(finish).toBeTypeOf("function"));
+  const signout = p.logout();
+  finish();
+  await signout;
+  await rejected;
+  expect(p.persist).toHaveBeenLastCalledWith(null);
+  expect(p.ready()).toBe(false);
+});
+it("clears an expired account when its refresh is rejected and reports a recoverable network failure", async () => {
+  const p = provider();
+  p.configure({
+    ...p.config(),
+    mode: "included",
+    service: "https://ai.example",
+  });
+  p.session = {
+    access_token: "a",
+    refresh_token: "r",
+    expires_at: 1,
+    email: "learner@example.com",
+  };
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    new Response(JSON.stringify({ error: "Expired" }), { status: 400 }),
+  );
+  await expect(p.usage()).rejects.toThrow("Sign in again");
+  expect(p.session).toBeUndefined();
+  vi.mocked(fetch).mockRejectedValue(new TypeError("Network secret error"));
+  await expect(p.login("learner@example.com")).rejects.toThrow(
+    "could not be reached",
+  );
 });

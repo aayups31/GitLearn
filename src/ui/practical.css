@@ -602,6 +602,155 @@
 .studio .task-guide {
   order: 0;
 }
+.session-direction {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+  min-width: 0;
+}
+.session-direction > svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.session-direction > div {
+  flex: 1;
+  min-width: 0;
+}
+.session-direction small {
+  display: block;
+  font-size: 9px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.session-direction span {
+  display: block;
+  font-size: 11px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.session-direction button {
+  flex-shrink: 0;
+  color: var(--accent);
+  padding: 6px 0;
+}
+.studio .task-guide-content {
+  max-height: 32dvh;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.learning-loop {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 15px;
+  gap: 20px;
+}
+.task-guide .learning-loop li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.learning-loop li > span {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+}
+.task-guide .learning-loop li[aria-current],
+.task-guide .learning-loop li.done {
+  color: var(--accent);
+}
+.learning-loop li[aria-current] > span {
+  border-color: var(--accent);
+  background: var(--active);
+}
+.task-completion {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  margin-top: 15px;
+}
+.task-check-evidence {
+  margin-top: 10px;
+}
+.task-check-evidence > summary {
+  padding: 5px 0 !important;
+  font-size: 10px !important;
+  color: var(--muted);
+}
+.task-completion h4 {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  margin: 0 0 8px;
+  color: var(--ink);
+}
+.task-completion label {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+}
+.task-completion textarea {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 72px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  padding: 10px;
+  margin: 8px 0 12px;
+  resize: vertical;
+  font: inherit;
+  line-height: 1.7;
+}
+.task-completion textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.task-guide-actions {
+  flex-wrap: wrap;
+}
+.task-guide-actions button.primary {
+  padding: 7px 10px;
+}
+.assistant-recovery {
+  margin: 12px 0;
+}
+.assistant-recovery button {
+  color: var(--accent);
+}
+.command-teacher {
+  margin: 8px 0 12px;
+  color: var(--accent) !important;
+}
+@media (max-width: 650px) {
+  .session-direction {
+    padding: 10px 14px;
+  }
+  .session-direction button {
+    max-width: 112px;
+    text-align: left;
+  }
+  .learning-loop {
+    gap: 12px;
+  }
+  .studio .task-guide-content {
+    max-height: 35dvh;
+  }
+}
 .contribution-context {
   padding: 12px 20px;
   flex-shrink: 0;

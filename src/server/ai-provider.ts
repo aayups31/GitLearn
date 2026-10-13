@@ -52,6 +52,8 @@ export class AIProvider {
   session?: AccountSession;
   persist?: (session: AccountSession | null) => Promise<void>;
   private refreshPromise?: Promise<void>;
+  private authRevision = 0;
+  private vaultWrite: Promise<void> = Promise.resolve();
   constructor(private app: Application) {}
   config(): AIConfig {
     return {
@@ -84,48 +86,83 @@ export class AIProvider {
     assertClean(input.localModel, "model name");
     if (input.service !== this.config().service && this.session)
       throw new UserError("Sign out before changing the included AI service.");
+    if (
+      input.service !== this.config().service ||
+      input.mode !== this.config().mode
+    )
+      this.authRevision++;
     this.app.store.put("ai:config", input);
     return this.status();
   }
   private async request(route: string, body?: unknown, authenticated = false) {
     const c = this.config();
+    const revision = this.authRevision;
     if (!c.service)
       throw new UserError(
         "Included AI has not been connected to a hosted service yet. Use a personal key or local model meanwhile.",
       );
     if (authenticated) await this.refresh();
-    const response = await fetch(`${endpoint(c.service)}/v1/${route}`, {
-      method: body === undefined ? "GET" : "POST",
-      redirect: "error",
-      headers: {
-        "Content-Type": "application/json",
-        ...(authenticated && this.session
-          ? { Authorization: `Bearer ${this.session.access_token}` }
-          : {}),
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-      signal: AbortSignal.timeout(35000),
-    });
-    const result = await response.json();
-    if (!response.ok)
+    if (authenticated && (!this.session || revision !== this.authRevision))
       throw new UserError(
-        typeof result.error === "string"
-          ? result.error.slice(0, 300)
-          : "The AI service could not complete this request.",
-        response.status,
+        "Your account changed. Sign in again to use included AI.",
+        401,
       );
-    return result;
+    try {
+      const response = await fetch(`${endpoint(c.service)}/v1/${route}`, {
+        method: body === undefined ? "GET" : "POST",
+        redirect: "error",
+        headers: {
+          "Content-Type": "application/json",
+          ...(authenticated && this.session
+            ? { Authorization: `Bearer ${this.session.access_token}` }
+            : {}),
+        },
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal: AbortSignal.timeout(35000),
+      });
+      const result = await response.json();
+      if (authenticated && revision !== this.authRevision)
+        throw new UserError(
+          "You signed out before this request finished.",
+          401,
+        );
+      if (!response.ok)
+        throw new UserError(
+          typeof result.error === "string"
+            ? result.error.slice(0, 300)
+            : "The AI service could not complete this request.",
+          response.status,
+        );
+      return result;
+    } catch (error) {
+      if (error instanceof UserError) throw error;
+      throw new UserError(
+        "The included AI service could not be reached. Check your connection and retry; your local work is safe.",
+        503,
+      );
+    }
   }
   async login(email: string) {
     await this.request("auth/email", { email });
     return { sent: true };
   }
   async verify(email: string, code: string) {
+    const revision = ++this.authRevision;
     const session = await this.request("auth/verify", { email, code });
-    await this.saveSession(session);
+    await this.saveSession(session, revision);
     return this.status();
   }
-  private async saveSession(input: unknown) {
+  private async writeVault(input: AccountSession | null, revision: number) {
+    const write = this.vaultWrite
+      .catch(() => {})
+      .then(async () => {
+        if (revision === this.authRevision && this.persist)
+          await this.persist(input);
+      });
+    this.vaultWrite = write;
+    await write;
+  }
+  private async saveSession(input: unknown, revision: number) {
     const parsed = z
       .object({
         access_token: z.string().min(1).max(12000),
@@ -134,25 +171,49 @@ export class AIProvider {
         email: z.string().email(),
       })
       .parse(input);
-    if (this.persist) await this.persist(parsed);
+    if (revision !== this.authRevision)
+      throw new UserError(
+        "Your account changed while signing in. Try again.",
+        401,
+      );
+    await this.writeVault(parsed, revision);
+    if (revision !== this.authRevision)
+      throw new UserError("You signed out before sign-in finished.", 401);
     this.session = parsed;
   }
   async logout() {
-    if (this.persist) await this.persist(null);
+    const revision = ++this.authRevision;
     this.session = undefined;
+    await this.writeVault(null, revision);
     return this.status();
   }
   private async refresh() {
     if (!this.session) throw new UserError("Sign in to use included AI.", 401);
     if (this.session.expires_at > Date.now() / 1000 + 60) return;
-    if (!this.refreshPromise)
+    if (!this.refreshPromise) {
+      const revision = this.authRevision;
       this.refreshPromise = this.request("auth/refresh", {
         refreshToken: this.session.refresh_token,
       })
-        .then((s) => this.saveSession(s))
+        .then((s) => this.saveSession(s, revision))
+        .catch(async (error) => {
+          if (
+            revision === this.authRevision &&
+            error instanceof UserError &&
+            [400, 401].includes(error.status)
+          ) {
+            await this.logout();
+            throw new UserError(
+              "Your account session expired. Sign in again to continue.",
+              401,
+            );
+          }
+          throw error;
+        })
         .finally(() => {
           this.refreshPromise = undefined;
         });
+    }
     await this.refreshPromise;
   }
   async usage(): Promise<AIUsage> {
@@ -160,6 +221,57 @@ export class AIProvider {
   }
   async checkout() {
     return this.request("checkout", {}, true) as Promise<{ url: string }>;
+  }
+  async checkConnection() {
+    const c = this.config();
+    if (!this.ready()) throw new UserError("Save a ready AI connection first.");
+    if (c.mode === "included") {
+      const usage = await this.usage();
+      return {
+        ok: true,
+        message:
+          usage.remaining > 0
+            ? "Signed in. Included AI has available allowance."
+            : "Signed in. Your included allowance is used up; your local work stays available.",
+      };
+    }
+    try {
+      const client = new OpenAI({
+        apiKey: c.mode === "local" ? "local-model" : this.app.apiKey,
+        ...(c.mode === "local"
+          ? { baseURL: endpoint(c.localEndpoint, true) }
+          : {}),
+        timeout: 8000,
+        maxRetries: 0,
+      });
+      const model =
+        c.mode === "local"
+          ? c.localModel
+          : process.env.OPENAI_CHAT_MODEL ||
+            process.env.OPENAI_MODEL ||
+            "gpt-4o-mini";
+      if (c.mode === "local") {
+        const models = await client.models.list();
+        if (!models.data.some((m) => m.id === model))
+          throw new UserError(
+            "The local server is reachable, but that exact model is not available. Check its installed model name.",
+            503,
+          );
+      } else await client.models.retrieve(model);
+      return {
+        ok: true,
+        message:
+          "The service and selected model are reachable. This check did not generate an AI answer; answer availability also depends on the provider's limits.",
+      };
+    } catch (error) {
+      if (error instanceof UserError) throw error;
+      throw new UserError(
+        c.mode === "local"
+          ? "Could not reach the local model. Start its server and check the endpoint and exact model name."
+          : "Could not verify your personal AI connection. Check the key, model access and network in Settings.",
+        503,
+      );
+    }
   }
   async structured<T extends z.ZodType>(options: {
     task: "teacher" | "architect" | "checkpoint";
@@ -174,56 +286,77 @@ export class AIProvider {
     const c = this.config();
     if (!this.ready())
       throw new UserError("Choose an AI connection in Settings first.");
-    let output: unknown;
-    if (c.mode === "included") {
-      const response = await this.request(
-        "answer",
-        { task, context, history },
-        true,
+    try {
+      let output: unknown;
+      if (c.mode === "included") {
+        const response = await this.request(
+          "answer",
+          { task, context, history },
+          true,
+        );
+        output = response.answer;
+      } else if (c.mode === "local") {
+        const client = new OpenAI({
+          apiKey: "local-model",
+          baseURL: endpoint(c.localEndpoint, true),
+          timeout: 60000,
+          maxRetries: 0,
+        });
+        const response = await client.chat.completions.create({
+          model: c.localModel,
+          max_tokens: 1800,
+          response_format: { type: "json_object" },
+          messages: [
+            {
+              role: "system",
+              content: `${instructions}\nReturn JSON matching this schema: ${JSON.stringify(z.toJSONSchema(schema))}`,
+            },
+            ...history,
+            { role: "user", content: context },
+          ],
+        });
+        output = JSON.parse(response.choices[0]?.message.content || "{}");
+      } else {
+        const client = new OpenAI({
+          apiKey: this.app.apiKey,
+          timeout: 25000,
+          maxRetries: 0,
+        });
+        const response = await client.responses.parse({
+          model:
+            process.env.OPENAI_CHAT_MODEL ||
+            process.env.OPENAI_MODEL ||
+            "gpt-4o-mini",
+          store: false,
+          max_output_tokens: task === "checkpoint" ? 250 : 1800,
+          instructions,
+          input: [...history, { role: "user", content: context }],
+          text: { format: zodTextFormat(schema, name) },
+        });
+        output = response.output_parsed;
+      }
+      const parsed = schema.parse(output);
+      assertClean(JSON.stringify(parsed), "AI response");
+      return parsed;
+    } catch (error) {
+      if (error instanceof UserError) throw error;
+      const status = (error as { status?: number })?.status;
+      if (status === 401 || status === 403)
+        throw new UserError(
+          "The selected AI connection needs attention. Check your account or personal key in Settings.",
+          401,
+        );
+      if (status === 429)
+        throw new UserError(
+          "This AI connection has reached its rate or usage limit. Check its allowance in Settings, then retry.",
+          429,
+        );
+      throw new UserError(
+        c.mode === "local"
+          ? "The local model did not return a usable answer. Check that its server and exact model are running, then retry."
+          : "The AI connection did not return a usable answer. Retry in a moment; your code and notes are safe.",
+        503,
       );
-      output = response.answer;
-    } else if (c.mode === "local") {
-      const client = new OpenAI({
-        apiKey: "local-model",
-        baseURL: endpoint(c.localEndpoint, true),
-        timeout: 60000,
-        maxRetries: 0,
-      });
-      const response = await client.chat.completions.create({
-        model: c.localModel,
-        max_tokens: 1800,
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content: `${instructions}\nReturn JSON matching this schema: ${JSON.stringify(z.toJSONSchema(schema))}`,
-          },
-          ...history,
-          { role: "user", content: context },
-        ],
-      });
-      output = JSON.parse(response.choices[0]?.message.content || "{}");
-    } else {
-      const client = new OpenAI({
-        apiKey: this.app.apiKey,
-        timeout: 25000,
-        maxRetries: 0,
-      });
-      const response = await client.responses.parse({
-        model:
-          process.env.OPENAI_CHAT_MODEL ||
-          process.env.OPENAI_MODEL ||
-          "gpt-4o-mini",
-        store: false,
-        max_output_tokens: task === "checkpoint" ? 250 : 1800,
-        instructions,
-        input: [...history, { role: "user", content: context }],
-        text: { format: zodTextFormat(schema, name) },
-      });
-      output = response.output_parsed;
     }
-    const parsed = schema.parse(output);
-    assertClean(JSON.stringify(parsed), "AI response");
-    return parsed;
   }
 }

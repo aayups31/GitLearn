@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Circle,
   Clock3,
+  Code2,
   Download,
   Flag,
   Github,
@@ -59,14 +60,19 @@ export function PracticePrompt({
   changed,
   onOpen,
   onLive,
+  onStart,
+  quietAfterTask,
 }: {
   api: Api;
   courseId?: string;
   changed?: unknown;
   onOpen: () => void;
   onLive?: () => void;
+  onStart?: (exerciseId: string) => Promise<void>;
+  quietAfterTask?: boolean;
 }) {
   const [data, setData] = useState<Dashboard>();
+  const action = useAction();
   useEffect(() => {
     let live = true;
     api<Dashboard>(
@@ -83,6 +89,9 @@ export function PracticePrompt({
   const suggestion = data?.opportunities[0],
     exercise = data?.exercises.find((e) => e.id === suggestion?.exerciseId);
   const liveSuggestion = data?.liveOpportunities[0];
+  if (data?.tasks.some((t) => t.status === "active")) return null;
+  if (quietAfterTask && data?.tasks.some((t) => t.status === "completed"))
+    return null;
   if ((!suggestion || !exercise) && liveSuggestion && onLive)
     return (
       <section className="practice-prompt">
@@ -127,8 +136,14 @@ export function PracticePrompt({
         </span>
       </div>
       <div className="prompt-actions">
-        <button className="button primary" onClick={onOpen}>
-          Explore task <ArrowRight size={14} />
+        <button
+          className="button primary"
+          disabled={action.busy}
+          onClick={() =>
+            onStart ? void action.run(() => onStart(exercise.id)) : onOpen()
+          }
+        >
+          {onStart ? "Try it here" : "Explore task"} <ArrowRight size={14} />
         </button>
         {liveSuggestion && onLive && (
           <button className="text-button" onClick={onLive}>
@@ -137,15 +152,18 @@ export function PracticePrompt({
         )}
         <button
           className="text-button"
+          disabled={action.busy}
           onClick={() =>
-            void api("practice-defer", { key: suggestion.key, days: 1 }).then(
-              () => setData(undefined),
-            )
+            void action.run(async () => {
+              await api("practice-defer", { key: suggestion.key, days: 1 });
+              setData(undefined);
+            })
           }
         >
           Later
         </button>
       </div>
+      {action.error && <p role="alert">{action.error}</p>}
     </section>
   );
 }
@@ -154,17 +172,19 @@ export function LearningHub({
   api,
   onCode,
   onRefresh,
+  initialTab = "practice",
 }: {
   state: Status;
   api: Api;
   onCode: (id: string) => void;
   onRefresh: () => Promise<unknown>;
+  initialTab?: string;
 }) {
   const [data, setData] = useState<Dashboard>(),
     [courseId, setCourseId] = useState(
       state.session?.courseId || state.courses[0]?.id || "",
     ),
-    [tab, setTab] = useState("practice"),
+    [tab, setTab] = useState(initialTab),
     [selected, setSelected] = useState<PracticeTask>(),
     [reflection, setReflection] = useState("");
   const [languageFilter, setLanguageFilter] = useState("course");
@@ -662,6 +682,12 @@ export function TaskGuide({
   workspace,
   beforeCheck,
   onAsk,
+  changed,
+  onChanged,
+  onOpenFile,
+  onPath,
+  onWorking,
+  blocked,
 }: {
   api: Api;
   sessionId: string;
@@ -669,16 +695,29 @@ export function TaskGuide({
   workspace: string;
   beforeCheck: () => Promise<void>;
   onAsk: (q: string) => void;
+  changed?: unknown;
+  onChanged?: (path?: string) => Promise<void>;
+  onOpenFile?: (path: string) => void;
+  onPath?: () => void;
+  onWorking?: (working: boolean) => void;
+  blocked?: boolean;
 }) {
   const [data, setData] = useState<Dashboard>(),
-    [hint, setHint] = useState("");
+    [hint, setHint] = useState(""),
+    [reflection, setReflection] = useState(""),
+    [expanded, setExpanded] = useState(true),
+    [notice, setNotice] = useState("");
   const action = useAction();
+  useEffect(() => {
+    onWorking?.(action.busy);
+    return () => onWorking?.(false);
+  }, [action.busy, onWorking]);
   const load = async () =>
     setData(await api(`practice?courseId=${encodeURIComponent(courseId)}`));
   useEffect(() => {
     void load().catch(() => {});
     setHint("");
-  }, [sessionId]);
+  }, [sessionId, changed]);
   const task =
     data?.tasks.find(
       (t) => t.workspace === workspace && t.status === "active",
@@ -687,9 +726,18 @@ export function TaskGuide({
       (t) => t.workspace === workspace && t.status === "completed",
     );
   const spec = data?.exercises.find((e) => e.id === task?.exerciseId);
-  if (!task || !spec) return null;
+  useEffect(() => {
+    setReflection(task?.reflection || "");
+    setNotice("");
+    setHint("");
+  }, [task?.id]);
+  if (!task || !spec || !data) return null;
   return (
-    <details className="task-guide" open={task.status === "active"}>
+    <details
+      className="task-guide"
+      open={expanded}
+      onToggle={(e) => setExpanded(e.currentTarget.open)}
+    >
       <summary>
         <Flag size={13} />
         <span>{spec.title}</span>
@@ -700,41 +748,77 @@ export function TaskGuide({
         </small>
       </summary>
       <div className="task-guide-content">
-        <p>{spec.brief}</p>
-        <ul>
-          {spec.requirements.map((r) => (
-            <li key={r}>{r}</li>
-          ))}
-        </ul>
+        <ol className="learning-loop" aria-label="Your practice steps">
+          {["Try", "Check", "Reflect", "Transfer"].map((step, i) => {
+            const current =
+              task.status !== "completed"
+                ? task.attempts.length
+                  ? 1
+                  : 0
+                : !task.reflection
+                  ? 2
+                  : 3;
+            return (
+              <li
+                key={step}
+                aria-current={i === current ? "step" : undefined}
+                className={i < current ? "done" : ""}
+              >
+                <span>{i < current ? <Check size={11} /> : i + 1}</span>
+                {step}
+              </li>
+            );
+          })}
+        </ol>
+        {task.status === "active" && (
+          <>
+            <p>{spec.brief}</p>
+            <ul>
+              {spec.requirements.map((r) => (
+                <li key={r}>{r}</li>
+              ))}
+            </ul>
+          </>
+        )}
         <div className="task-guide-actions">
-          <button
-            disabled={action.busy || task.status !== "active"}
-            onClick={() =>
-              action.run(async () => {
-                await beforeCheck();
-                await api("practice-check", { taskId: task.id, sessionId });
-                await load();
-              })
-            }
-          >
-            <Check size={13} />
-            Check my work
-          </button>
-          <button
-            disabled={action.busy}
-            onClick={() =>
-              action.run(async () => {
-                const r = await api<{ hint: string }>("practice-hint", {
-                  taskId: task.id,
-                });
-                setHint(r.hint);
-                await load();
-              })
-            }
-          >
-            <Lightbulb size={13} />
-            Next hint
-          </button>
+          {onOpenFile && (
+            <button onClick={() => onOpenFile(task.path)}>
+              <Code2 size={13} /> Open task file
+            </button>
+          )}
+          {task.status === "active" && (
+            <>
+              <button
+                disabled={action.busy || blocked || task.status !== "active"}
+                onClick={() =>
+                  action.run(async () => {
+                    await beforeCheck();
+                    await api("practice-check", { taskId: task.id, sessionId });
+                    await load();
+                    await onChanged?.();
+                  })
+                }
+              >
+                <Check size={13} />
+                Check my work
+              </button>
+              <button
+                disabled={action.busy || task.status !== "active"}
+                onClick={() =>
+                  action.run(async () => {
+                    const r = await api<{ hint: string }>("practice-hint", {
+                      taskId: task.id,
+                    });
+                    setHint(r.hint);
+                    await load();
+                  })
+                }
+              >
+                <Lightbulb size={13} />
+                Next hint
+              </button>
+            </>
+          )}
           <button
             onClick={() =>
               onAsk(
@@ -752,14 +836,93 @@ export function TaskGuide({
         )}
         {action.error && <p role="alert">{action.error}</p>}
         {task.attempts[0] && (
-          <div className="inline-checks">
-            {task.attempts[0].checks.map((c) => (
-              <span key={c.label} className={c.passed ? "passed" : ""}>
-                {c.passed ? <Check size={12} /> : <Circle size={12} />}{" "}
-                {c.label}
-              </span>
-            ))}
-            {task.attempts[0].output && <pre>{task.attempts[0].output}</pre>}
+          <details
+            className="task-check-evidence"
+            open={task.status === "active" || undefined}
+          >
+            <summary>
+              {task.status === "completed"
+                ? "View recorded checks"
+                : "Latest recorded checks"}
+            </summary>
+            <div className="inline-checks">
+              {task.attempts[0].checks.map((c) => (
+                <span key={c.label} className={c.passed ? "passed" : ""}>
+                  {c.passed ? <Check size={12} /> : <Circle size={12} />}{" "}
+                  {c.label}
+                </span>
+              ))}
+              {task.attempts[0].output && <pre>{task.attempts[0].output}</pre>}
+            </div>
+          </details>
+        )}
+        {task.status === "completed" && (
+          <div className="task-completion">
+            <h4>
+              <Check size={14} /> Your recorded checks passed.
+            </h4>
+            <p>
+              Explain one decision you made and what a different input would
+              change. Passing these cases is a starting point for independent
+              work.
+            </p>
+            <label>
+              Task reflection
+              <textarea
+                aria-label="Task reflection"
+                value={reflection}
+                onChange={(e) => setReflection(e.target.value)}
+                maxLength={4000}
+                placeholder="Why does your approach work? What would you test next?"
+              />
+            </label>
+            <div className="task-guide-actions">
+              <button
+                disabled={action.busy || !reflection.trim()}
+                onClick={() =>
+                  void action.run(async () => {
+                    await api("practice-update", {
+                      taskId: task.id,
+                      action: "reflection",
+                      reflection,
+                    });
+                    await load();
+                    setNotice("Reflection saved in your learning history.");
+                    await onChanged?.();
+                  })
+                }
+              >
+                Save task reflection
+              </button>
+              {data.exercises.find((e) => e.transferFrom === spec.id) &&
+                !data.tasks.some((t) => t.transferOf === task.id) && (
+                  <button
+                    className="primary"
+                    disabled={action.busy}
+                    onClick={() =>
+                      void action.run(async () => {
+                        const next = await api<PracticeTask>("practice-start", {
+                          courseId,
+                          exerciseId: data.exercises.find(
+                            (e) => e.transferFrom === spec.id,
+                          )!.id,
+                          transferOf: task.id,
+                        });
+                        await load();
+                        await onChanged?.(next.path);
+                      })
+                    }
+                  >
+                    Try a changed requirement <ArrowRight size={13} />
+                  </button>
+                )}
+              {onPath && (
+                <button onClick={onPath}>
+                  Apply it to my project <ArrowRight size={13} />
+                </button>
+              )}
+            </div>
+            {notice && <p role="status">{notice}</p>}
           </div>
         )}
       </div>
@@ -771,11 +934,15 @@ export function ProjectConsole({
   sessionId,
   onRunning,
   onFilesChanged,
+  beforeCommand,
+  onAsk,
 }: {
   api: Api;
   sessionId: string;
   onRunning: (running: boolean) => void;
   onFilesChanged: () => Promise<unknown>;
+  beforeCommand?: () => Promise<void>;
+  onAsk?: (question: string) => void;
 }) {
   const [open, setOpen] = useState(false),
     [commands, setCommands] = useState<CommandRecord[]>([]),
@@ -949,6 +1116,7 @@ export function ProjectConsole({
           onSubmit={(e) => {
             e.preventDefault();
             void action.run(async () => {
+              await beforeCommand?.();
               await api("project-command", { sessionId, command });
               await load();
             });
@@ -993,6 +1161,18 @@ export function ProjectConsole({
               {latest.output.replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, "") ||
                 "Waiting for output…"}
             </pre>
+            {onAsk && latest.state !== "running" && latest.exitCode !== 0 && (
+              <button
+                className="command-teacher"
+                onClick={() =>
+                  onAsk(
+                    "Help me understand the latest recorded project command. Give me one diagnostic question and a small experiment; leave the changes to me.",
+                  )
+                }
+              >
+                Understand this result with OffCourse <ArrowRight size={13} />
+              </button>
+            )}
             {latest.regression && (
               <div className="alert error" role="alert">
                 <strong>Regression Alert</strong>

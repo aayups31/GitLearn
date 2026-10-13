@@ -790,7 +790,11 @@ export function createApp(
     const teaching =
       input.mode === "help"
         ? {
-            practice: practice.context(input.courseId),
+            practice: practice.context(
+              input.courseId,
+              input.selectedCode?.path,
+            ),
+            projectCommand: runtime.context(input.courseId),
             contribution: live.context(input.courseId),
             direction: learning.direction(input.courseId),
             project: learning.status(input.courseId).milestones,
