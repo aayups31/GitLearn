@@ -886,8 +886,6 @@ export function Studio({
                   api={api}
                   courseId={course.id}
                   changed={workspaceRevision}
-                  onWorking={setTaskWorking}
-                  blocked={running || projectRunning}
                   onOpen={onPath}
                 />
                 <PracticePrompt
@@ -913,6 +911,8 @@ export function Studio({
                   courseId={course.id}
                   workspace={session.workspace}
                   changed={workspaceRevision}
+                  onWorking={setTaskWorking}
+                  blocked={running || projectRunning}
                   onChanged={taskChanged}
                   onOpenFile={(path) => void safe("open", () => openFile(path))}
                   onPath={onPath}
