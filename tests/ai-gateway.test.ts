@@ -1,5 +1,6 @@
 import { it, expect, afterEach, vi } from "vitest";
 import type { Server } from "node:http";
+import { InvalidBillingSignature } from "../services/ai/billing";
 import {
   createGateway,
   type GatewayDependencies,
@@ -46,6 +47,7 @@ async function fixture(overrides: Partial<GatewayDependencies> = {}) {
   const base = `http://127.0.0.1:${(server.address() as any).port}`;
   return {
     deps,
+    base,
     post: (route: string, body: unknown, token = "valid-account") =>
       fetch(base + route, {
         method: "POST",
@@ -72,6 +74,28 @@ it("requires a verified account, reserves allowance before inference and blocks 
   expect(await (await f.get("/v1/usage")).json()).toMatchObject({
     remaining: 0,
   });
+});
+it("passes the exact raw Stripe payload and distinguishes invalid signatures from retryable failures", async () => {
+  const webhook = vi.fn(async (_body: Buffer, _signature: string) => {});
+  const f = await fixture({ webhook });
+  const raw = '{ "event": "untouched whitespace" }';
+  const send = () =>
+    fetch(f.base + "/v1/stripe/webhook", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "stripe-signature": "signed",
+      },
+      body: raw,
+    });
+  expect((await send()).status).toBe(200);
+  expect(webhook).toHaveBeenCalledWith(Buffer.from(raw), "signed");
+  webhook.mockRejectedValueOnce(new InvalidBillingSignature());
+  expect((await send()).status).toBe(400);
+  webhook.mockRejectedValueOnce(Error("Private database failure"));
+  const result = await send();
+  expect(result.status).toBe(503);
+  expect(await result.text()).not.toContain("Private");
 });
 it("refunds a failed or malformed model answer and rejects arbitrary proxy tasks", async () => {
   const f = await fixture({

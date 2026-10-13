@@ -6,6 +6,11 @@ import { zodTextFormat } from "openai/helpers/zod";
 import { Pool } from "pg";
 import Stripe from "stripe";
 import {
+  InvalidBillingSignature,
+  PostgresBillingStore,
+  StripeBilling,
+} from "./billing.js";
+import {
   hostedRequest,
   teacherAnswer,
   architectAnswer,
@@ -31,6 +36,9 @@ export class PostgresAllowances implements Allowances {
   async migrate() {
     await this.pool.query(`CREATE SCHEMA IF NOT EXISTS outclass_service;
       CREATE TABLE IF NOT EXISTS outclass_service.accounts(user_id uuid PRIMARY KEY, customer text UNIQUE, subscription text, paid_until timestamptz);
+      ALTER TABLE outclass_service.accounts ADD COLUMN IF NOT EXISTS checkout_key uuid;
+      ALTER TABLE outclass_service.accounts ADD COLUMN IF NOT EXISTS checkout_expires_at timestamptz;
+      ALTER TABLE outclass_service.accounts ADD COLUMN IF NOT EXISTS checkout_session text;
       CREATE TABLE IF NOT EXISTS outclass_service.usage(user_id uuid NOT NULL, period text NOT NULL, used integer NOT NULL DEFAULT 0 CHECK(used>=0), PRIMARY KEY(user_id,period));
       CREATE TABLE IF NOT EXISTS outclass_service.requests(id uuid PRIMARY KEY, user_id uuid NOT NULL, period text NOT NULL, refunded boolean NOT NULL DEFAULT false, created_at timestamptz NOT NULL DEFAULT now());
       CREATE TABLE IF NOT EXISTS outclass_service.webhooks(id text PRIMARY KEY, received_at timestamptz NOT NULL DEFAULT now());
@@ -110,6 +118,8 @@ export type GatewayConfig = {
   stripeKey?: string;
   stripeWebhookSecret?: string;
   stripePrice?: string;
+  stripePortalConfiguration?: string;
+  stripeAutomaticTax?: boolean;
   publicUrl: string;
   freeLimit: number;
   paidLimit: number;
@@ -142,8 +152,10 @@ export function createGateway(deps: GatewayDependencies) {
             String(req.headers["stripe-signature"] || ""),
           );
           res.json({ ok: true });
-        } catch {
-          res.status(400).json({ error: "Webhook was not accepted." });
+        } catch (error) {
+          res
+            .status(error instanceof InvalidBillingSignature ? 400 : 503)
+            .json({ error: "Webhook was not accepted." });
         }
       },
     );
@@ -339,7 +351,21 @@ export function productionDependencies(
     timeout: 30000,
     maxRetries: 0,
   });
-  const stripe = config.stripeKey ? new Stripe(config.stripeKey) : undefined;
+  const stripe = config.stripeKey
+    ? new Stripe(config.stripeKey, { timeout: 20000, maxNetworkRetries: 2 })
+    : undefined;
+  // Enable checkout and payment notifications together; never sell access without its webhook.
+  const billing =
+    stripe && config.stripePrice && config.stripeWebhookSecret
+      ? new StripeBilling(stripe, new PostgresBillingStore(allowance.pool), {
+          price: config.stripePrice,
+          webhookSecret: config.stripeWebhookSecret,
+          live: config.stripeKey!.startsWith("sk_live_"),
+          publicUrl: config.publicUrl,
+          portalConfiguration: config.stripePortalConfiguration,
+          automaticTax: config.stripeAutomaticTax,
+        })
+      : undefined;
   return {
     allowance,
     authenticate: async (token) =>
@@ -376,92 +402,12 @@ export function productionDependencies(
       });
       return response.output_parsed;
     },
-    checkout:
-      stripe && config.stripePrice
-        ? async (user) => {
-            const saved = await allowance.pool.query(
-              "SELECT customer,paid_until>now() AS paid FROM outclass_service.accounts WHERE user_id=$1",
-              [user],
-            );
-            const customer =
-              saved.rows[0]?.customer ||
-              (
-                await stripe.customers.create(
-                  { metadata: { outclass_user: user } },
-                  { idempotencyKey: `outclass-customer-${user}` },
-                )
-              ).id;
-            await allowance.pool.query(
-              "INSERT INTO outclass_service.accounts(user_id,customer) VALUES($1,$2) ON CONFLICT(user_id) DO UPDATE SET customer=excluded.customer",
-              [user, customer],
-            );
-            if (saved.rows[0]?.paid)
-              return (
-                await stripe.billingPortal.sessions.create({
-                  customer,
-                  return_url: `${config.publicUrl}/billing/return`,
-                })
-              ).url;
-            const s = await stripe.checkout.sessions.create({
-              mode: "subscription",
-              customer,
-              line_items: [{ price: config.stripePrice!, quantity: 1 }],
-              subscription_data: { metadata: { outclass_user: user } },
-              success_url: `${config.publicUrl}/billing/success`,
-              cancel_url: `${config.publicUrl}/billing/cancel`,
-            });
-            return s.url!;
-          }
-        : undefined,
-    webhook:
-      stripe && config.stripeWebhookSecret
-        ? async (body, signature) => {
-            const event = stripe.webhooks.constructEvent(
-              body,
-              signature,
-              config.stripeWebhookSecret!,
-            );
-            if (
-              ![
-                "customer.subscription.created",
-                "customer.subscription.updated",
-                "customer.subscription.deleted",
-              ].includes(event.type)
-            )
-              return;
-            const exists = await allowance.pool.query(
-              "SELECT 1 FROM outclass_service.webhooks WHERE id=$1",
-              [event.id],
-            );
-            if (exists.rowCount) return;
-            // Fetch current subscription rather than trusting out-of-order event payloads.
-            const current = await stripe.subscriptions.retrieve(
-              (event.data.object as Stripe.Subscription).id,
-            );
-            const user = z
-              .string()
-              .uuid()
-              .parse(current.metadata.outclass_user);
-            const item = current.items.data.find(
-              (i) => i.price.id === config.stripePrice,
-            );
-            const paidUntil =
-              item && ["active", "trialing"].includes(current.status)
-                ? new Date(item.current_period_end * 1000)
-                : null;
-            const customer =
-              typeof current.customer === "string"
-                ? current.customer
-                : current.customer.id;
-            await allowance.pool.query(
-              "INSERT INTO outclass_service.accounts(user_id,customer,subscription,paid_until) VALUES($1,$2,$3,$4) ON CONFLICT(user_id) DO UPDATE SET customer=excluded.customer,subscription=excluded.subscription,paid_until=excluded.paid_until",
-              [user, customer, current.id, paidUntil],
-            );
-            await allowance.pool.query(
-              "INSERT INTO outclass_service.webhooks(id) VALUES($1) ON CONFLICT DO NOTHING",
-              [event.id],
-            );
-          }
-        : undefined,
+    ...(billing
+      ? {
+          checkout: (user: string) => billing.checkout(user),
+          webhook: (body: Buffer, signature: string) =>
+            billing.webhook(body, signature),
+        }
+      : {}),
   };
 }

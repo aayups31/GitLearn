@@ -324,6 +324,26 @@ describe("Udemy to local history", () => {
   });
 });
 describe("boundary checks", () => {
+  it("blocks bare Stripe secrets before checkpoint capture or AI context, while allowing publishable keys", () => {
+    for (const prefix of [
+      "sk_test_",
+      "sk_live_",
+      "rk_test_",
+      "rk_live_",
+      "whsec_",
+    ]) {
+      expect(
+        scan(`const value = '${prefix}${"a".repeat(24)}'`, "billing.ts"),
+      ).toContainEqual({
+        path: "billing.ts",
+        kind:
+          prefix === "whsec_" ? "Stripe webhook secret" : "Stripe secret key",
+      });
+    }
+    expect(
+      scan(`const value = 'pk_test_${"a".repeat(24)}'`, "billing.ts"),
+    ).toEqual([]);
+  });
   it("rejects traversal, credential URLs, and unrelated sites", () => {
     expect(() => child(repo, "../outside")).toThrow();
     expect(() => child(repo, "folder/../../outside")).toThrow();

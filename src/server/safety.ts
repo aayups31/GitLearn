@@ -80,6 +80,8 @@ export function excluded(relative: string) {
 export function scan(text: string, filename: string): Finding[] {
   const checks: [RegExp, string][] = [
     [/\bsk-(?:proj-|svcacct-)?[a-zA-Z0-9_-]{20,}/, "API key"],
+    [/\b(?:sk|rk)_(?:test|live)_[a-zA-Z0-9]{20,}/, "Stripe secret key"],
+    [/\bwhsec_[a-zA-Z0-9]{20,}/, "Stripe webhook secret"],
     [/\b(?:ghp_|github_pat_|gho_|ghs_)[a-zA-Z0-9_]{20,}/, "GitHub token"],
     [/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/, "private key"],
     [/\bAKIA[0-9A-Z]{16}\b/, "cloud credential"],
