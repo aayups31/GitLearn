@@ -121,7 +121,9 @@ export class IdeaNotebook {
     }
     return {
       ...data,
-      aiReady: this.app.ai.ready(),
+      aiReady:
+        this.app.ai.ready() &&
+        !!this.app.store.state().settings.assistantEnabled,
       reviewDue: data.projects
         .filter(
           (p) =>
@@ -256,16 +258,14 @@ export class IdeaNotebook {
         .digest("hex"),
       title: p.title,
       problem: p.problem,
-      notes: p.notes
-        .slice(-20)
-        .map((n) => ({
-          id: n.id,
-          text: n.text.slice(0, 2000),
-          kind: n.kind,
-          origin: n.origin,
-          courseId: n.courseId,
-          sourceId: n.sourceId,
-        })),
+      notes: p.notes.slice(-20).map((n) => ({
+        id: n.id,
+        text: n.text.slice(0, 2000),
+        kind: n.kind,
+        origin: n.origin,
+        courseId: n.courseId,
+        sourceId: n.sourceId,
+      })),
       courses: p.courseIds.map((id) => {
         const c = this.app.store.state().courses.find((c) => c.id === id);
         return {
@@ -294,11 +294,10 @@ export class IdeaNotebook {
         context = this.context(id);
       let answer: z.infer<typeof architectAnswer>,
         mode: "ai" | "local" = "local";
-      if (this.app.ai.ready()) {
-        if (!this.app.store.state().settings.assistantEnabled)
-          throw new UserError(
-            "Enable AI assistance in Settings before sending notebook context.",
-          );
+      if (
+        this.app.ai.ready() &&
+        this.app.store.state().settings.assistantEnabled
+      ) {
         answer = await this.app.ai.structured({
           task: "architect",
           schema: architectAnswer,

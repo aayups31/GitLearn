@@ -134,6 +134,19 @@ it("rejects fabricated model connections and a note deletion during inference", 
   finish({ answer: "Old suggestion", connections: [] });
   await expect(response).rejects.toThrow("changed during");
 });
+it("keeps local planning available when a connection is configured but AI is disabled", async () => {
+  const p = create();
+  vi.spyOn(app.ai, "ready").mockReturnValue(true);
+  const infer = vi.spyOn(app.ai, "structured");
+  const result = await notebook.ask(
+    p.id,
+    "What should my first version do?",
+    true,
+  );
+  expect(result.review?.mode).toBe("local");
+  expect(infer).not.toHaveBeenCalled();
+  expect(notebook.status().aiReady).toBe(false);
+});
 it("persists original notes and project settings across restarts without AI", () => {
   const p = create();
   notebook.note(p.id, { text: "A durable project decision", kind: "decision" });

@@ -88,6 +88,25 @@ if (args[0] === "status") {
   console.log(
     `Published preview release: https://github.com/aayups31/OutClass/releases/tag/v${version}`,
   );
+} else if (args[0] === "replace-preview") {
+  const { version } = JSON.parse(await readFile("package.json", "utf8"));
+  await command(
+    "gh",
+    [
+      "release",
+      "upload",
+      `v${version}`,
+      `dist/releases/OutClass-Setup-${version}.exe`,
+      `dist/releases/OutClass-Chrome-${version}.zip`,
+      `dist/releases/OutClass-Editor-${version}.vsix`,
+      "dist/releases/SHA256SUMS.txt",
+      "--repo",
+      "aayups31/OutClass",
+      "--clobber",
+    ],
+    env,
+  );
+  console.log(`Updated verified preview artifacts for v${version}.`);
 } else if (args[0] === "replace-installer") {
   const { version } = JSON.parse(await readFile("package.json", "utf8"));
   await command(
