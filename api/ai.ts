@@ -20,7 +20,15 @@ export default async function handler(
         throw error;
       });
     (await runtime).app(req, res);
-  } catch {
+  } catch (error) {
+    // Diagnostic identifiers only: database errors can contain connection credentials.
+    const code = (error as { code?: unknown })?.code;
+    console.error("OutClass service initialization failed", {
+      code: typeof code === "string" && /^[A-Z0-9_]{1,60}$/.test(code) ? code : "INITIALIZATION",
+      settings: error instanceof Error && error.message.startsWith("Configure AI service settings:")
+        ? error.message.replace("Configure AI service settings: ", "").split(", ")
+        : undefined,
+    });
     res.statusCode = 503;
     res.setHeader("Content-Type", "application/json");
     res.setHeader("Cache-Control", "no-store");
