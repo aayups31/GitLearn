@@ -1,0 +1,327 @@
+.suite-nav {
+  display: flex;
+  gap: 28px;
+  padding-block: 24px;
+  border-bottom: 1px solid #ffffff12;
+  flex-wrap: wrap;
+}
+.suite-nav a {
+  color: #8a9ab7;
+  font-size: 13px;
+}
+.suite-nav a[aria-current="page"] {
+  color: #dceaff;
+}
+.suite-hero {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  align-items: center;
+  gap: 70px;
+  padding-block: 90px 100px;
+}
+.suite-status {
+  color: #87a9e8;
+  font-size: 11px;
+  line-height: 1.8;
+  letter-spacing: 0.03em;
+}
+.suite-hero h1 {
+  font-size: clamp(48px, 6vw, 88px);
+  letter-spacing: -0.07em;
+  line-height: 1.05;
+  margin: 23px 0;
+}
+.suite-hero > div > p {
+  color: #9cadc7;
+  line-height: 1.8;
+  font-size: 17px;
+  max-width: 430px;
+}
+.suite-hero .hero-actions {
+  flex-wrap: wrap;
+}
+.suite-course,
+.suite-creative,
+.suite-growth {
+  padding: 30px;
+  background:
+    radial-gradient(ellipse at 100% 0, #294f9740, transparent 65%), #101724;
+  border: 1px solid #5075b43a;
+  border-radius: 18px;
+  box-shadow: 0 25px 80px #0006;
+  min-width: 0;
+}
+.suite-hero > div > span,
+.suite-hero small {
+  font-size: 10px;
+  color: #819bc2;
+  line-height: 1.7;
+}
+.suite-hero small {
+  display: block;
+  margin-top: 22px;
+}
+.suite-course h3,
+.suite-growth h3 {
+  font-size: 26px;
+  letter-spacing: -0.04em;
+  margin: 24px 0 10px;
+}
+.suite-course p {
+  color: #8d9cba;
+}
+.suite-node {
+  border: 1px solid #617dac35;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 12px;
+  font-size: 14px;
+  color: #d3e1f8;
+}
+.suite-node > span {
+  display: block;
+  color: #7797c7;
+  font-size: 11px;
+  margin-top: 7px;
+}
+.suite-course i,
+.suite-funnel i {
+  display: block;
+  text-align: center;
+  font-style: normal;
+  color: #648dcc;
+  margin-top: 10px;
+}
+.suite-artboard {
+  background: linear-gradient(130deg, #244a92, #111c31);
+  border: 1px solid #5a8adc44;
+  border-radius: 9px;
+  padding: 30px;
+  margin-top: 24px;
+}
+.suite-artboard span {
+  color: #9ebbed;
+  font-size: 12px;
+}
+.suite-artboard h3 {
+  font-size: 40px;
+  line-height: 1.1;
+  letter-spacing: -0.055em;
+  color: #e0ecff;
+}
+.suite-artboard i {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: #7faae8;
+  font-style: normal;
+}
+.suite-timeline {
+  display: flex;
+  gap: 5px;
+  margin-top: 24px;
+  height: 28px;
+}
+.suite-timeline b {
+  flex: 1;
+  background: #3f6dc344;
+  border: 1px solid #5f8ddd44;
+  border-radius: 4px;
+}
+.suite-timeline b:nth-child(2) {
+  flex: 2;
+  background: #365b9144;
+}
+.suite-funnel {
+  margin-top: 26px;
+}
+.suite-funnel b {
+  display: block;
+  font-weight: 500;
+  font-size: 14px;
+  border: 1px solid #6b87b22e;
+  padding: 15px 20px;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: 10px;
+}
+.suite-metrics {
+  display: flex;
+  gap: 40px;
+  margin-top: 28px;
+  font-size: 11px;
+  color: #8d9dba;
+}
+.suite-metrics strong {
+  display: block;
+  font-size: 16px;
+  font-weight: 500;
+  color: #bbcee9;
+  margin-top: 10px;
+}
+.suite-workflow {
+  padding-block: 90px;
+  border-top: 1px solid #ffffff12;
+}
+.suite-workflow h2,
+.suite-agent h2,
+.suite-connected h2 {
+  font-size: clamp(34px, 4.1vw, 56px);
+  line-height: 1.1;
+  letter-spacing: -0.06em;
+  margin: 0 0 25px;
+}
+.suite-workflow > p {
+  max-width: 670px;
+  line-height: 1.8;
+  color: #97a7c0;
+}
+.suite-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+  margin-top: 50px;
+}
+.suite-steps h3 {
+  font-size: 21px;
+  letter-spacing: -0.035em;
+}
+.suite-steps p {
+  color: #8e9fba;
+  line-height: 1.8;
+  font-size: 14px;
+}
+.suite-agent {
+  padding-block: 85px;
+  border-top: 1px solid #ffffff12;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+}
+.suite-agent h2 {
+  margin-top: 18px;
+}
+.suite-agent p {
+  color: #90a1bd;
+  line-height: 1.8;
+}
+.suite-connected {
+  padding-block: 80px;
+  border-top: 1px solid #ffffff12;
+}
+.suite-connected > p {
+  color: #8a9cb9;
+  line-height: 1.7;
+}
+.suite-portfolio {
+  padding-block: 100px;
+}
+.suite-portfolio-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 40px;
+  margin-bottom: 40px;
+}
+.suite-portfolio h2 {
+  font-size: clamp(38px, 4.5vw, 64px);
+  line-height: 1.1;
+  letter-spacing: -0.06em;
+  margin: 0;
+}
+.suite-portfolio h2 span {
+  color: #96a6bf;
+}
+.suite-portfolio-heading > p {
+  max-width: 300px;
+  color: #92a2bd;
+  line-height: 1.8;
+}
+.suite-product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+.suite-product-grid > a {
+  display: block;
+  padding: 28px 20px;
+  border-top: 1px solid #6683b34d;
+  border-radius: 8px;
+  background: linear-gradient(140deg, #19253a70, transparent);
+}
+.suite-product-grid > a:hover {
+  background: #162338;
+}
+.suite-product-grid span {
+  font-size: 10px;
+  color: #83a6e1;
+  line-height: 1.8;
+  display: block;
+  min-height: 36px;
+}
+.suite-product-grid h3 {
+  font-size: 22px;
+  letter-spacing: -0.035em;
+  color: #e0e9fa;
+}
+.suite-product-grid p {
+  font-size: 13px;
+  color: #92a4c2;
+  line-height: 1.8;
+}
+.site-footer nav {
+  flex-wrap: wrap;
+}
+@media (max-width: 900px) {
+  .suite-hero {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    padding-block: 60px;
+  }
+  .suite-agent {
+    gap: 35px;
+    grid-template-columns: 1fr;
+  }
+  .suite-product-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .suite-nav {
+    gap: 18px;
+    padding-block: 18px;
+  }
+  .suite-nav a {
+    font-size: 11px;
+  }
+  .suite-hero h1 {
+    font-size: 48px;
+  }
+  .suite-hero > div > p {
+    font-size: 15px;
+  }
+  .suite-course,
+  .suite-creative,
+  .suite-growth {
+    padding: 22px;
+  }
+  .suite-steps {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    margin-top: 30px;
+  }
+  .suite-portfolio-heading {
+    display: block;
+  }
+  .suite-product-grid {
+    grid-template-columns: 1fr;
+  }
+  .suite-portfolio,
+  .suite-workflow,
+  .suite-agent,
+  .suite-connected {
+    padding-block: 60px;
+  }
+  .suite-artboard h3 {
+    font-size: 36px;
+  }
+}
