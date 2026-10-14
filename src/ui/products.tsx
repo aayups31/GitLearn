@@ -18,6 +18,8 @@ import type {
   Campaign,
 } from "../expansion-contract";
 import "./products.css";
+import { CreatorMedia } from "./creator-media";
+import { AgentPanel, CompilerPanel } from "./product-intelligence";
 type API = <T>(route: string, body?: unknown) => Promise<T>;
 const courseValues = (c: AcademyDraft): AcademyDraft => ({
   title: c.title,
@@ -446,10 +448,16 @@ export function ProductWorkspace({
                     Approve local release
                   </button>
                 </div>
+                <CompilerPanel course={selected} dirty={dirty} api={api} />
+                <AgentPanel
+                  domain="academy"
+                  entity={selected}
+                  dirty={dirty}
+                  api={api}
+                />
                 <p className="product-limit">
-                  Academy Architect and executable course validation are next.
-                  This builder checks required content; it does not claim code
-                  was tested.
+                  Structure checks validate required course content. The
+                  laboratory executes the supported Python template separately.
                 </p>
               </section>
             </div>
@@ -762,10 +770,24 @@ export function ProductWorkspace({
                   Export editable brief
                 </button>
               </div>
+              <AgentPanel
+                domain="creative"
+                entity={selectedCreative}
+                dirty={dirty}
+                api={api}
+                onApply={(text) => {
+                  setCreative({ ...creative, copy: text });
+                  changed();
+                }}
+              />
+              <CreatorMedia
+                api={api}
+                creative={selectedCreative}
+                dirty={dirty}
+              />
               <p className="product-limit">
-                Video ingestion, timeline rendering and Creative Director
-                inference are not connected yet. This workspace creates real,
-                editable writing briefs with course provenance.
+                Source-grounded writing and reviewed proposals stay editable.
+                Media production is managed separately below.
               </p>
             </section>
           </div>
@@ -1005,9 +1027,19 @@ export function ProductWorkspace({
                   </li>
                 </ol>
               </div>
+              <AgentPanel
+                domain="growth"
+                entity={selectedCampaign}
+                dirty={dirty}
+                api={api}
+                onApply={(text) => {
+                  setCampaign({ ...campaign, goal: text.slice(0, 2000) });
+                  changed();
+                }}
+              />
               <p className="product-limit">
-                Growth Strategist, official publishing and ad analytics are not
-                connected. Budget here is a plan, never a spending instruction.
+                Proposed budgets are plans, never spending instructions. Connect
+                verified channels before publishing.
               </p>
             </section>
           </div>

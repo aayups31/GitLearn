@@ -50,13 +50,14 @@ type Theme = "light" | "dark";
 const initialTheme: Theme =
   document.documentElement.dataset.theme === "dark" ? "dark" : "light";
 async function request<T>(route: string, body?: unknown): Promise<T> {
+  const binary = body instanceof Blob;
   const response = await fetch(`/api/${route}`, {
     method: body === undefined ? "GET" : "POST",
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": binary ? "application/octet-stream" : "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: body === undefined ? undefined : binary ? body : JSON.stringify(body),
   });
   const result = await response.json();
   if (!response.ok)

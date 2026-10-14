@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { CompiledProject } from "./server/academy-compiler.js";
 
 const text = (max = 4000) => z.string().trim().max(max);
 export const academyLesson = z
@@ -56,6 +57,7 @@ export type CourseRelease = AcademyDraft & {
   publishedAt: string;
   hash: string;
   visibility: "local";
+  project?: CompiledProject;
 };
 export type Creative = Revision<CreativeDraft> & {
   approval?: { hash: string; revision: number; approvedAt: string };

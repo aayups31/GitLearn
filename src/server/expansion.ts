@@ -11,6 +11,16 @@ import {
 } from "../expansion-contract.js";
 import type { Application } from "./application.js";
 import { assertClean, slug, UserError } from "./safety.js";
+import {
+  AcademyCompiler,
+  apiStarter,
+  apiTests,
+  apiServer,
+  milestones,
+} from "./academy-compiler.js";
+import { writeFile } from "node:fs/promises";
+import path from "node:path";
+import { ProductAgents } from "./product-agents.js";
 
 const key = "expansion:v1";
 const stamp = () => new Date().toISOString();
@@ -44,7 +54,10 @@ export function validateCourse(course: AcademyDraft) {
   };
 }
 export class Expansion {
-  constructor(readonly app: Application) {}
+  readonly compiler: AcademyCompiler;
+  constructor(readonly app: Application) {
+    this.compiler = new AcademyCompiler(app);
+  }
   state(): ExpansionState {
     return (
       this.app.store.get<ExpansionState>(key) || {
@@ -118,6 +131,9 @@ export class Expansion {
         publishedAt: stamp(),
         hash: hash(content),
         visibility: "local",
+        ...(this.compiler.status(id)?.revision === draft.revision
+          ? { project: this.compiler.status(id) }
+          : {}),
       };
       state.releases.push(release);
       return release;
@@ -182,6 +198,30 @@ export class Expansion {
     }
     await this.app.mirror(courseId);
     await this.app.start(courseId, lessonId);
+    if (release.project?.verified) {
+      const workspace = this.app.store.state().session!.workspace;
+      const files = {
+        "main.py": apiStarter,
+        "test_project.py": apiTests,
+        "server.py": apiServer,
+        "data.json": JSON.stringify(
+          [
+            { user: "Ada", minutes: 25 },
+            { user: "Ada", minutes: 20 },
+            { user: "Bob", minutes: 12 },
+          ],
+          null,
+          2,
+        ),
+        "PROJECT_BRIEF.md": `# ${release.project.title}\n\n${milestones.map((m, i) => `## ${i + 1}. ${m.title}\n${m.objective}\n\n${m.brief}\nChecks: ${m.checks}`).join("\n\n")}\n\nRun checks: python test_project.py\nStart the local API: python server.py\nOpen http://127.0.0.1:8000/report after implementing the boundary. data.json contains illustrative sample records.\nThe reference passed 18 checks; the starter intentionally passes none. This verifies the template, not learner mastery.\n`,
+      };
+      for (const [name, content] of Object.entries(files))
+        await writeFile(path.join(workspace, name), content, {
+          flag: "wx",
+        }).catch((error: NodeJS.ErrnoException) => {
+          if (error.code !== "EEXIST") throw error;
+        });
+    }
     await this.app.saveNote(
       `${lesson.content}\n\nObjective: ${lesson.objective}\n\nPractice: ${lesson.practice}`,
     );
@@ -275,6 +315,22 @@ export class Expansion {
 export function expansionRoutes(app: Application) {
   const router = Router(),
     expansion = new Expansion(app);
+  const agents = new ProductAgents(app, () => expansion.state());
+  router.get("/agents", (_req, res) => res.json(agents.list()));
+  router.post("/agents/run", async (req, res) => {
+    const input = z
+      .object({
+        domain: z.enum(["academy", "creative", "growth"]),
+        entityId: z.string().uuid(),
+        expectedRevision: z.number().int(),
+        approveProvider: z.literal(true),
+      })
+      .strict()
+      .parse(req.body);
+    res.json(
+      await agents.run(input.domain, input.entityId, input.expectedRevision),
+    );
+  });
   router.get("/state", (_req, res) => res.json(expansion.state()));
   router.post("/courses/save", (req, res) =>
     res.json(expansion.saveCourse(req.body)),
@@ -289,6 +345,31 @@ export function expansionRoutes(app: Application) {
   router.post("/courses/:id/release", (req, res) =>
     res.json(expansion.release(req.params.id, req.body)),
   );
+  router.get("/courses/:id/project", (req, res) =>
+    res.json(expansion.compiler.status(req.params.id) || null),
+  );
+  router.post("/courses/:id/compile", async (req, res) => {
+    const input = z
+      .object({
+        expectedRevision: z.number().int(),
+        approveExecution: z.literal(true),
+      })
+      .strict()
+      .parse(req.body);
+    const course = expansion
+      .state()
+      .courses.find((c) => c.id === req.params.id);
+    if (!course || course.revision !== input.expectedRevision)
+      throw new UserError(
+        "Reload the current course draft before compiling.",
+        409,
+      );
+    const report = validateCourse(course);
+    if (!report.valid) throw new UserError(report.issues.join(" "));
+    res.json(
+      await expansion.compiler.compile(course.id, course.revision, course),
+    );
+  });
   router.post("/releases/:id/enroll", (req, res) => {
     z.object({}).strict().parse(req.body);
     res.json(expansion.enroll(req.params.id));

@@ -21,7 +21,8 @@ import { LearningPath, directionSchema } from "./learning-path.js";
 import { IdeaNotebook } from "./notebook.js";
 import { workspaceFeatures } from "./workspace-features.js";
 import { EditorIntegration } from "./editor-integration.js";
-import { expansionRoutes } from "./expansion.js";
+import { expansionRoutes, Expansion } from "./expansion.js";
+import { CreatorProduction } from "./creator-production.js";
 
 const text = z.string().max(2000);
 function matches(a: string, b: string) {
@@ -37,6 +38,9 @@ export function createApp(
     path.resolve("dist/editor/OutClass-Editor-0.7.0.vsix"),
 ) {
   const app = express();
+  const creatorProduction = new CreatorProduction(application, () =>
+    new Expansion(application).state(),
+  );
   const workspace = new Workspace(application);
   const practice = new Practice(application, workspace);
   const runtime = new ProjectRuntime(application, workspace);
@@ -50,6 +54,7 @@ export function createApp(
   );
   app.locals.stopPrograms = async () => {
     app.locals.closing = true;
+    creatorProduction.stop();
     live.stopAll();
     runtime.stopAll();
     await workspace.stopAll();
@@ -102,6 +107,7 @@ export function createApp(
     next();
   });
   app.use(express.json({ limit: "1mb" }));
+  app.use("/creator-media", creatorProduction.publicRoutes());
   app.get("/api/health", (_req, res) =>
     res.json({ ok: true, name: "GitLearn", version: "0.4.2" }),
   );
@@ -301,6 +307,7 @@ export function createApp(
   );
   workspaceFeatures(app, application, notebook);
   app.use("/api/expansion", expansionRoutes(application));
+  app.use("/api/expansion/media", creatorProduction.routes());
   app.post("/api/editor-run", async (req, res) => {
     const input = z
         .object({

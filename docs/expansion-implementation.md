@@ -122,3 +122,26 @@ Next milestone: bounded Academy Architect contract and Python project compiler
 with executed starter/reference/test validation; then source-media/EDL/FFmpeg
 production. Organization auth and hosted launch grants precede public catalog/
 enrollment. The entire master specification is not delivered by this foundation.
+
+## Executable Academy and real Creator production milestone
+The source build now has separate bounded Academy Architect, Creative Director and
+Growth Strategist proposal contracts using the existing personal/included/local AI
+provider. Saved creator drafts and bounded lesson excerpts are sent only after a
+user confirms the run. Proposals persist with source IDs, revision, limits and status;
+invalid source IDs are rejected. This pass tested the models with fixtures and did
+not spend provider credits.
+
+Academy can compile the vetted Python Activity API sequence. Course CI executes
+18 reference checks, confirms the intentionally incomplete starter, and smoke-tests
+the actual localhost HTTP boundary. The verified template is pinned to a released
+course. Learn receives starter code, visible tests, a local server, sample data and
+milestone instructions without overwriting an existing file. This is one supported
+template, not verification of arbitrary instructor code or learner mastery.
+
+Creator Studio imports owned MP4/MOV/WebM source files (80 MB/file, 320 MB library),
+probes actual streams, edits clip ranges/captions, and runs a single bounded FFmpeg
+worker. Landscape/portrait output, captions, editable timeline manifests, playback,
+download and exact export approval work. Source files stay local; no cloud render
+charges. Jobs survive as receipts; an interrupted job is marked failed and requires
+explicit resubmission, not a hidden restart. Python and FFmpeg/FFprobe are required.
+Real fixture rendering and media QA passed.

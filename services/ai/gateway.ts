@@ -16,6 +16,8 @@ import {
 } from "./billing.js";
 import {
   hostedRequest,
+  answerSchema,
+  answerInstructions,
   teacherAnswer,
   architectAnswer,
   checkpointAnswer,
@@ -296,13 +298,7 @@ export function createGateway(deps: GatewayDependencies) {
           });
           return;
         }
-        const answer = (
-          input.task === "teacher"
-            ? teacherAnswer
-            : input.task === "checkpoint"
-              ? checkpointAnswer
-              : architectAnswer
-        ).parse(await deps.answer(input));
+        const answer = answerSchema(input.task).parse(await deps.answer(input));
         res.json({ answer, usage: await deps.allowance.usage(user) });
       } finally {
         active.delete(user);
@@ -425,22 +421,12 @@ export function productionDependencies(
       };
     },
     answer: async ({ task, context, history }) => {
-      const schema =
-        task === "teacher"
-          ? teacherAnswer
-          : task === "checkpoint"
-            ? checkpointAnswer
-            : architectAnswer;
+      const schema = answerSchema(task);
       const response = await client.responses.parse({
         model: config.model,
         store: false,
         max_output_tokens: task === "checkpoint" ? 250 : 1800,
-        instructions:
-          task === "teacher"
-            ? teacherInstructions
-            : task === "checkpoint"
-              ? checkpointInstructions
-              : architectInstructions,
+        instructions: answerInstructions(task),
         input: [...history, { role: "user", content: context }],
         text: { format: zodTextFormat(schema, "outclass_answer") },
       });

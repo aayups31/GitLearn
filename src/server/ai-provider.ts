@@ -274,7 +274,13 @@ export class AIProvider {
     }
   }
   async structured<T extends z.ZodType>(options: {
-    task: "teacher" | "architect" | "checkpoint";
+    task:
+      | "teacher"
+      | "architect"
+      | "checkpoint"
+      | "academy"
+      | "creative"
+      | "growth";
     schema: T;
     name: string;
     instructions: string;
