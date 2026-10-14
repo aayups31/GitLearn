@@ -1,0 +1,88 @@
+# OutClass expansion implementation direction
+October 14, 2026. Source: expansion-master-spec.md. This is a multi-release
+programme; delivery status is recorded explicitly rather than equating pages with products.
+
+## Verified reusable foundation
+- React/TypeScript desktop, CodeMirror, Node loopback companion, SQLite KV transactions.
+- Course/session identities, granted coding folders, explicit execution, checkpoints,
+  imported course sources, practice, evidence and two existing learner agents.
+- Local API middleware rejects remote origins, scopes extension/editor tokens, requires
+  bearer auth. New creator routes must sit after that middleware.
+- Public Vercel static site + optional account/AI gateway; Supabase is currently used
+  for identity, allowances and AI subscription billing, not creator organizations.
+- No Academy commerce, creator memberships, media object storage, publishing OAuth,
+  social/ads adapters, Academy launch grants or cloud workflow runner currently exist.
+- Existing AI structured output supports teacher/architect/checkpoint contracts.
+  New flagship agents need their own contracts; reusing the learner architect name
+  as an included-AI curriculum endpoint would return the wrong shape.
+
+## Product boundaries
+Learn stays intact. Academy owns course drafts, immutable releases and enrollments.
+Creator Studio owns brand/media/EDL/asset approval. GTM owns campaigns, links,
+manual handoff and eventually confirmed distribution/attribution. Separate pages:
+ /learn, /academy, /creator-studio, /gtm.
+Initial workspace paths: ?view=academy, ?view=creator, ?view=gtm.
+These are additive local authoring tools, not a public marketplace.
+
+## First working slices
+1. Persist local Academy drafts, measurable lesson objectives, practice briefs,
+   validation reports, revision checks and immutable locally released snapshots.
+   Local self-enrollment -> version-pinned Learn course -> actual existing session.
+   Use an in-process authenticated adapter; no public desktop launch/deep link claims.
+2. Creator: editable source-grounded writing/storyboard and brand draft, exported
+   manifests, review tied to exact revision. Actual source-video import/render comes
+   next with isolated bounded FFmpeg workers. No text prompt labelled rendered video.
+3. GTM: linked course/approved creative version, draft campaign, validated UTM URL,
+   manual export, planned budget/currency and measurement checklist.
+   No invented traffic/revenue/published state, no spend or external writes.
+4. Academy Architect: bounded editable proposals with explicit model/cost consent;
+   Python project compiler with real tests and starter/reference separation next.
+
+## Shared contracts and persistence
+Version 1 local expansion entities use their own KV prefix and Zod boundary schemas.
+Local drafts never touch saved learner course data until explicit enrollment/launch.
+Expected revision prevents stale tabs from overwriting drafts. Release and creative
+approval freeze exact revisions; edits require fresh review. Limits on entities/text.
+Local identity is the authenticated companion owner; no claims of multi-tenant isolation.
+Cloud migration will introduce organizations/memberships, normalized Postgres tables
+with RLS, upload objects, transactional outbox and durable jobs after identity design.
+Existing AI/Stripe subscription tables remain separate from course commerce.
+
+## Learn adapter
+Course IDs include Academy release identity. Actual sessions use Application.start;
+safe paths and workspace creation use existing Application checks. Lesson body/brief
+is copied to the session note on explicit launch. No code execution or secret upload
+occurs. Active sessions block a different launch. Telemetry sharing is absent by default.
+Future hosted adapter: entitlement check, expiring single-use scoped grant, local
+confirmation, immutable template hash, consented events, replay-safe exchange.
+No permanent credentials in URLs and no unauthenticated localhost write route.
+
+## Staged release gates
+- Foundation: local drafts survive restart; invalid/unreviewed/stale releases blocked;
+  local enrollments idempotent; actual Learn launch; all four public pages.
+- Compiler: one Python stack, bounded sandbox execution, reference/tests verified,
+  versioned acceptance/rubric/hint ladder; no published “verified” from schema checks.
+- Studio: source rights, probes, timestamp index, editable EDL, actual bounded render,
+  decoding/duration/caption QA, immutable exports, cancellation.
+- Organic GTM: manual fallback first; one verified official provider, OAuth/scopes,
+  precise approval, durable retry, external confirmation, consented first-party events.
+- Commerce: separate Stripe course orders, idempotent webhook entitlements, refunds,
+  actual fees/net ledger, marketplace payout decisions. Existing Plus is not course checkout.
+- Ads: authorized read-only ingestion before approved writes. Unknown metrics stay unknown.
+- Cross-product intelligence: evidence graph, consent, revisions and evaluated models.
+
+## Cost discipline
+Small commits represent finished slices, not token churn. Reuse architecture and
+dependencies, no proactive subagents, no full-suite reruns for copy changes.
+One targeted build/type check and relevant tests per behavioral milestone; repeat
+only after changes/failures. No paid inference/render/provider calls by default.
+Deterministic validation and outline scaffolds cost no API credits. A future agent run
+must declare source/version, max calls/tokens and budget before execution.
+A $7–15 development cost per commit is a target, not a guaranteed measurement:
+Codex billing is account/model/session dependent and Git commits have no intrinsic cost.
+Commercial provider costs need measured usage; no fictional per-course estimates.
+
+## Remaining external setup
+Public creator authentication/organizations; verified email sender; media bucket;
+isolated workers/queue; official social/ads application access; course commerce
+pricing/refund/payout policies. Existing account preview and test Stripe are retained.
