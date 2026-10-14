@@ -22,9 +22,24 @@ export function AgentPanel({
   const current = useRef(entity?.id);
   current.current = entity?.id;
   useEffect(() => {
+    let active = true;
     setRun(undefined);
     setError("");
-  }, [entity?.id]);
+    if (entity)
+      api<ProductAgentRun[]>("expansion/agents")
+        .then((rows) => {
+          if (active)
+            setRun(
+              rows
+                .filter((r) => r.entityId === entity.id && r.domain === domain)
+                .at(-1),
+            );
+        })
+        .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [entity?.id, api, domain]);
   const name =
     domain === "academy"
       ? "Academy Architect"

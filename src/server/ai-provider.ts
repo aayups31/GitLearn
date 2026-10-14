@@ -142,6 +142,15 @@ export class AIProvider {
       );
     }
   }
+  platform(route: string, body?: unknown) {
+    if (
+      !/^(catalog|mine|publish|redeem|courses\/[a-f0-9-]{36}\/(enroll|grant|withdraw))$/.test(
+        route,
+      )
+    )
+      throw new UserError("Unknown Academy operation.");
+    return this.request(`academy/${route}`, body, route !== "catalog");
+  }
   async login(email: string) {
     await this.request("auth/email", { email });
     return { sent: true };

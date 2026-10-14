@@ -21,6 +21,8 @@ import {
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { ProductAgents } from "./product-agents.js";
+import { designExport } from "./creator-design.js";
+import { CourseLibrary } from "./library.js";
 
 const key = "expansion:v1";
 const stamp = () => new Date().toISOString();
@@ -150,6 +152,76 @@ export class Expansion {
       return enrollment;
     });
   }
+  async publishHosted(releaseId: string) {
+    const release = this.state().releases.find((r) => r.id === releaseId);
+    if (!release) throw new UserError("Choose a local course release.", 404);
+    const { title, audience, outcome, rightsConfirmed, lessons } = release;
+    const result = await this.app.ai.platform("publish", {
+      releaseId: release.id,
+      lineageId: release.courseId,
+      revision: release.revision,
+      course: { title, audience, outcome, rightsConfirmed, lessons },
+      projectTemplate: release.project?.verified
+        ? "python_activity_api_v1"
+        : null,
+      approvePublicRelease: true,
+    });
+    this.app.store.put(`academy:publication:${release.id}`, result);
+    return result;
+  }
+  async importHosted(grant: string) {
+    if (this.app.configured().session)
+      throw new UserError(
+        "Finish or discard your current Learn session before redeeming a course code.",
+        409,
+      );
+    const payload = z
+      .object({
+        contractVersion: z.literal(1),
+        id: z.string().uuid(),
+        title: z.string(),
+        revision: z.number().int().positive(),
+        lessonIndex: z.number().int().min(0).max(29),
+        course: courseDraft,
+        projectTemplate: z.enum(["python_activity_api_v1"]).nullable(),
+        scopes: z.tuple([z.literal("read_assignment")]),
+      })
+      .parse(await this.app.ai.platform("redeem", { grant }));
+    if (!payload.course.lessons[payload.lessonIndex])
+      throw new UserError("The assignment does not contain this lesson.");
+    const release: CourseRelease = {
+      ...payload.course,
+      id: payload.id,
+      courseId: payload.id,
+      revision: payload.revision,
+      publishedAt: stamp(),
+      hash: hash(payload.course),
+      visibility: "local",
+    };
+    this.change((state) => {
+      const existing = state.releases.find((r) => r.id === release.id);
+      if (
+        existing &&
+        (existing.revision !== release.revision ||
+          existing.hash !== release.hash)
+      )
+        throw new UserError(
+          "This downloaded release conflicts with local content.",
+          409,
+        );
+      if (!existing) {
+        if (state.releases.length >= 120)
+          throw new UserError("The local release limit has been reached.");
+        state.releases.push(release);
+      }
+    });
+    this.app.store.put(
+      `academy:template:${release.id}`,
+      payload.projectTemplate,
+    );
+    this.enroll(release.id);
+    return this.launch(release.id, payload.lessonIndex);
+  }
   async launch(releaseId: string, lessonIndex: number) {
     const expansion = this.state();
     const release = expansion.releases.find((r) => r.id === releaseId);
@@ -198,7 +270,11 @@ export class Expansion {
     }
     await this.app.mirror(courseId);
     await this.app.start(courseId, lessonId);
-    if (release.project?.verified) {
+    if (
+      release.project?.verified ||
+      this.app.store.get(`academy:template:${release.id}`) ===
+        "python_activity_api_v1"
+    ) {
       const workspace = this.app.store.state().session!.workspace;
       const files = {
         "main.py": apiStarter,
@@ -213,7 +289,7 @@ export class Expansion {
           null,
           2,
         ),
-        "PROJECT_BRIEF.md": `# ${release.project.title}\n\n${milestones.map((m, i) => `## ${i + 1}. ${m.title}\n${m.objective}\n\n${m.brief}\nChecks: ${m.checks}`).join("\n\n")}\n\nRun checks: python test_project.py\nStart the local API: python server.py\nOpen http://127.0.0.1:8000/report after implementing the boundary. data.json contains illustrative sample records.\nThe reference passed 18 checks; the starter intentionally passes none. This verifies the template, not learner mastery.\n`,
+        "PROJECT_BRIEF.md": `# ${release.project?.title || "Python activity API"}\n\n${milestones.map((m, i) => `## ${i + 1}. ${m.title}\n${m.objective}\n\n${m.brief}\nChecks: ${m.checks}`).join("\n\n")}\n\nRun checks: python test_project.py\nStart the local API: python server.py\nOpen http://127.0.0.1:8000/report after implementing the boundary. data.json contains illustrative sample records.\nThe reference passed 18 checks; the starter intentionally passes none. This verifies the template, not learner mastery.\n`,
       };
       for (const [name, content] of Object.entries(files))
         await writeFile(path.join(workspace, name), content, {
@@ -222,6 +298,17 @@ export class Expansion {
           if (error.code !== "EEXIST") throw error;
         });
     }
+    const library = new CourseLibrary(this.app);
+    release.lessons.forEach((l, i) =>
+      library.document(
+        courseId,
+        l.title,
+        `${l.content}\n\nObjective: ${l.objective}\n\nPractice: ${l.practice}`,
+        "academy",
+        `lesson-${i}`,
+        `academy:${releaseId}:${i}`,
+      ),
+    );
     await this.app.saveNote(
       `${lesson.content}\n\nObjective: ${lesson.objective}\n\nPractice: ${lesson.practice}`,
     );
@@ -332,6 +419,29 @@ export function expansionRoutes(app: Application) {
     );
   });
   router.get("/state", (_req, res) => res.json(expansion.state()));
+  router.get("/hosted/mine", async (_req, res) =>
+    res.json(await app.ai.platform("mine")),
+  );
+  router.post("/hosted/:id/withdraw", async (req, res) => {
+    z.object({ approveWithdrawal: z.literal(true) })
+      .strict()
+      .parse(req.body);
+    const id = z.string().uuid().parse(req.params.id);
+    res.json(await app.ai.platform(`courses/${id}/withdraw`, req.body));
+  });
+  router.post("/hosted/redeem", async (req, res) => {
+    const input = z
+      .object({ grant: z.string().regex(/^[a-f0-9]{64}$/) })
+      .strict()
+      .parse(req.body);
+    res.json(await app.serial(() => expansion.importHosted(input.grant)));
+  });
+  router.post("/releases/:id/publish", async (req, res) => {
+    z.object({ approvePublicRelease: z.literal(true) })
+      .strict()
+      .parse(req.body);
+    res.json(await expansion.publishHosted(req.params.id));
+  });
   router.post("/courses/save", (req, res) =>
     res.json(expansion.saveCourse(req.body)),
   );
@@ -391,6 +501,17 @@ export function expansionRoutes(app: Application) {
   router.post("/creatives/:id/approve", (req, res) =>
     res.json(expansion.approveCreative(req.params.id, req.body)),
   );
+  router.post("/creatives/:id/design", (req, res) => {
+    const input = z
+        .object({ format: z.enum(["square", "wide"]) })
+        .strict()
+        .parse(req.body),
+      creative = expansion
+        .state()
+        .creatives.find((c) => c.id === req.params.id);
+    if (!creative) throw new UserError("Save a creative draft first.");
+    res.json(designExport(creative, input.format));
+  });
   router.post("/campaigns/save", (req, res) =>
     res.json(expansion.saveCampaign(req.body)),
   );

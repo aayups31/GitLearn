@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 import { serviceConfig } from "./config.js";
 import { verifySchema } from "./schema.js";
+import { HostedAcademy } from "./academy.js";
 import {
   PostgresAllowances,
   createGateway,
@@ -23,7 +24,9 @@ export async function createRuntime(
       config.paidLimit,
       globalLimit,
     );
-    const app = createGateway(productionDependencies(config, allowance));
+    const deps = productionDependencies(config, allowance);
+    deps.academy = new HostedAcademy(pool);
+    const app = createGateway(deps);
     app.get("/ready", async (_req, res) => {
       try {
         await pool.query("SELECT 1");

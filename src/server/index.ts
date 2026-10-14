@@ -12,6 +12,11 @@ const projectRoot = isDev
   ? path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
   : path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 dotenv.config({ path: path.join(projectRoot, ".env"), quiet: true });
+if (isDev)
+  dotenv.config({
+    path: path.join(projectRoot, ".local", "creator-platform.env"),
+    quiet: true,
+  });
 const port = Number(process.env.GITLEARN_PORT || "47831");
 const dataDirectory =
   process.env.GITLEARN_DATA_DIR ||

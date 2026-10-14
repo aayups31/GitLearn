@@ -63,12 +63,25 @@ test("author a course, launch Learn, approve grounded copy and prepare a manual 
   await page
     .getByRole("button", { name: "Save course draft", exact: true })
     .click();
-  await expect(page.getByRole("status")).toContainText("Draft saved");
+  await expect(page.locator(".product-message[role=status]")).toContainText(
+    "Draft saved",
+  );
   await page
     .getByRole("button", { name: "Validate structure", exact: true })
     .click();
-  await expect(page.getByRole("status")).toContainText("not been executed");
+  await expect(page.locator(".product-message[role=status]")).toContainText(
+    "not been executed",
+  );
   page.on("dialog", (d) => d.accept());
+  await page
+    .getByRole("button", {
+      name: "Compile & validate Python project",
+      exact: true,
+    })
+    .click();
+  await expect(page.locator(".product-ci-report")).toContainText("18/18", {
+    timeout: 20000,
+  });
   await page
     .getByRole("button", { name: "Approve local release", exact: true })
     .click();
@@ -80,6 +93,13 @@ test("author a course, launch Learn, approve grounded copy and prepare a manual 
     .click();
   await expect(page.locator(".topbar")).toContainText("Code & learn");
   expect(store.state().session?.note).toContain("Handle empty input");
+  expect(
+    store.db
+      .prepare(
+        "SELECT count(*) AS total FROM rag_documents WHERE course_id=? AND kind='academy'",
+      )
+      .get(store.state().session!.courseId),
+  ).toMatchObject({ total: 1 });
   await page
     .getByRole("button", { name: "Creator Studio", exact: true })
     .click();
@@ -103,9 +123,37 @@ test("author a course, launch Learn, approve grounded copy and prepare a manual 
   await page
     .getByRole("button", { name: "Save creative draft", exact: true })
     .click();
-  await expect(page.getByRole("status")).toContainText("Creative draft saved");
+  await expect(page.locator(".product-message[role=status]")).toContainText(
+    "Creative draft saved",
+  );
   await page.getByRole("button", { name: "Approve copy", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("Copy approved");
+  await expect(page.locator(".product-message[role=status]")).toContainText(
+    "Copy approved",
+  );
+  await page
+    .getByRole("button", { name: "Compose design preview", exact: true })
+    .click();
+  await expect(page.locator(".creator-design-preview")).toBeVisible();
+  await page
+    .getByLabel("Source video · up to 80 MB")
+    .setInputFiles("src/site/assets/agents-film.mp4");
+  await page
+    .getByLabel("I have permission to edit and use this footage.")
+    .check();
+  await page
+    .getByRole("button", { name: "Import & inspect video", exact: true })
+    .click();
+  await expect(page.getByLabel("Source library")).not.toHaveValue("", {
+    timeout: 15000,
+  });
+  await page.getByLabel("End seconds 1").fill("2");
+  await page.getByLabel("Caption 1").fill("Practice the actual concept");
+  await page
+    .getByRole("button", { name: "Save editable timeline", exact: true })
+    .click();
+  await expect(page.locator(".creator-media-panel")).toContainText(
+    "Saved timeline v1",
+  );
   await page.getByRole("button", { name: "GTM", exact: true }).click();
   await page
     .getByLabel("Campaign title", { exact: true })
@@ -123,12 +171,21 @@ test("author a course, launch Learn, approve grounded copy and prepare a manual 
   await page
     .getByRole("button", { name: "Save campaign plan", exact: true })
     .click();
-  await expect(page.getByRole("status")).toContainText(
+  await expect(page.locator(".product-message[role=status]")).toContainText(
     "Nothing has been published or spent",
   );
   await expect(page.locator(".product-source").first()).toContainText(
     "utm_source=linkedin",
   );
+  await page
+    .getByLabel("Report source", { exact: true })
+    .fill("LinkedIn supplied report");
+  await page.getByLabel("Reported impressions", { exact: true }).fill("100");
+  await page.getByLabel("Reported clicks", { exact: true }).fill("5");
+  await page
+    .getByRole("button", { name: "Record supplied report", exact: true })
+    .click();
+  await expect(page.locator(".gtm-report-grid")).toContainText("5.00%");
   const download = page.waitForEvent("download");
   await page
     .getByRole("button", { name: "Export manual handoff", exact: true })

@@ -37,6 +37,18 @@ function release() {
     approve: true,
   });
 }
+it("imports a scoped hosted assignment into the real Learn workspace and preserves its lesson sources",async()=>{
+  await app.setup(path.join(dir,"history"),false);
+  const id="ef6669f8-4248-454f-8ba3-d8e22bc4aa88";
+  let redeemed=0;
+  app.ai.platform=async()=>{redeemed++;return {contractVersion:1,id,title:draft.title,revision:1,lessonIndex:0,course:draft,projectTemplate:"python_activity_api_v1",scopes:["read_assignment"]};};
+  const result=await expansion.importHosted("a".repeat(64));
+  expect(result.courseId).toBe(`academy:${id}`);
+  expect(await readFile(path.join(store.state().session!.workspace,"main.py"),"utf8")).toContain("NotImplementedError");
+  expect(store.db.prepare("SELECT content FROM rag_documents WHERE course_id=? AND kind='academy'").get(result.courseId)).toMatchObject({content:expect.stringContaining("running total")});
+  await expect(expansion.importHosted("b".repeat(64))).rejects.toThrow(/current Learn session/);
+  expect(redeemed).toBe(1);
+});
 it("validates structure honestly and blocks missing rights, content and stale approval", () => {
   expect(validateCourse(draft).technicalVerification).toBe("not_run");
   const c = expansion.saveCourse({

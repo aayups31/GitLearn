@@ -23,6 +23,9 @@ import { workspaceFeatures } from "./workspace-features.js";
 import { EditorIntegration } from "./editor-integration.js";
 import { expansionRoutes, Expansion } from "./expansion.js";
 import { CreatorProduction } from "./creator-production.js";
+import { SocialConnections } from "./social-connections.js";
+import { GTMPublishing } from "./gtm-publishing.js";
+import { GTMAnalytics } from "./gtm-analytics.js";
 
 const text = z.string().max(2000);
 function matches(a: string, b: string) {
@@ -41,6 +44,13 @@ export function createApp(
   const creatorProduction = new CreatorProduction(application, () =>
     new Expansion(application).state(),
   );
+  const social = new SocialConnections(port),
+    publishing = new GTMPublishing(
+      application,
+      () => new Expansion(application).state(),
+      social,
+      creatorProduction,
+    );
   const workspace = new Workspace(application);
   const practice = new Practice(application, workspace);
   const runtime = new ProjectRuntime(application, workspace);
@@ -108,6 +118,7 @@ export function createApp(
   });
   app.use(express.json({ limit: "1mb" }));
   app.use("/creator-media", creatorProduction.publicRoutes());
+  app.use("/social/callback", social.callbacks());
   app.get("/api/health", (_req, res) =>
     res.json({ ok: true, name: "GitLearn", version: "0.4.2" }),
   );
@@ -308,6 +319,14 @@ export function createApp(
   workspaceFeatures(app, application, notebook);
   app.use("/api/expansion", expansionRoutes(application));
   app.use("/api/expansion/media", creatorProduction.routes());
+  app.use("/api/expansion/social", social.routes());
+  app.use("/api/expansion/publishing", publishing.routes());
+  app.use(
+    "/api/expansion/analytics",
+    new GTMAnalytics(application, () =>
+      new Expansion(application).state(),
+    ).routes(),
+  );
   app.post("/api/editor-run", async (req, res) => {
     const input = z
         .object({

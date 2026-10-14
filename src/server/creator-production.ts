@@ -63,7 +63,17 @@ export type RenderJob = {
   };
   approval?: { hash: string; approvedAt: string };
 };
-type MediaState = { assets: MediaAsset[]; jobs: RenderJob[] };
+export type TimelineDraft = {
+  creativeId: string;
+  revision: number;
+  savedAt: string;
+  timeline: Omit<VideoTimeline, "approveRender">;
+};
+type MediaState = {
+  assets: MediaAsset[];
+  jobs: RenderJob[];
+  drafts: TimelineDraft[];
+};
 const key = "creator:production:v1",
   now = () => new Date().toISOString();
 const digest = (v: Buffer | string) =>
@@ -96,7 +106,51 @@ export class CreatorProduction {
     this.save(state);
   }
   state(): MediaState {
-    return this.app.store.get<MediaState>(key) || { assets: [], jobs: [] };
+    const stored = this.app.store.get<Partial<MediaState>>(key);
+    return {
+      assets: stored?.assets || [],
+      jobs: stored?.jobs || [],
+      drafts: stored?.drafts || [],
+    };
+  }
+  saveTimeline(raw: unknown) {
+    const input = timeline
+        .omit({ approveRender: true })
+        .extend({ expectedTimelineRevision: z.number().int().min(0) })
+        .strict()
+        .parse(raw),
+      state = this.state(),
+      old = state.drafts.find((d) => d.creativeId === input.creativeId),
+      creative = this.expansion().creatives.find(
+        (c) => c.id === input.creativeId,
+      );
+    if (
+      !creative ||
+      creative.revision !== input.expectedRevision ||
+      !state.assets.some((a) => a.id === input.assetId)
+    )
+      throw new UserError(
+        "Save the current creative and select source footage first.",
+        409,
+      );
+    if ((old?.revision || 0) !== input.expectedTimelineRevision)
+      throw new UserError(
+        "This timeline changed in another window. Reload it before saving.",
+        409,
+      );
+    const { expectedTimelineRevision, ...content } = input,
+      draft: TimelineDraft = {
+        creativeId: input.creativeId,
+        revision: expectedTimelineRevision + 1,
+        savedAt: now(),
+        timeline: content,
+      };
+    state.drafts = [
+      ...state.drafts.filter((d) => d.creativeId !== input.creativeId),
+      draft,
+    ];
+    this.save(state);
+    return draft;
   }
   private save(state: MediaState) {
     this.app.store.put(key, state);
@@ -460,6 +514,18 @@ export class CreatorProduction {
     this.stopped = true;
     if (this.active?.child) stopProduction(this.active.child);
   }
+  approvedExport(id: string) {
+    const job = this.state().jobs.find((j) => j.id === id);
+    if (
+      job?.state !== "ready" ||
+      !job.output ||
+      job.approval?.hash !== job.output.hash
+    )
+      throw new UserError(
+        "Select an export whose exact rendered version has been reviewed and approved.",
+      );
+    return { job, file: this.file(id, "export.mp4") };
+  }
   publicRoutes() {
     const router = Router();
     router.get("/:token", (req, res) => {
@@ -477,6 +543,9 @@ export class CreatorProduction {
   routes() {
     const router = Router();
     router.get("/state", (_req, res) => res.json(this.state()));
+    router.post("/timeline", (req, res) =>
+      res.json(this.saveTimeline(req.body)),
+    );
     router.post(
       "/import",
       express.raw({ type: "application/octet-stream", limit: "80mb" }),

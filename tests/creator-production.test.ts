@@ -47,6 +47,20 @@ it("imports real footage, renders a captioned edit, verifies it and approves its
     );
     expect(source.duration).toBeGreaterThan(19);
     expect(source.width).toBe(1280);
+    const timeline = {
+      creativeId: cr.id,
+      expectedRevision: 1,
+      expectedTimelineRevision: 0,
+      assetId: source.id,
+      format: "portrait",
+      scenes: [{ start: 1, end: 2, caption: "Saved scene" }],
+    };
+    expect(media.saveTimeline(timeline).revision).toBe(1);
+    expect(() => media.saveTimeline(timeline)).toThrow(/changed/);
+    expect(
+      new CreatorProduction(app, () => e.state()).state().drafts[0].timeline
+        .scenes[0].caption,
+    ).toBe("Saved scene");
     expect(() =>
       media.render({
         creativeId: cr.id,

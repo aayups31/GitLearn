@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { Pool } from "pg";
+import type { HostedAcademy } from "./academy.js";
 import Stripe from "stripe";
 import {
   browserAccountRoutes,
@@ -132,6 +133,7 @@ export type GatewayConfig = {
   port: number;
 };
 export type GatewayDependencies = {
+  academy?: HostedAcademy;
   browser?: BrowserAccount;
   allowance: Allowances;
   authenticate: (token: string) => Promise<string>;
@@ -166,7 +168,7 @@ export function createGateway(deps: GatewayDependencies) {
         }
       },
     );
-  app.use(express.json({ limit: "128kb" }));
+  app.use(express.json({ limit: "512kb" }));
   const limits = new Map<string, { count: number; at: number }>(),
     active = new Set<string>();
   function limited(key: string, max: number) {
@@ -182,6 +184,37 @@ export function createGateway(deps: GatewayDependencies) {
   app.get("/health", (_req, res) =>
     res.json({ ok: true, name: "OutClass included AI" }),
   );
+  // Stateless HTTPS OAuth relay. The local companion alone verifies the one-use
+  // state and exchanges the code; tokens and client secrets never pass here.
+  app.get("/v1/social/callback/:provider", (req, res) => {
+    if (limited(`oauth:${req.ip}`, 12)) {
+      res.status(429).send("Wait before retrying this connection.");
+      return;
+    }
+    const parsed = z
+      .object({
+        provider: z.enum(["youtube", "linkedin", "x", "instagram"]),
+        state: z.string().regex(/^[A-Za-z0-9_-]{30,150}$/),
+        code: z.string().min(1).max(5000),
+      })
+      .safeParse({ ...req.query, provider: req.params.provider });
+    if (!parsed.success) {
+      res
+        .status(400)
+        .send(
+          "Authorization was not completed. Return to OutClass and try connecting again.",
+        );
+      return;
+    }
+    const target = new URL(
+      `http://127.0.0.1:47831/social/callback/${parsed.data.provider}`,
+    );
+    target.searchParams.set("state", parsed.data.state);
+    target.searchParams.set("code", parsed.data.code);
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("Referrer-Policy", "no-referrer");
+    res.redirect(303, target.href);
+  });
   app.post("/v1/auth/:action", async (req, res) => {
     if (limited(`auth:${req.ip}`, 6)) {
       res.status(429).json({
@@ -227,6 +260,7 @@ export function createGateway(deps: GatewayDependencies) {
       });
     }
   });
+  if (deps.academy) app.use("/v1/academy", deps.academy.publicRoutes());
   if (deps.browser) app.use("/v1/browser", browserAccountRoutes(deps, limited));
   app.use("/v1", async (req, res, next) => {
     try {
@@ -248,6 +282,7 @@ export function createGateway(deps: GatewayDependencies) {
       res.status(401).json({ error: "Sign in again to use included AI." });
     }
   });
+  if (deps.academy) app.use("/v1/academy", deps.academy.privateRoutes());
   app.get("/v1/usage", async (_req, res, next) => {
     try {
       res.json(await deps.allowance.usage(res.locals.user));

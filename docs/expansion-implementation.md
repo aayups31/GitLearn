@@ -145,3 +145,12 @@ download and exact export approval work. Source files stay local; no cloud rende
 charges. Jobs survive as receipts; an interrupted job is marked failed and requires
 explicit resubmission, not a hidden restart. Python and FFmpeg/FFprobe are required.
 Real fixture rendering and media QA passed.
+# Delivered workflow extension
+
+The source preview now includes a private Supabase Academy schema and authenticated free-course catalog. Creators explicitly publish immutable versions; enrollment is idempotent; five-minute, account-bound, hashed, one-use grants import assignments into the existing Learn workspace. Lesson text becomes local RAG evidence. No learner code or progress is uploaded. The real database test exercises ownership and replay rejection inside a rollback-only transaction. Public email onboarding still needs a verified sender domain; the configured Resend test sender is owner-only.
+
+Creator Studio now saves revision-controlled editable timelines, imports owned footage, renders actual landscape/portrait MP4 with captions using bounded local FFmpeg, verifies dimensions/duration/hash, and requires review of the exact export. Deterministic SVG/PNG designs include downloadable layer manifests. This does not yet provide automatic transcription, semantic footage search, generative media, a cloud render farm or cloud media hosting.
+
+GTM adds YouTube, LinkedIn, X and Instagram OAuth/API adapters, durable exact-content reviews, duplicate-write prevention, accepted/confirmed/uncertain states, and dated manual reports with null-preserving financial calculations. Credentials, platform approval and real account validation remain necessary before claiming a working public channel integration. Tokens are process-local and require reconnection; a public OAuth broker and encrypted persistent token vault remain release prerequisites. No external posts, ads, paid model calls or campaign spending occurred during implementation. See `docs/social-publishing.md`.
+
+Course payments, instructor payouts, settlement reconciliation, unattended scheduling, advertising ingestion, attribution and the remaining advanced master-spec features are not shipped. Existing AI subscription billing is unchanged. The published installer is still v0.7.1; these additions run from source until a new tested installer is released.

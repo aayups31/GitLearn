@@ -6,6 +6,7 @@ import {
   productAgentInstructions,
 } from "../product-agent-contract.js";
 import { UserError } from "./safety.js";
+import { GTMAnalytics } from "./gtm-analytics.js";
 export type ProductAgentRun = {
   id: string;
   domain: "academy" | "creative" | "growth";
@@ -57,16 +58,23 @@ export class ProductAgents {
       domain === "academy"
         ? state.courses.find((c) => c.id === entityId)!.lessons
         : release?.lessons || [];
-    const sources = lessons
-      .slice(0, 8)
-      .map((l, i) => ({
-        id: `lesson:${i}`,
-        title: l.title,
-        text: `Objective: ${l.objective}\nPractice: ${l.practice}\n${l.content}`.slice(
-          0,
-          2000,
-        ),
-      }));
+    const sources = lessons.slice(0, 6).map((l, i) => ({
+      id: `lesson:${i}`,
+      title: l.title,
+      text: `Objective: ${l.objective}\nPractice: ${l.practice}\n${l.content}`.slice(
+        0,
+        2000,
+      ),
+    }));
+    if (domain === "growth")
+      for (const r of new GTMAnalytics(this.app, this.state)
+        .view(entityId)
+        .reports.slice(-4))
+        sources.push({
+          id: `report:${r.id}`,
+          title: `Manually supplied ${r.source} report · ${r.date}`,
+          text: JSON.stringify(r).slice(0, 2000),
+        });
     return {
       entity,
       revision: entity.revision,

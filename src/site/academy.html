@@ -17,6 +17,7 @@
     <script src="assets/vendor/gsap.min.js" defer></script>
     <script src="assets/vendor/ScrollTrigger.min.js" defer></script>
     <script src="assets/site.js" defer></script>
+    <script src="assets/academy.js" defer></script>
   </head>
   <body class="subpage suite-page">
     <a class="skip-link" href="#main">Skip to content</a>
@@ -59,9 +60,7 @@
     <main id="main" tabindex="-1">
       <section class="suite-hero wrap">
         <div data-reveal>
-          <span class="suite-status"
-            >In development · local authoring in source</span
-          >
+          <span class="suite-status">Source preview · free hosted catalog</span>
           <h1>Engineer the learning.</h1>
           <p>Design courses around what a learner can actually build.</p>
           <div class="hero-actions">
@@ -88,8 +87,8 @@
             Build independently <span>Project → review</span>
           </div>
           <small
-            >Illustrative curriculum · Code validation is not connected
-            yet.</small
+            >Python project templates run 18 checks and a real HTTP smoke test.
+            Custom code is not automatically executed.</small
           >
         </div>
       </section>
@@ -123,17 +122,18 @@
       </section>
       <section class="suite-agent wrap">
         <div>
-          <span class="suite-status">Flagship agent · Planned</span>
+          <span class="suite-status">Flagship agent · bounded proposals</span>
           <h2>Academy Architect</h2>
           <p>From expertise to a practical path.</p>
         </div>
         <div>
-          <h3>What comes next</h3>
+          <h3>From a draft to actual practice</h3>
           <p>
-            Next: a bounded Python project compiler, executable course
-            validation, creator accounts, and a public catalog. The current
-            authoring tool is local; it does not publish a marketplace course or
-            collect payments.
+            Plan with Academy Architect, review every proposal, and validate a
+            supported Python project locally. Share an immutable free course
+            using your OutClass account. Learners enroll here and open lessons
+            in Learn using a five-minute code. Paid courses and instructor
+            payouts are not available yet.
           </p>
           <a
             class="text-link"
@@ -141,6 +141,18 @@
             >Read the implementation direction ↗</a
           >
         </div>
+      </section>
+      <section class="suite-workflow wrap" id="catalog">
+        <h2>Choose your next build.</h2>
+        <p>
+          Free courses released by creators. Preview the curriculum before
+          enrolling. <a href="account.html">Sign in</a> to enroll, then use the
+          launch code in the OutClass app signed in to the same account.
+        </p>
+        <p id="catalog-message" role="status" tabindex="-1">
+          Loading the catalog…
+        </p>
+        <div id="academy-catalog" class="suite-steps"></div>
       </section>
       <section class="suite-connected wrap">
         <h2>One connected OutClass.</h2>

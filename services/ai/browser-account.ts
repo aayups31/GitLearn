@@ -140,6 +140,25 @@ export function browserAccountRoutes(
       return null;
     }
   }
+  if (deps.academy)
+    router.use(
+      "/academy",
+      async (req, res, next) => {
+        const account = await identity(req, res);
+        if (!account) {
+          res
+            .status(401)
+            .json({
+              error:
+                "Sign in to OutClass before enrolling or creating a launch code.",
+            });
+          return;
+        }
+        res.locals.user = account.id;
+        next();
+      },
+      deps.academy.privateRoutes(),
+    );
   router.get("/config", async (_req, res) => {
     let plan: BrowserPlan | null = null;
     if (options.plan) {

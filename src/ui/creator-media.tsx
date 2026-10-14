@@ -5,20 +5,25 @@ import type {
   MediaAsset,
   RenderJob,
   VideoTimeline,
+  TimelineDraft,
 } from "../server/creator-production";
 type API = <T>(route: string, body?: unknown) => Promise<T>;
 export function CreatorMedia({
   api,
   creative,
   dirty,
+  onTimelineDirty,
 }: {
   api: API;
   creative?: Creative;
   dirty: boolean;
+  onTimelineDirty: (dirty: boolean) => void;
 }) {
-  const [data, setData] = useState<{ assets: MediaAsset[]; jobs: RenderJob[] }>(
-      { assets: [], jobs: [] },
-    ),
+  const [data, setData] = useState<{
+      assets: MediaAsset[];
+      jobs: RenderJob[];
+      drafts: TimelineDraft[];
+    }>({ assets: [], jobs: [], drafts: [] }),
     [file, setFile] = useState<File>(),
     [rights, setRights] = useState(false),
     [busy, setBusy] = useState(false),
@@ -30,6 +35,49 @@ export function CreatorMedia({
     ]),
     [preview, setPreview] = useState(""),
     [previewJob, setPreviewJob] = useState<RenderJob>();
+  const [timelineRevision, setTimelineRevision] = useState(0),
+    [timelineDirty, setTimelineDirty] = useState(false);
+  const mark = () => {
+    setTimelineDirty(true);
+    onTimelineDirty(true);
+  };
+  const updateScenes = (value: VideoTimeline["scenes"]) => {
+    setScenes(value);
+    mark();
+  };
+  const updateAsset = (value: string) => {
+    setAsset(value);
+    mark();
+  };
+  const updateFormat = (value: VideoTimeline["format"]) => {
+    setFormat(value);
+    mark();
+  };
+  useEffect(() => {
+    let active = true;
+    setTimelineRevision(0);
+    setTimelineDirty(false);
+    onTimelineDirty(false);
+    setAsset("");
+    setScenes([{ start: 0, end: 5, caption: "" }]);
+    setFormat("landscape");
+    if (creative)
+      api<typeof data>("expansion/media/state")
+        .then((r) => {
+          if (!active) return;
+          const draft = r.drafts?.find((d) => d.creativeId === creative.id);
+          if (draft) {
+            setAsset(draft.timeline.assetId);
+            setScenes(draft.timeline.scenes);
+            setFormat(draft.timeline.format);
+            setTimelineRevision(draft.revision);
+          }
+        })
+        .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [api, creative?.id, onTimelineDirty]);
   const asset = data.assets.find((a) => a.id === assetId);
   const refresh = async () => {
     const result = await api<typeof data>("expansion/media/state");
@@ -113,8 +161,8 @@ export function CreatorMedia({
                   `expansion/media/import?name=${encodeURIComponent(file!.name)}&rights=confirmed`,
                   file,
                 );
-                setAsset(result.id);
-                setScenes([
+                updateAsset(result.id);
+                updateScenes([
                   { start: 0, end: Math.min(5, result.duration), caption: "" },
                 ]);
               })
@@ -130,10 +178,10 @@ export function CreatorMedia({
           aria-label="Source library"
           value={assetId}
           onChange={(e) => {
-            setAsset(e.target.value);
+            updateAsset(e.target.value);
             const value = data.assets.find((a) => a.id === e.target.value);
             if (value)
-              setScenes([
+              updateScenes([
                 { start: 0, end: Math.min(5, value.duration), caption: "" },
               ]);
           }}
@@ -151,7 +199,9 @@ export function CreatorMedia({
         <select
           aria-label="Output composition"
           value={format}
-          onChange={(e) => setFormat(e.target.value as VideoTimeline["format"])}
+          onChange={(e) =>
+            updateFormat(e.target.value as VideoTimeline["format"])
+          }
         >
           <option value="landscape">Landscape · 1280×720</option>
           <option value="portrait">
@@ -167,7 +217,7 @@ export function CreatorMedia({
               <button
                 aria-label={`Remove scene ${i + 1}`}
                 disabled={scenes.length === 1 || busy}
-                onClick={() => setScenes(scenes.filter((_, n) => n !== i))}
+                onClick={() => updateScenes(scenes.filter((_, n) => n !== i))}
               >
                 <X size={14} />
               </button>
@@ -183,7 +233,7 @@ export function CreatorMedia({
                   max={asset?.duration}
                   value={scene.start}
                   onChange={(e) =>
-                    setScenes(
+                    updateScenes(
                       scenes.map((s, n) =>
                         n === i ? { ...s, start: Number(e.target.value) } : s,
                       ),
@@ -201,7 +251,7 @@ export function CreatorMedia({
                   max={asset?.duration}
                   value={scene.end}
                   onChange={(e) =>
-                    setScenes(
+                    updateScenes(
                       scenes.map((s, n) =>
                         n === i ? { ...s, end: Number(e.target.value) } : s,
                       ),
@@ -218,7 +268,7 @@ export function CreatorMedia({
                 maxLength={150}
                 placeholder="A source-grounded teaching point"
                 onChange={(e) =>
-                  setScenes(
+                  updateScenes(
                     scenes.map((s, n) =>
                       n === i ? { ...s, caption: e.target.value } : s,
                     ),
@@ -239,9 +289,40 @@ export function CreatorMedia({
       <div className="product-actions">
         <button
           className="button"
+          disabled={!creative || !asset || dirty || busy}
+          onClick={() =>
+            void act(async () => {
+              const draft = await api<TimelineDraft>(
+                "expansion/media/timeline",
+                {
+                  creativeId: creative!.id,
+                  expectedRevision: creative!.revision,
+                  expectedTimelineRevision: timelineRevision,
+                  assetId,
+                  format,
+                  scenes,
+                },
+              );
+              setTimelineRevision(draft.revision);
+              setTimelineDirty(false);
+              onTimelineDirty(false);
+            })
+          }
+        >
+          Save editable timeline
+        </button>
+        <span>
+          {timelineDirty
+            ? "Unsaved timeline"
+            : timelineRevision
+              ? "Saved timeline v" + timelineRevision
+              : "New timeline"}
+        </span>
+        <button
+          className="button"
           disabled={scenes.length >= 8 || !asset}
           onClick={() =>
-            setScenes([
+            updateScenes([
               ...scenes,
               { start: 0, end: Math.min(5, asset!.duration), caption: "" },
             ])

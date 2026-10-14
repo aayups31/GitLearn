@@ -18,6 +18,9 @@ import type {
   Campaign,
 } from "../expansion-contract";
 import "./products.css";
+import { CreatorDesign } from "./creator-design";
+import { HostedAcademyPanel } from "./academy-hosted";
+import { GTMOperations } from "./gtm-operations";
 import { CreatorMedia } from "./creator-media";
 import { AgentPanel, CompilerPanel } from "./product-intelligence";
 type API = <T>(route: string, body?: unknown) => Promise<T>;
@@ -103,6 +106,8 @@ export function ProductWorkspace({
   });
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign>();
   const [dirty, setDirty] = useState(false);
+  const [mediaDirty, setMediaDirty] = useState(false);
+  useEffect(() => onDirty(dirty || mediaDirty), [dirty, mediaDirty, onDirty]);
   const reload = async () => {
     const result = await api<ExpansionState>("expansion/state");
     setData(result);
@@ -128,10 +133,13 @@ export function ProductWorkspace({
   }
   function clean() {
     setDirty(false);
-    onDirty(false);
+    onDirty(mediaDirty);
   }
   function canSwitch() {
-    return !dirty || confirm("Discard unsaved changes to this draft?");
+    return (
+      !(dirty || mediaDirty) ||
+      confirm("Discard unsaved changes to this draft?")
+    );
   }
   async function action(fn: () => Promise<unknown>, message?: string) {
     if (busy) return;
@@ -461,6 +469,11 @@ export function ProductWorkspace({
                 </p>
               </section>
             </div>
+            <HostedAcademyPanel
+              api={api}
+              releases={data.releases}
+              onCode={onCode}
+            />
             <section className="product-catalog">
               <h2>Your local catalog</h2>
               <p>
@@ -780,7 +793,13 @@ export function ProductWorkspace({
                   changed();
                 }}
               />
+              <CreatorDesign
+                api={api}
+                creative={selectedCreative}
+                dirty={dirty}
+              />
               <CreatorMedia
+                onTimelineDirty={setMediaDirty}
                 api={api}
                 creative={selectedCreative}
                 dirty={dirty}
@@ -1036,6 +1055,11 @@ export function ProductWorkspace({
                   setCampaign({ ...campaign, goal: text.slice(0, 2000) });
                   changed();
                 }}
+              />
+              <GTMOperations
+                api={api}
+                campaign={selectedCampaign}
+                dirty={dirty}
               />
               <p className="product-limit">
                 Proposed budgets are plans, never spending instructions. Connect
