@@ -32,6 +32,8 @@
     <script src="assets/vendor/ScrollTrigger.min.js" defer=""></script>
     <script src="assets/site.js" defer=""></script>
     <link rel="stylesheet" href="assets/refinement.css" />
+    <link rel="stylesheet" href="assets/agents.css" />
+    <script src="assets/agents.js" defer></script>
   </head>
   <body class="subpage">
     <a class="skip-link" href="#main">Skip to content</a>
@@ -66,30 +68,111 @@
       </div>
     </header>
     <main id="main" tabindex="-1">
-      <section class="page-hero agents-hero wrap">
-        <h1>Intelligence that<br /><span>makes you capable.</span></h1>
-        <p>
-          One agent for understanding. One for possibility.<br />Both built
-          around your work and your decisions.
-        </p>
-        <div class="hero-actions">
-          <a class="button primary" href="download.html"
-            >Build with OutClass
-            <svg class="icon" aria-hidden="true">
-              <use href="assets/icons.svg#arrow"></use></svg></a
-          ><a class="text-link" href="#offcourse"
-            >Meet OffCourse
-            <svg class="icon" aria-hidden="true">
-              <use href="assets/icons.svg#down"></use></svg
-          ></a>
-        </div>
-        <div class="agent-duet agent-hero-duet" aria-hidden="true">
-          <div class="duet-line"></div>
-          <div class="agent-sphere teacher-sphere">
-            <i></i><i></i><i></i><span>✧</span>
+      <section class="agent-cinema-hero wrap">
+        <div class="agent-cinema-heading">
+          <div class="agent-identity">
+            <span class="film-mark">✧</span
+            ><span class="film-mark architect-mark">⌘</span>
           </div>
-          <div class="agent-sphere architect-sphere">
-            <i></i><i></i><i></i><span>⌘</span>
+          <h1>Go further.<br /><span>Think for yourself.</span></h1>
+          <p>
+            Meet the agents that turn “I’m stuck” into understanding,<br />and
+            “what if” into your next project.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="download.html">Get OutClass ↗</a
+            ><a class="text-link" href="#offcourse">See how they work ↓</a>
+          </div>
+        </div>
+        <div class="agent-film" data-agent-film>
+          <div class="film-top">
+            <span class="film-brand"
+              ><span class="film-mark">✧</span> OutClass
+              <span class="film-divider">/</span> Agents</span
+            ><span class="film-example">Interactive preview</span>
+          </div>
+          <div
+            class="film-selector"
+            role="group"
+            aria-label="Choose an agent preview"
+          >
+            <button class="is-active" data-scene="teacher" aria-pressed="true">
+              ✧ <span>OffCourse<small>Understand. Apply.</small></span>
+            </button>
+            <button data-scene="architect" aria-pressed="false">
+              ⌘ <span>Architect<small>Imagine. Build.</small></span>
+            </button>
+          </div>
+          <div class="film-scene" data-scene-panel="teacher">
+            <div class="film-source">
+              <div class="film-file">
+                activity.py <span>Course project</span>
+              </div>
+              <pre><span class="code-muted"># Collect each student's activity</span>
+<span class="code-violet">for</span> event <span class="code-violet">in</span> events:
+    user = event[<span class="code-green">"user"</span>]
+    <mark>totals[user] = event["minutes"]</mark></pre>
+              <div class="film-run">
+                <span class="run-dot"></span> Expected 45 minutes
+                <span>Received 20</span>
+              </div>
+            </div>
+            <div class="film-answer">
+              <div class="film-agent">
+                <span class="film-mark">✧</span><strong>OffCourse</strong
+                ><span>Lesson + your attempt</span>
+              </div>
+              <h3>You found the symptom.<br />Let’s find the reason.</h3>
+              <p>
+                When the same student appears twice, what happens to the value
+                already in <code>totals</code>?
+              </p>
+              <div class="film-hint">
+                <span>Try this</span>Trace the first two events. Predict the
+                total before you run it.
+              </div>
+              <div class="film-reference">
+                ↗ Collections · Imported lesson <span>Example</span>
+              </div>
+            </div>
+          </div>
+          <div class="film-scene" data-scene-panel="architect" hidden>
+            <div class="film-source idea-source">
+              <div class="film-file">
+                Idea notebook <span>Selected context</span>
+              </div>
+              <div class="film-note">
+                <span>YOUR IDEA</span>
+                <h3>What if finding a campus event was effortless?</h3>
+                <p>“I keep hearing about things after they happen.”</p>
+              </div>
+              <div class="film-run">
+                <span class="run-dot blue"></span> Connected learning
+                <span>APIs · Data · UI</span>
+              </div>
+            </div>
+            <div class="film-answer">
+              <div class="film-agent">
+                <span class="film-mark">⌘</span><strong>Architect</strong
+                ><span>Idea + shared learning</span>
+              </div>
+              <h3>Start with one problem.<br />Build one useful thing.</h3>
+              <p>
+                Who misses out most often? Talk to three students before
+                deciding what to build.
+              </p>
+              <div class="film-plan">
+                <span>Understand the need</span><i>↓</i
+                ><span>Prototype one event feed</span><i>↓</i
+                ><span>Test it with a student</span>
+              </div>
+            </div>
+          </div>
+          <div class="film-bottom">
+            <span>Illustrative workflow · You write the code.</span
+            ><button class="film-replay" type="button">
+              Replay animation <span>↻</span>
+            </button>
           </div>
         </div>
       </section>

@@ -46,3 +46,14 @@ Gateway, browser-account, Stripe-billing, and provider tests use isolated fixtur
 The source and docs stay in the existing Git repository. Public deployment uses the existing Vercel project and `main` integration. The Windows installer links continue to point to the published v0.7.1 preview; the updated desktop account styling is in source and local builds until a new installer is packaged.
 
 Implementation references: [Supabase server session guidance](https://supabase.com/docs/guides/auth/server-side/advanced-guide) and [local sign-out scope](https://supabase.com/docs/reference/javascript/auth-signout).
+
+## Agent preview refresh — October 14
+Replaced the homepage orbital placeholders with a switchable product demonstration.
+The Agents page now opens with a large version of the same demonstration, followed
+by course-teacher and architecture details. The two illustrative scenes reveal
+context, reasoning, and a next step using a short GSAP timeline. Replay is explicit;
+there is no looping video, remote media dependency, or implied real AI response.
+Reduced motion exposes the complete scene immediately. Switching agents is available
+without animation; all source content remains readable without GSAP.
+Validated both scenes, replay, live reduced-motion changes, mobile navigation,
+and layout at 1440/768/375/320 widths. Existing download, account, and no-JS checks pass.

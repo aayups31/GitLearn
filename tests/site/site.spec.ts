@@ -354,7 +354,7 @@ test("hero art appears once and mobile navigation exposes agents and setup", asy
   ).toBeVisible();
   await page.getByRole("link", { name: "Agents", exact: true }).first().click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    /Intelligence that\s*makes you capable\./,
+    /Go further\.\s*Think for yourself\./,
   );
   await expect(page.locator('img[src="assets/hero-tiles.webp"]')).toHaveCount(
     0,
