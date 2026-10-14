@@ -75,6 +75,7 @@ for (const tab of tabs) {
   });
 }
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+let journeyScroll = null;
 const track = document.querySelector(".journey-track");
 if (track) {
   const cards = [...track.querySelectorAll(".journey-card")];
@@ -93,11 +94,24 @@ if (track) {
       track.scrollLeft >= track.scrollWidth - track.clientWidth - 2;
     count.textContent = `${String(active() + 1).padStart(2, "0")} / ${String(cards.length).padStart(2, "0")}`;
   };
-  const move = (direction) =>
-    track.scrollTo({
-      left: (active() + direction) * step(),
-      behavior: reduceMotion.matches ? "instant" : "smooth",
-    });
+  const moveTo = (left) => {
+    if (journeyScroll) {
+      const maximum = track.scrollWidth - track.clientWidth;
+      window.scrollTo({
+        top:
+          journeyScroll.start +
+          Math.min(1, Math.max(0, left / maximum)) *
+            (journeyScroll.end - journeyScroll.start),
+        behavior: "smooth",
+      });
+    } else {
+      track.scrollTo({
+        left,
+        behavior: reduceMotion.matches ? "instant" : "smooth",
+      });
+    }
+  };
+  const move = (direction) => moveTo((active() + direction) * step());
   prev.addEventListener("click", () => move(-1));
   next.addEventListener("click", () => move(1));
   track.addEventListener("keydown", (event) => {
@@ -107,10 +121,7 @@ if (track) {
       move(event.key === "ArrowRight" ? 1 : -1);
     } else if (event.key === "Home" || event.key === "End") {
       event.preventDefault();
-      track.scrollTo({
-        left: event.key === "Home" ? 0 : track.scrollWidth,
-        behavior: "instant",
-      });
+      moveTo(event.key === "Home" ? 0 : track.scrollWidth);
     }
   });
   let timer;
@@ -130,6 +141,43 @@ if (track) {
 if (window.gsap && window.ScrollTrigger) {
   gsap.registerPlugin(ScrollTrigger);
   const media = gsap.matchMedia();
+  media.add(
+    "(min-width: 1000px) and (min-height: 800px) and (prefers-reduced-motion: no-preference)",
+    () => {
+      const section = document.querySelector(".journey-section");
+      if (!section || !track) return;
+      section.classList.add("journey-scroll-pinned");
+      track.setAttribute(
+        "aria-label",
+        "Learning journey. Scroll down through three steps, or use the arrow keys.",
+      );
+      const tween = gsap.to(track, {
+        scrollLeft: () => track.scrollWidth - track.clientWidth,
+        ease: "none",
+        scrollTrigger: {
+          id: "learning-journey",
+          trigger: section,
+          start: "top 80px",
+          end: () =>
+            "+=" +
+            Math.max(innerHeight * 1.6, track.scrollWidth - track.clientWidth),
+          pin: true,
+          scrub: 0.65,
+          invalidateOnRefresh: true,
+          anticipatePin: 1,
+        },
+      });
+      journeyScroll = tween.scrollTrigger;
+      return () => {
+        journeyScroll = null;
+        section.classList.remove("journey-scroll-pinned");
+        track.setAttribute(
+          "aria-label",
+          "Learning journey. Scroll horizontally for three steps.",
+        );
+      };
+    },
+  );
   media.add("(prefers-reduced-motion: no-preference)", () => {
     document.body.classList.add("motion-ready");
     if (document.querySelector(".hero") && scrollY < 80 && !document.hidden) {

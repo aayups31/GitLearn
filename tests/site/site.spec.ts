@@ -403,3 +403,30 @@ test("downloads and the product story remain usable without animation scripts or
   await expect(nojs.locator(".guide-list > li")).toHaveCount(8);
   await context.close();
 });
+
+test("vertical scrolling advances and reverses the pinned learning carousel", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator(".journey-section")).toHaveClass(
+    /journey-scroll-pinned/,
+  );
+  const bounds = await page.evaluate(() => {
+    const trigger = (window as any).ScrollTrigger.getById("learning-journey");
+    return { start: trigger.start, end: trigger.end };
+  });
+  await page.evaluate((y) => window.scrollTo(0, y), bounds.start);
+  await expect
+    .poll(() => page.locator(".journey-track").evaluate((el) => el.scrollLeft))
+    .toBeLessThan(2);
+  await page.evaluate((y) => window.scrollTo(0, y), bounds.end);
+  await expect(page.locator(".carousel-count")).toHaveText("03 / 03");
+  await page.evaluate((y) => window.scrollTo(0, y), bounds.start);
+  await expect(page.locator(".carousel-count")).toHaveText("01 / 03");
+  await page.getByRole("button", { name: "Next learning step" }).click();
+  await expect(page.locator(".carousel-count")).toHaveText("02 / 03");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator(".journey-section")).not.toHaveClass(
+    /journey-scroll-pinned/,
+  );
+});

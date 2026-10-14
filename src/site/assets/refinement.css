@@ -1670,3 +1670,32 @@ html:not(.enhanced) .account-loading {
     font-size: 48px;
   }
 }
+
+.journey-scroll-pinned {
+  padding: 28px 0 24px;
+}
+.journey-scroll-pinned .journey-heading {
+  margin-bottom: 24px;
+}
+.journey-scroll-pinned .journey-heading h2 {
+  font-size: clamp(36px, 4.2vw, 62px);
+}
+.journey-scroll-pinned .journey-track {
+  scroll-snap-type: none;
+  scrollbar-width: none;
+  overflow-x: hidden;
+}
+.journey-scroll-pinned .practice-visual,
+.journey-scroll-pinned .project-visual,
+.journey-scroll-pinned .contribution-visual {
+  height: 280px;
+}
+.journey-scroll-pinned .journey-card {
+  padding: 20px 26px;
+}
+.journey-scroll-pinned .journey-card h3 {
+  font-size: 26px;
+}
+.journey-scroll-pinned .journey-footer {
+  margin-top: 12px;
+}
