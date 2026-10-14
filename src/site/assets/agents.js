@@ -69,3 +69,10 @@
     observer.observe(film);
   }
 })();
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden)
+    document
+      .querySelectorAll(".agent-video-showcase video")
+      .forEach((video) => video.pause());
+});

@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 test("agent previews switch, replay, and respect reduced motion", async ({
   page,
 }) => {
-  for (const route of ["/", "/agents.html"]) {
+  for (const route of ["/"]) {
     await page.goto(route);
     const film = page.locator("[data-agent-film]");
     await film.scrollIntoViewIfNeeded();
@@ -33,4 +33,41 @@ test("agent previews switch, replay, and respect reduced motion", async ({
       fullPage: true,
     });
   }
+});
+
+test("agent video is playable, seekable, and has a readable walkthrough", async ({
+  page,
+}) => {
+  await page.goto("/agents.html");
+  const video = page.locator(".agent-video-showcase video");
+  await expect(video).toHaveAttribute("controls", "");
+  await expect(video).not.toHaveAttribute("autoplay");
+  await video.evaluate(async (element: HTMLVideoElement) => {
+    await element.play();
+  });
+  await expect
+    .poll(() =>
+      video.evaluate((element: HTMLVideoElement) => element.currentTime),
+    )
+    .toBeGreaterThan(0);
+  await video.evaluate((element: HTMLVideoElement) => {
+    element.pause();
+    element.currentTime = 16;
+  });
+  await expect
+    .poll(() =>
+      video.evaluate((element: HTMLVideoElement) => element.readyState),
+    )
+    .toBeGreaterThanOrEqual(2);
+  await expect
+    .poll(() => video.evaluate((element: HTMLVideoElement) => element.duration))
+    .toBe(20);
+  await page.getByText("Read the video walkthrough").click();
+  await expect(page.locator(".agent-video-transcript")).toContainText(
+    "talking to three students",
+  );
+  await page.screenshot({
+    path: ".local/landing-refresh/agents-video.png",
+    fullPage: true,
+  });
 });

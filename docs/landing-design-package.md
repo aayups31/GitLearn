@@ -57,3 +57,25 @@ Reduced motion exposes the complete scene immediately. Switching agents is avail
 without animation; all source content remains readable without GSAP.
 Validated both scenes, replay, live reduced-motion changes, mobile navigation,
 and layout at 1440/768/375/320 widths. Existing download, account, and no-JS checks pass.
+
+## Black-and-blue artwork and agent film — October 14
+Recolored the existing raster logo and hero with the built-in image editing tool.
+Both preserve alpha and the established orbital silhouette; the hero retains all
+five tile positions and the real GitHub SVG overlay. Exported optimized WebP assets.
+
+Image edit prompt: Recolor only to the OutClass black and blue brand palette.
+Black obsidian and midnight navy surfaces, saturated royal blue #386BFA and ice blue
+edge highlights. Replace all purple, violet, lavender and pink with blue. Preserve
+shape, perspective, composition and symbols. No text or new elements. Actual
+transparent background. Hero: preserve five tile positions, blank upper-left tile,
+graph, code, graduation cap and trails; no terrain. Logo: preserve orbital ring
+and pointed diagonal swoosh, isolated on transparency.
+
+The Agents page now contains a real 20-second H.264 MP4, rendered from deterministic
+UI scenes using scripts/render-agent-video.mjs (Sharp + FFmpeg on PATH, or FFMPEG_PATH).
+The illustrative sequence shows OffCourse reasoning about an accumulation bug and
+Architect developing a campus-app experiment. The learner performs the code change.
+1280×720, 15fps, approximately 211 KB, no audio. Native controls, no autoplay,
+preload=none, readable poster, and a complete text walkthrough. The homepage retains
+its switchable live HTML preview. Browser tests verify actual playback, seeking,
+duration and transcript, as well as the existing site flows (9 passing).
