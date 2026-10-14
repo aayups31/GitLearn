@@ -325,3 +325,7 @@
     font-size: 36px;
   }
 }
+
+.site-header + .suite-nav {
+  margin-top: 88px;
+}

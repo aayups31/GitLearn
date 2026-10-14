@@ -23,6 +23,7 @@ export type Lesson = z.infer<typeof lessonSchema> & {
 };
 export interface Course {
   id: string;
+  platform?: "udemy" | "academy";
   title: string;
   url: string;
   path: string;

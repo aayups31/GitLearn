@@ -1,8 +1,10 @@
 # OutClass expansion implementation direction
+
 October 14, 2026. Source: expansion-master-spec.md. This is a multi-release
 programme; delivery status is recorded explicitly rather than equating pages with products.
 
 ## Verified reusable foundation
+
 - React/TypeScript desktop, CodeMirror, Node loopback companion, SQLite KV transactions.
 - Course/session identities, granted coding folders, explicit execution, checkpoints,
   imported course sources, practice, evidence and two existing learner agents.
@@ -17,14 +19,16 @@ programme; delivery status is recorded explicitly rather than equating pages wit
   as an included-AI curriculum endpoint would return the wrong shape.
 
 ## Product boundaries
+
 Learn stays intact. Academy owns course drafts, immutable releases and enrollments.
 Creator Studio owns brand/media/EDL/asset approval. GTM owns campaigns, links,
 manual handoff and eventually confirmed distribution/attribution. Separate pages:
- /learn, /academy, /creator-studio, /gtm.
+/learn, /academy, /creator-studio, /gtm.
 Initial workspace paths: ?view=academy, ?view=creator, ?view=gtm.
 These are additive local authoring tools, not a public marketplace.
 
 ## First working slices
+
 1. Persist local Academy drafts, measurable lesson objectives, practice briefs,
    validation reports, revision checks and immutable locally released snapshots.
    Local self-enrollment -> version-pinned Learn course -> actual existing session.
@@ -39,6 +43,7 @@ These are additive local authoring tools, not a public marketplace.
    Python project compiler with real tests and starter/reference separation next.
 
 ## Shared contracts and persistence
+
 Version 1 local expansion entities use their own KV prefix and Zod boundary schemas.
 Local drafts never touch saved learner course data until explicit enrollment/launch.
 Expected revision prevents stale tabs from overwriting drafts. Release and creative
@@ -49,6 +54,7 @@ with RLS, upload objects, transactional outbox and durable jobs after identity d
 Existing AI/Stripe subscription tables remain separate from course commerce.
 
 ## Learn adapter
+
 Course IDs include Academy release identity. Actual sessions use Application.start;
 safe paths and workspace creation use existing Application checks. Lesson body/brief
 is copied to the session note on explicit launch. No code execution or secret upload
@@ -58,6 +64,7 @@ confirmation, immutable template hash, consented events, replay-safe exchange.
 No permanent credentials in URLs and no unauthenticated localhost write route.
 
 ## Staged release gates
+
 - Foundation: local drafts survive restart; invalid/unreviewed/stale releases blocked;
   local enrollments idempotent; actual Learn launch; all four public pages.
 - Compiler: one Python stack, bounded sandbox execution, reference/tests verified,
@@ -72,6 +79,7 @@ No permanent credentials in URLs and no unauthenticated localhost write route.
 - Cross-product intelligence: evidence graph, consent, revisions and evaluated models.
 
 ## Cost discipline
+
 Small commits represent finished slices, not token churn. Reuse architecture and
 dependencies, no proactive subagents, no full-suite reruns for copy changes.
 One targeted build/type check and relevant tests per behavioral milestone; repeat
@@ -83,6 +91,34 @@ Codex billing is account/model/session dependent and Git commits have no intrins
 Commercial provider costs need measured usage; no fictional per-course estimates.
 
 ## Remaining external setup
+
 Public creator authentication/organizations; verified email sender; media bucket;
 isolated workers/queue; official social/ads application access; course commerce
 pricing/refund/payout policies. Existing account preview and test Stripe are retained.
+
+## Delivered foundation — October 14, 2026
+
+Public pages: /learn, /academy, /creator-studio, /gtm, plus homepage product links.
+Source workspace: separate Academy, Creator Studio and GTM sidebar views and
+reloadable ?view= paths. New UI is lazy loaded (~16 KB minified, ~5 KB gzip).
+
+Working flow: create/edit course -> structure validation -> explicit local release
+-> idempotent local enrollment -> actual Learn session with the lesson/practice in
+its notes -> source-grounded creative brief -> exact copy approval -> campaign
+draft with a pinned creative snapshot and hash -> exported manual handoff.
+Local authoring persists in expansion:v1 in the existing SQLite KV table. No cloud
+schema migration, public marketplace, external publishing or model invocation.
+No private learner code is uploaded.
+
+Validation: TypeScript check, Vite workspace build and site build passed. Six domain
+tests passed, covering rights/stale revisions, immutable releases, restart durability,
+real Learn launch and active-session conflicts, approval invalidation, campaign
+snapshot preservation and invalid payloads. One full browser test traverses the
+course-to-Learn-to-creative-to-campaign/export flow against an isolated real companion.
+One responsive site test verifies all four pages at desktop/mobile sizes.
+No new desktop installer published; use the source development build.
+
+Next milestone: bounded Academy Architect contract and Python project compiler
+with executed starter/reference/test validation; then source-media/EDL/FFmpeg
+production. Organization auth and hosted launch grants precede public catalog/
+enrollment. The entire master specification is not delivered by this foundation.

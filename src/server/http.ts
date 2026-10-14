@@ -21,6 +21,7 @@ import { LearningPath, directionSchema } from "./learning-path.js";
 import { IdeaNotebook } from "./notebook.js";
 import { workspaceFeatures } from "./workspace-features.js";
 import { EditorIntegration } from "./editor-integration.js";
+import { expansionRoutes } from "./expansion.js";
 
 const text = z.string().max(2000);
 function matches(a: string, b: string) {
@@ -299,6 +300,7 @@ export function createApp(
     res.json(await application.status()),
   );
   workspaceFeatures(app, application, notebook);
+  app.use("/api/expansion", expansionRoutes(application));
   app.post("/api/editor-run", async (req, res) => {
     const input = z
         .object({

@@ -8,6 +8,12 @@ The **0.7.1 preview** connects lesson practice, saved-code checks, OffCourse gui
 
 [Next release priorities](docs/next-release.md): validate real Udemy use, improve relevant during-course practice, verify transfer with changed requirements, and guide a small project into responsible contribution work.
 
+The [expansion direction](docs/expansion-implementation.md) adds Academy, Creator Studio and GTM around Learn. The first **source-only local authoring preview** now creates course drafts and immutable local releases, enrolls locally, opens actual Learn sessions, prepares source-grounded writing briefs, approves exact copy versions, and exports manual campaign plans with tagged links. Public product pages describe each area separately. This does not add a public marketplace, course payments, social publishing, video rendering or the three new flagship agents yet. The published v0.7.1 installer remains the earlier Learn release.
+
+## Development
+
+Use Node 24 or later, run `npm ci` then `npm run dev`. Open the local app, complete its existing learning-folder setup, and select **Academy**, **Creator Studio**, or **GTM** in the sidebar. Direct workspace URLs are `/?view=academy`, `/?view=creator`, and `/?view=gtm` on your local companion. Course releases and creative approvals are local to that device. No AI key or external account is required for this authoring slice, and it incurs no inference, rendering, advertising or payment-provider charges.
+
 ## Start
 
 **Windows desktop preview:** download the installer from [GitHub Releases](https://github.com/aayups31/OutClass/releases), open OutClass, and follow its first-run setup. Choose one parent learning folder; OutClass creates practice and history folders for each course automatically. JavaScript's runtime is bundled. Git for Windows is required for checkpoints; Python is optional for Python lessons. VS Code and GitHub remain optional.

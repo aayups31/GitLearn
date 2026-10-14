@@ -41,6 +41,9 @@ import { LearningHub, LiveWorkHub, PracticePrompt } from "./practical";
 const Studio = lazy(() =>
   import("./studio").then((module) => ({ default: module.Studio })),
 );
+const ProductWorkspace = lazy(() =>
+  import("./products").then((module) => ({ default: module.ProductWorkspace })),
+);
 
 let token = "";
 type Theme = "light" | "dark";
@@ -69,7 +72,10 @@ type Page =
   | "practice"
   | "live"
   | "ideas"
-  | "editors";
+  | "editors"
+  | "academy"
+  | "creator"
+  | "gtm";
 function App() {
   const { layout } = useWorkspaceLayout();
   const layoutControl = useWorkspaceLayout();
@@ -97,6 +103,9 @@ function App() {
       "live",
       "ideas",
       "editors",
+      "academy",
+      "creator",
+      "gtm",
     ].includes(view || "")
       ? (view as Page)
       : "overview";
@@ -128,6 +137,14 @@ function App() {
     )
       return;
     if (courseId) setSelectedCourse(courseId);
+    if (
+      ["academy", "creator", "gtm"].includes(next) ||
+      ["academy", "creator", "gtm"].includes(page)
+    ) {
+      const url = new URL(location.href);
+      url.searchParams.set("view", next);
+      history.replaceState(null, "", url);
+    }
     setPage(next);
   }
   const refresh = async () => {
@@ -261,6 +278,9 @@ function App() {
               { id: "ideas", label: "Ideas & architecture", icon: Sparkles },
               { id: "editors", label: "Editors & extensions", icon: Code2 },
               { id: "history", label: "Checkpoints", icon: History },
+              { id: "academy", label: "Academy", icon: BookOpen },
+              { id: "creator", label: "Creator Studio", icon: LayoutGrid },
+              { id: "gtm", label: "GTM", icon: ArrowUpRight },
             ] as const
           ).map((item) => (
             <button
@@ -361,7 +381,13 @@ function App() {
                             ? "Ideas & architecture"
                             : page === "editors"
                               ? "Editors & extensions"
-                              : "Settings"}
+                              : page === "academy"
+                                ? "Academy"
+                                : page === "creator"
+                                  ? "Creator Studio"
+                                  : page === "gtm"
+                                    ? "GTM"
+                                    : "Settings"}
             </span>
           </div>
           <div className="topbar-actions">
@@ -834,6 +860,22 @@ function App() {
                     </>
                   )}
                 </>
+              )}
+              {(["academy", "creator", "gtm"] as string[]).includes(page) && (
+                <Suspense fallback={<p>Opening product workspace…</p>}>
+                  <ProductWorkspace
+                    key={page}
+                    mode={page as "academy" | "creator" | "gtm"}
+                    api={request}
+                    onDirty={setDraftDirty}
+                    onCode={(id) => {
+                      void refresh().then((next) => {
+                        setNote(next.session?.note || "");
+                        navigate("studio", id);
+                      });
+                    }}
+                  />
+                </Suspense>
               )}
               {page === "practice" && (
                 <LearningHub

@@ -346,11 +346,11 @@ export class Application {
     );
     const portable = {
       schemaVersion: 1,
-      platform: "udemy",
+      platform: course.platform || "udemy",
       courseId: course.id,
       title: course.title,
       url: course.url,
-      discovery: "partial",
+      discovery: course.platform === "academy" ? "versioned" : "partial",
       lessons: course.lessons.map((lesson) => ({ ...lesson })),
     };
     const generated = JSON.stringify(portable, null, 2) + "\n";
