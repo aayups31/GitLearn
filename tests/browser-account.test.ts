@@ -1,0 +1,216 @@
+import { it, expect, vi, afterEach } from "vitest";
+import type { Server } from "node:http";
+import {
+  createGateway,
+  type GatewayDependencies,
+} from "../services/ai/gateway";
+const user = "b8a66e7b-50e0-4f9b-8e5b-24614926e490";
+const origin = "https://outclass.example";
+const session = {
+  access_token: "access-fixture",
+  refresh_token: "refresh-fixture",
+  expires_at: Math.floor(Date.now() / 1000) + 3600,
+  email: "learner@example.com",
+};
+let server: Server | undefined;
+afterEach(async () => {
+  if (server) await new Promise<void>((r) => server!.close(() => r()));
+  server = undefined;
+});
+async function fixture(overrides: Partial<GatewayDependencies> = {}) {
+  const deps: GatewayDependencies = {
+    authenticate: async () => user,
+    answer: async () => ({ answer: "Predict the result.", citations: [] }),
+    auth: vi.fn(async (route, body) => {
+      if (route === "otp") return { sent: true };
+      if (route === "verify" && (body as any).token !== "123456")
+        throw Error("invalid-code");
+      return session;
+    }),
+    allowance: {
+      reserve: async () => true,
+      refund: async () => {},
+      usage: async () => ({
+        used: 1,
+        limit: 20,
+        remaining: 19,
+        plan: "free",
+        period: "2026-10",
+      }),
+    },
+    checkout: vi.fn(
+      async () => "https://checkout.stripe.com/c/pay/test_fixture",
+    ),
+    browser: {
+      origin,
+      preview: true,
+      freeLimit: 20,
+      paidLimit: 600,
+      identity: vi.fn(async (token) => {
+        if (token !== session.access_token) throw Error("expired");
+        return { id: user, email: session.email };
+      }),
+      signOut: vi.fn(async () => {}),
+      plan: async () => ({
+        amount: 1200,
+        currency: "cad",
+        interval: "month",
+        mode: "test",
+      }),
+    },
+    ...overrides,
+  };
+  server = createGateway(deps).listen(0, "127.0.0.1");
+  await new Promise<void>((r) => server!.once("listening", r));
+  const base = `http://127.0.0.1:${(server.address() as any).port}`;
+  const post = (
+    path: string,
+    body: unknown,
+    cookie = "",
+    requestOrigin = origin,
+  ) =>
+    fetch(`${base}/v1/browser/${path}`, {
+      method: "POST",
+      headers: {
+        Origin: requestOrigin,
+        "Content-Type": "application/json",
+        Cookie: cookie,
+      },
+      body: JSON.stringify(body),
+    });
+  const get = (path: string, cookie = "") =>
+    fetch(`${base}/v1/browser/${path}`, { headers: { Cookie: cookie } });
+  return { deps, post, get };
+}
+it("sets verified, secure, HttpOnly session cookies and never exposes tokens to browser JSON", async () => {
+  const f = await fixture();
+  expect(await (await f.get("config")).json()).toMatchObject({
+    preview: true,
+    freeLimit: 20,
+    paidLimit: 600,
+    plan: { mode: "test", amount: 1200 },
+  });
+  const r = await f.post("verify", { email: session.email, code: "123456" });
+  expect(r.status).toBe(200);
+  expect(await r.json()).toEqual({ authenticated: true, email: session.email });
+  const saved = r.headers.getSetCookie();
+  expect(saved).toHaveLength(2);
+  for (const cookie of saved) {
+    expect(cookie).toContain("HttpOnly");
+    expect(cookie).toContain("Secure");
+    expect(cookie).toContain("SameSite=Strict");
+    expect(cookie).toContain("Path=/");
+  }
+  expect(r.headers.get("cache-control")).toBe("private, no-store");
+  const cookie = saved.map((value) => value.split(";")[0]).join("; ");
+  expect(await (await f.get("session", cookie)).json()).toMatchObject({
+    authenticated: true,
+    email: session.email,
+    usage: { remaining: 19 },
+  });
+  const checkout = await f.post(
+    "checkout",
+    { user_id: "someone-else" },
+    cookie,
+  );
+  expect(checkout.status).toBe(200);
+  expect(f.deps.checkout).toHaveBeenCalledWith(user);
+  expect(await (await f.get("session")).json()).toEqual({
+    authenticated: false,
+  });
+});
+it("rejects cross-origin mutations, invalid codes, unauthenticated checkout and non-Stripe billing links", async () => {
+  const f = await fixture({
+    checkout: async () => "https://malicious.example/pay",
+  });
+  expect(
+    (
+      await f.post(
+        "email",
+        { email: session.email },
+        "",
+        "https://malicious.example",
+      )
+    ).status,
+  ).toBe(403);
+  expect(f.deps.auth).not.toHaveBeenCalled();
+  expect(
+    (await f.post("verify", { email: session.email, code: "000000" })).status,
+  ).toBe(400);
+  expect((await f.post("checkout", {})).status).toBe(401);
+  const r = await f.post(
+    "checkout",
+    {},
+    `__Host-outclass-access=${session.access_token}`,
+  );
+  expect(r.status).toBe(503);
+  expect(await r.text()).not.toContain("malicious");
+});
+it("refreshes expired tokens before trusting identity and keeps sessions isolated", async () => {
+  const f = await fixture();
+  const r = await f.get(
+    "session",
+    `__Host-outclass-access=expired; __Host-outclass-refresh=${session.refresh_token}`,
+  );
+  expect(await r.json()).toMatchObject({
+    authenticated: true,
+    email: session.email,
+  });
+  expect(f.deps.auth).toHaveBeenCalledWith("token?grant_type=refresh_token", {
+    refresh_token: session.refresh_token,
+  });
+  expect(r.headers.getSetCookie()).toHaveLength(2);
+  expect(await (await f.get("session")).json()).toEqual({
+    authenticated: false,
+  });
+});
+it("sign-out revokes only this provider session and clears both browser cookies", async () => {
+  const f = await fixture();
+  const r = await f.post(
+    "sign-out",
+    {},
+    `__Host-outclass-access=${session.access_token}; __Host-outclass-refresh=${session.refresh_token}`,
+  );
+  expect(await r.json()).toEqual({ signedOut: true, revoked: true });
+  expect(f.deps.browser!.signOut).toHaveBeenCalledWith(session.access_token);
+  expect(
+    r.headers
+      .getSetCookie()
+      .every((cookie) => cookie.includes("Expires=Thu, 01 Jan 1970")),
+  ).toBe(true);
+});
+it("fails closed when provider identity disagrees with a returned login session", async () => {
+  const f = await fixture();
+  f.deps.browser!.identity = async () => {
+    throw Error("not verified");
+  };
+  const response = await f.post("verify", {
+    email: session.email,
+    code: "123456",
+  });
+  expect(response.status).toBe(400);
+  expect(response.headers.getSetCookie()).toHaveLength(0);
+});
+it("retains cookies during an identity-provider outage instead of signing the learner out", async () => {
+  const f = await fixture();
+  f.deps.browser!.identity = async () => {
+    throw Object.assign(Error("temporary outage"), { status: 503 });
+  };
+  const response = await f.get(
+    "session",
+    `__Host-outclass-access=${session.access_token}; __Host-outclass-refresh=${session.refresh_token}`,
+  );
+  expect(response.status).toBe(503);
+  expect(response.headers.getSetCookie()).toHaveLength(0);
+  expect(f.deps.auth).not.toHaveBeenCalled();
+});
+it("revokes a refresh-only session when the access cookie has expired", async () => {
+  const f = await fixture();
+  const response = await f.post(
+    "sign-out",
+    {},
+    `__Host-outclass-refresh=${session.refresh_token}`,
+  );
+  expect(await response.json()).toEqual({ signedOut: true, revoked: true });
+  expect(f.deps.browser!.signOut).toHaveBeenCalledWith(session.access_token);
+});

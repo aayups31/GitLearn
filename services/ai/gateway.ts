@@ -6,6 +6,10 @@ import { zodTextFormat } from "openai/helpers/zod";
 import { Pool } from "pg";
 import Stripe from "stripe";
 import {
+  browserAccountRoutes,
+  type BrowserAccount,
+} from "./browser-account.js";
+import {
   InvalidBillingSignature,
   PostgresBillingStore,
   StripeBilling,
@@ -126,6 +130,7 @@ export type GatewayConfig = {
   port: number;
 };
 export type GatewayDependencies = {
+  browser?: BrowserAccount;
   allowance: Allowances;
   authenticate: (token: string) => Promise<string>;
   answer: (request: z.infer<typeof hostedRequest>) => Promise<unknown>;
@@ -220,6 +225,7 @@ export function createGateway(deps: GatewayDependencies) {
       });
     }
   });
+  if (deps.browser) app.use("/v1/browser", browserAccountRoutes(deps, limited));
   app.use("/v1", async (req, res, next) => {
     try {
       const token = /^Bearer (\S+)$/.exec(req.headers.authorization || "")?.[1];
@@ -334,9 +340,14 @@ export function productionDependencies(
   const supabase = new URL(config.supabaseUrl);
   if (supabase.protocol !== "https:" || supabase.username || supabase.password)
     throw new Error("SUPABASE_URL must use HTTPS.");
-  const authFetch = async (route: string, body?: unknown, token?: string) => {
+  const authFetch = async (
+    route: string,
+    body?: unknown,
+    token?: string,
+    method?: "POST",
+  ) => {
     const response = await fetch(`${supabase.origin}/auth/v1/${route}`, {
-      method: body === undefined ? "GET" : "POST",
+      method: method || (body === undefined ? "GET" : "POST"),
       redirect: "error",
       headers: {
         apikey: config.supabaseAnonKey,
@@ -346,7 +357,10 @@ export function productionDependencies(
       body: body === undefined ? undefined : JSON.stringify(body),
       signal: AbortSignal.timeout(15000),
     });
-    if (!response.ok) throw new Error("Account request failed.");
+    if (!response.ok)
+      throw Object.assign(new Error("Account request failed."), {
+        status: response.status,
+      });
     return response.json();
   };
   const client = new OpenAI({
@@ -370,6 +384,33 @@ export function productionDependencies(
         })
       : undefined;
   return {
+    browser: {
+      origin: config.publicUrl,
+      preview: true,
+      freeLimit: config.freeLimit,
+      paidLimit: config.paidLimit,
+      identity: async (token) => {
+        const user = await authFetch("user", undefined, token);
+        return { id: user.id, email: user.email };
+      },
+      signOut: async (token) => {
+        // Supabase logout succeeds with an empty body, so do not parse JSON.
+        const response = await fetch(
+          `${supabase.origin}/auth/v1/logout?scope=local`,
+          {
+            method: "POST",
+            redirect: "error",
+            headers: {
+              apikey: config.supabaseAnonKey,
+              Authorization: `Bearer ${token}`,
+            },
+            signal: AbortSignal.timeout(15000),
+          },
+        );
+        if (!response.ok) throw Error("Account sign-out failed.");
+      },
+      ...(billing ? { plan: () => billing.publicPlan() } : {}),
+    },
     allowance,
     authenticate: async (token) =>
       (await authFetch("user", undefined, token)).id,

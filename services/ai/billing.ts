@@ -165,6 +165,15 @@ const terminal = (s: Stripe.Subscription) =>
   ["canceled", "incomplete_expired"].includes(s.status);
 
 export class StripeBilling {
+  private planCache?: {
+    until: number;
+    value: {
+      amount: number;
+      currency: string;
+      interval: "month";
+      mode: "test" | "live";
+    };
+  };
   private readonly origin: string;
   constructor(
     private readonly stripe: Stripe,
@@ -192,6 +201,19 @@ export class StripeBilling {
         "Configure an active monthly fixed price in the matching Stripe environment.",
       );
     return price;
+  }
+  async publicPlan() {
+    if (this.planCache && this.planCache.until > Date.now())
+      return this.planCache.value;
+    const price = await this.price();
+    const value = {
+      amount: price.unit_amount!,
+      currency: price.currency,
+      interval: "month" as const,
+      mode: price.livemode ? ("live" as const) : ("test" as const),
+    };
+    this.planCache = { until: Date.now() + 60000, value };
+    return value;
   }
   private async subscriptions(customer: string, user: string) {
     const found: Stripe.Subscription[] = [];

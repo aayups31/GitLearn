@@ -1,166 +1,335 @@
+document.documentElement.classList.add("enhanced");
+const menu = document.querySelector(".menu-toggle");
+const navigation = document.querySelector("#site-navigation");
+function closeMenu() {
+  menu?.setAttribute("aria-expanded", "false");
+  menu?.setAttribute("aria-label", "Open navigation");
+  navigation?.classList.remove("is-open");
+}
+menu?.addEventListener("click", () => {
+  const open = menu.getAttribute("aria-expanded") !== "true";
+  menu.setAttribute("aria-expanded", String(open));
+  menu.setAttribute(
+    "aria-label",
+    open ? "Close navigation" : "Open navigation",
+  );
+  navigation.classList.toggle("is-open", open);
+});
+navigation?.addEventListener("click", (event) => {
+  if (event.target.closest("a")) closeMenu();
+});
+document.addEventListener("keydown", (event) => {
+  if (
+    event.key === "Escape" &&
+    menu?.getAttribute("aria-expanded") === "true"
+  ) {
+    closeMenu();
+    menu.focus();
+  }
+});
+for (const link of navigation?.querySelectorAll("a") || []) {
+  if (
+    new URL(link.href).pathname.replace(/\.html$/, "") ===
+    location.pathname.replace(/\.html$/, "")
+  )
+    link.setAttribute("aria-current", "page");
+}
+// The bundled guide opens hosted account management on the public website.
+if (location.pathname.startsWith("/welcome/")) {
+  document.querySelectorAll('a[href="account.html"]').forEach((link) => {
+    link.href = "https://git-learn-black.vercel.app/account";
+  });
+}
 const tabs = [...document.querySelectorAll('[role="tab"]')];
-function selectTab(tab) {
-  for (const item of tabs) {
+function selectTab(tab, focus = false) {
+  const group = tab.closest('[role="tablist"]');
+  for (const item of group.querySelectorAll('[role="tab"]')) {
     const selected = item === tab;
     item.setAttribute("aria-selected", String(selected));
     item.tabIndex = selected ? 0 : -1;
     document.getElementById(item.getAttribute("aria-controls")).hidden =
       !selected;
   }
+  if (focus) tab.focus();
 }
 for (const tab of tabs) {
   tab.addEventListener("click", () => selectTab(tab));
   tab.addEventListener("keydown", (event) => {
-    if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
-      event.preventDefault();
-      const next =
-        event.key === "Home"
-          ? tabs[0]
-          : event.key === "End"
-            ? tabs.at(-1)
-            : tabs[
-                (tabs.indexOf(tab) +
-                  (event.key === "ArrowLeft" ? -1 : 1) +
-                  tabs.length) %
-                  tabs.length
-              ];
-      selectTab(next);
-      next.focus();
-    }
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    const group = [
+      ...tab.closest('[role="tablist"]').querySelectorAll('[role="tab"]'),
+    ];
+    const next =
+      event.key === "Home"
+        ? group[0]
+        : event.key === "End"
+          ? group.at(-1)
+          : group[
+              (group.indexOf(tab) +
+                (event.key === "ArrowLeft" ? -1 : 1) +
+                group.length) %
+                group.length
+            ];
+    selectTab(next, true);
   });
 }
-// Content is visible before scripts run. MatchMedia reverts every GSAP style
-// and trigger when the visitor changes their motion preference or viewport.
-if (window.gsap && window.ScrollTrigger && document.querySelector(".hero")) {
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const track = document.querySelector(".journey-track");
+if (track) {
+  const cards = [...track.querySelectorAll(".journey-card")];
+  const prev = document.querySelector("[data-carousel-prev]");
+  const next = document.querySelector("[data-carousel-next]");
+  const count = document.querySelector(".carousel-count");
+  const step = () => cards[1].offsetLeft - cards[0].offsetLeft;
+  const active = () =>
+    Math.min(
+      cards.length - 1,
+      Math.max(0, Math.round(track.scrollLeft / step())),
+    );
+  const update = () => {
+    prev.disabled = track.scrollLeft < 2;
+    next.disabled =
+      track.scrollLeft >= track.scrollWidth - track.clientWidth - 2;
+    count.textContent = `${String(active() + 1).padStart(2, "0")} / ${String(cards.length).padStart(2, "0")}`;
+  };
+  const move = (direction) =>
+    track.scrollTo({
+      left: (active() + direction) * step(),
+      behavior: reduceMotion.matches ? "instant" : "smooth",
+    });
+  prev.addEventListener("click", () => move(-1));
+  next.addEventListener("click", () => move(1));
+  track.addEventListener("keydown", (event) => {
+    if (event.target !== track) return;
+    if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+      event.preventDefault();
+      move(event.key === "ArrowRight" ? 1 : -1);
+    } else if (event.key === "Home" || event.key === "End") {
+      event.preventDefault();
+      track.scrollTo({
+        left: event.key === "Home" ? 0 : track.scrollWidth,
+        behavior: "instant",
+      });
+    }
+  });
+  let timer;
+  track.addEventListener(
+    "scroll",
+    () => {
+      clearTimeout(timer);
+      timer = setTimeout(update, 100);
+    },
+    { passive: true },
+  );
+  new ResizeObserver(update).observe(track);
+  update();
+}
+// Progressive enhancement: native scrolling, readable content without GSAP,
+// and reversible animation when motion preferences change while browsing.
+if (window.gsap && window.ScrollTrigger) {
   gsap.registerPlugin(ScrollTrigger);
   const media = gsap.matchMedia();
-  let entered = false;
   media.add("(prefers-reduced-motion: no-preference)", () => {
     document.body.classList.add("motion-ready");
-    if (!entered && !document.hidden && scrollY < 80) {
+    if (document.querySelector(".hero") && scrollY < 80 && !document.hidden) {
       gsap.from(".hero-word", {
-        yPercent: 108,
-        duration: 1.1,
-        stagger: 0.13,
+        yPercent: 105,
+        duration: 1.2,
+        stagger: 0.12,
         ease: "power3.out",
         clearProps: "transform",
       });
       gsap.from(".hero-enter", {
-        y: 16,
+        y: 15,
         opacity: 0,
-        duration: 0.85,
+        duration: 0.9,
         stagger: 0.07,
         delay: 0.2,
         ease: "power2.out",
         clearProps: "all",
       });
-      entered = true;
     }
-    ScrollTrigger.create({
-      trigger: ".hero",
-      start: "top bottom",
-      end: "bottom top",
-      toggleClass: { targets: document.body, className: "hero-in-view" },
-    });
-    gsap.to(".orbit-shell", {
-      y: -65,
-      rotation: -7,
-      ease: "none",
-      scrollTrigger: {
-        trigger: ".hero",
-        start: "top top",
-        end: "bottom top",
-        scrub: 0.8,
-      },
-    });
-    gsap.to(".loop-words", {
-      x: 30,
-      ease: "none",
-      scrollTrigger: {
-        trigger: ".problem",
-        start: "top bottom",
-        end: "bottom top",
-        scrub: 0.8,
-      },
-    });
     for (const el of document.querySelectorAll("[data-reveal]")) {
       gsap.from(el, {
-        y: 26,
-        opacity: 0.15,
-        duration: 0.85,
+        y: 24,
+        duration: 0.95,
         ease: "power2.out",
         scrollTrigger: {
           trigger: el,
-          start: "top 92%",
+          start: "top 94%",
           toggleActions: "play none none reverse",
         },
       });
     }
-    // Anchors and keyboard focus must never leave a focus target dimmed.
-    const focused = (event) => {
-      const el = event.target.closest("[data-reveal]");
-      if (el) {
-        gsap.killTweensOf(el, "opacity");
-        gsap.set(el, { opacity: 1 });
-      }
-    };
-    document.addEventListener("focusin", focused);
-    return () => {
-      document.body.classList.remove("motion-ready", "hero-in-view");
-      document.removeEventListener("focusin", focused);
-    };
+    for (const el of document.querySelectorAll(".agent-sphere")) {
+      gsap.fromTo(
+        el,
+        { y: 28, rotate: -8 },
+        {
+          y: -22,
+          rotate: 10,
+          ease: "none",
+          scrollTrigger: {
+            trigger: el.parentElement,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: 1,
+          },
+        },
+      );
+    }
+    for (const canvas of document.querySelectorAll(".architecture-canvas")) {
+      gsap.from(
+        canvas.querySelectorAll(
+          ".architecture-root,.architecture-branches>div,.architecture-decision",
+        ),
+        {
+          y: 20,
+          opacity: 0.25,
+          stagger: 0.14,
+          duration: 0.95,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: canvas,
+            start: "top 85%",
+            toggleActions: "play none none reverse",
+          },
+        },
+      );
+    }
+    for (const element of document.querySelectorAll(
+      ".practice-invite,.milestone.active,.contribution-steps",
+    )) {
+      gsap.fromTo(
+        element,
+        { y: 18 },
+        {
+          y: -8,
+          ease: "none",
+          scrollTrigger: {
+            trigger: ".journey-section",
+            start: "top bottom",
+            end: "bottom 40%",
+            scrub: 1,
+          },
+        },
+      );
+    }
+    return () => document.body.classList.remove("motion-ready");
   });
   media.add(
     "(min-width: 901px) and (prefers-reduced-motion: no-preference)",
     () => {
+      const hero = document.querySelector(".hero");
+      if (!hero) return;
+      // Pin the opening only. The next surface naturally rises over it from
+      // below, so wheels, anchors, touch, and browser history keep native behavior.
+      ScrollTrigger.create({
+        trigger: hero,
+        start: "top top",
+        end: () => `+=${hero.offsetHeight}`,
+        pin: true,
+        pinSpacing: false,
+        anticipatePin: 1,
+      });
+      gsap.from(".hero-orbit", {
+        opacity: 0,
+        duration: 1.5,
+        delay: 0.15,
+        ease: "power3.out",
+        clearProps: "opacity",
+      });
       gsap.fromTo(
-        ".workspace-frame",
-        { rotateX: 7, y: 35, scale: 0.96 },
+        ".hero-art-stage",
+        { y: 0, scale: 1, rotate: -2 },
+        {
+          y: -90,
+          scale: 1.12,
+          rotate: 2,
+          ease: "none",
+          scrollTrigger: {
+            trigger: hero,
+            start: 0,
+            end: () => hero.offsetHeight - 120,
+            scrub: 1,
+            invalidateOnRefresh: true,
+          },
+        },
+      );
+      gsap.fromTo(
+        ".hero-copy",
+        { y: 0, scale: 1, opacity: 1 },
+        {
+          y: -60,
+          scale: 0.93,
+          opacity: 0.12,
+          ease: "none",
+          scrollTrigger: {
+            trigger: hero,
+            start: 0,
+            end: () => Math.max(400, hero.offsetHeight - 140),
+            scrub: 0.7,
+            invalidateOnRefresh: true,
+          },
+        },
+      );
+      gsap.to(".showcase-surface", {
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".showcase-surface",
+          start: "top 80%",
+          end: "top top",
+          scrub: 0.7,
+        },
+      });
+      gsap.fromTo(
+        ".home-page .workspace-frame",
+        { rotateX: 8, y: 70, scale: 0.93 },
         {
           rotateX: 0,
           y: 0,
           scale: 1,
           ease: "none",
           scrollTrigger: {
-            trigger: ".product-proof",
-            start: "top 94%",
-            end: "top 30%",
-            scrub: 0.65,
+            trigger: ".workspace-frame",
+            start: "top 96%",
+            end: "top 20%",
+            scrub: 0.8,
           },
         },
       );
-      gsap.fromTo(
-        ".path-fill",
-        { scaleY: 0 },
-        {
-          scaleY: 1,
-          ease: "none",
-          scrollTrigger: {
-            trigger: ".escape-chapters",
-            start: "top 55%",
-            end: "bottom 65%",
-            scrub: 0.5,
-          },
-        },
-      );
-      const nodes = [...document.querySelectorAll(".path-node")];
-      const activate = (index) =>
-        nodes.forEach((node, i) =>
-          node.classList.toggle("is-active", i <= index),
-        );
-      for (const step of document.querySelectorAll(".escape-step")) {
-        ScrollTrigger.create({
-          trigger: step,
-          start: "top 58%",
-          end: "bottom 58%",
-          onEnter: () => activate(Number(step.dataset.step)),
-          onEnterBack: () => activate(Number(step.dataset.step)),
+      const orbital = document.querySelector(".hero-orbit");
+      const finePointer = matchMedia("(pointer: fine)");
+      if (orbital && finePointer.matches) {
+        const rotateX = gsap.quickTo(orbital, "rotationX", {
+          duration: 1.3,
+          ease: "power3.out",
         });
+        const rotateY = gsap.quickTo(orbital, "rotationY", {
+          duration: 1.3,
+          ease: "power3.out",
+        });
+        const move = (event) => {
+          const rect = hero.getBoundingClientRect();
+          rotateX(((event.clientY - rect.top) / rect.height - 0.5) * -5);
+          rotateY(((event.clientX - rect.left) / rect.width - 0.5) * 7);
+        };
+        const leave = () => {
+          rotateX(0);
+          rotateY(0);
+        };
+        hero.addEventListener("pointermove", move, { passive: true });
+        hero.addEventListener("pointerleave", leave);
+        return () => {
+          hero.removeEventListener("pointermove", move);
+          hero.removeEventListener("pointerleave", leave);
+        };
       }
-      return () => nodes.forEach((node) => node.classList.remove("is-active"));
     },
   );
-  // The browser handles scrolling. No wheel interception or synthetic scroller.
   window.addEventListener("load", () => ScrollTrigger.refresh(), {
     once: true,
   });
@@ -176,44 +345,51 @@ function pauseMotion() {
 }
 document.addEventListener("visibilitychange", pauseMotion);
 pauseMotion();
-fetch(
-  new URL(
-    "release.json",
-    document.currentScript?.src || new URL("assets/site.js", location.href),
-  ),
-)
-  .then((response) => {
-    if (!response.ok) throw Error();
-    return response.json();
-  })
-  .then((release) => {
-    for (const [id, asset] of [
-      ["windows", release.windows],
-      ["extension", release.extension],
-    ]) {
-      if (!asset?.url) continue;
-      const url = new URL(asset.url);
-      if (
-        url.protocol !== "https:" ||
-        url.hostname !== "github.com" ||
-        !url.pathname.startsWith("/aayups31/OutClass/releases/download/")
-      )
-        continue;
-      document.getElementById(`${id}-download`).href = url.href;
-      if (id === "windows")
-        document.getElementById("windows-status").textContent =
-          `Windows x64 · ${release.productName || "OutClass"} v${release.version} · ${asset.size || "Preview installer"} · Unsigned preview`;
-    }
-    if (release.chromeStoreUrl) {
-      const url = new URL(release.chromeStoreUrl);
-      if (
-        url.protocol === "https:" &&
-        url.hostname === "chromewebstore.google.com"
-      ) {
-        document.getElementById("extension-download").href = url.href;
-        document.getElementById("extension-status").textContent =
-          "Install from the Chrome Web Store, then pair in the app.";
+// Public download URLs remain useful without scripts; refresh only known assets.
+const releaseUrl = new URL(
+  "release.json",
+  document.currentScript?.src || new URL("assets/site.js", location.href),
+);
+if (
+  document.querySelector(
+    "#windows-download, #extension-download, #editor-download",
+  )
+) {
+  fetch(releaseUrl)
+    .then((response) => {
+      if (!response.ok) throw Error();
+      return response.json();
+    })
+    .then((release) => {
+      for (const id of ["windows", "extension", "editor"]) {
+        const link = document.getElementById(`${id}-download`);
+        const asset = release[id];
+        if (!link || !asset?.url) continue;
+        const url = new URL(asset.url);
+        if (
+          url.protocol !== "https:" ||
+          url.hostname !== "github.com" ||
+          !url.pathname.startsWith("/aayups31/OutClass/releases/download/")
+        )
+          continue;
+        link.href = url.href;
+        if (id === "windows")
+          document.getElementById("windows-status").textContent =
+            `Windows x64 · ${release.productName || "OutClass"} v${release.version} · ${asset.size || "Preview installer"} · Unsigned preview`;
       }
-    }
-  })
-  .catch(() => {});
+      if (release.chromeStoreUrl) {
+        const url = new URL(release.chromeStoreUrl);
+        const link = document.getElementById("extension-download");
+        if (
+          link &&
+          url.protocol === "https:" &&
+          url.hostname === "chromewebstore.google.com"
+        ) {
+          link.href = url.href;
+          document.getElementById("extension-status").textContent =
+            "Install from the Chrome Web Store, then pair in the app.";
+        }
+      }
+    })
+    .catch(() => {});
+}

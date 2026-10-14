@@ -11,6 +11,6 @@ export default defineConfig({
   webServer: {
     command: "npm run preview:site",
     url: "http://127.0.0.1:47832",
-    reuseExistingServer: false,
+    reuseExistingServer: process.env.OUTCLASS_REUSE_SITE_PREVIEW === "1",
   },
 });

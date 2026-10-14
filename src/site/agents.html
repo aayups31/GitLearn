@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#080a10" />
+    <title>AI agents · OutClass</title>
+    <meta
+      name="description"
+      content="Meet OffCourse, your course and code teacher, and Architect, the separate agent for developing ideas, architecture, and practical next decisions."
+    />
+    <link rel="icon" href="assets/orbital-logo.webp" type="image/webp" />
+    <link rel="stylesheet" href="assets/site.css" />
+    <link
+      rel="preload"
+      href="assets/fonts/Manrope.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin=""
+    />
+    <link rel="canonical" href="https://git-learn-black.vercel.app/agents" />
+    <meta property="og:title" content="AI agents · OutClass" />
+    <meta
+      property="og:description"
+      content="Meet OffCourse, your course and code teacher, and Architect, the separate agent for developing ideas, architecture, and practical next decisions."
+    />
+    <meta
+      property="og:image"
+      content="https://git-learn-black.vercel.app/assets/hero-tiles.webp"
+    />
+    <script src="assets/vendor/gsap.min.js" defer=""></script>
+    <script src="assets/vendor/ScrollTrigger.min.js" defer=""></script>
+    <script src="assets/site.js" defer=""></script>
+    <link rel="stylesheet" href="assets/refinement.css" />
+  </head>
+  <body class="subpage">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="wordmark" href="./" aria-label="OutClass home"
+        ><img
+          class="brand-orbit"
+          src="assets/orbital-logo.webp"
+          width="54"
+          height="36"
+          alt=""
+        />OutClass</a
+      ><button
+        class="menu-toggle"
+        aria-expanded="false"
+        aria-controls="site-navigation"
+        aria-label="Open navigation"
+      >
+        <span></span><span></span>
+      </button>
+      <nav id="site-navigation" aria-label="Main navigation">
+        <a href="product.html">Product</a><a href="agents.html">Agents</a
+        ><a href="setup.html">How it works</a>
+      </nav>
+      <div class="header-actions">
+        <a class="sign-in-link" href="account.html">Sign in</a
+        ><a class="button small" href="download.html"
+          >Get OutClass
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/icons.svg#arrow"></use></svg
+        ></a>
+      </div>
+    </header>
+    <main id="main" tabindex="-1">
+      <section class="page-hero agents-hero wrap">
+        <h1>Intelligence that<br /><span>makes you capable.</span></h1>
+        <p>
+          One agent for understanding. One for possibility.<br />Both built
+          around your work and your decisions.
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="download.html"
+            >Build with OutClass
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#arrow"></use></svg></a
+          ><a class="text-link" href="#offcourse"
+            >Meet OffCourse
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#down"></use></svg
+          ></a>
+        </div>
+        <div class="agent-duet agent-hero-duet" aria-hidden="true">
+          <div class="duet-line"></div>
+          <div class="agent-sphere teacher-sphere">
+            <i></i><i></i><i></i><span>✧</span>
+          </div>
+          <div class="agent-sphere architect-sphere">
+            <i></i><i></i><i></i><span>⌘</span>
+          </div>
+        </div>
+      </section>
+      <section id="offcourse" class="agent-profile wrap">
+        <div class="agent-profile-copy" data-reveal="">
+          <div class="agent-name">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#spark"></use>
+            </svg>
+            OffCourse
+          </div>
+          <h2>Find your way<br /><span>through the hard part.</span></h2>
+          <p>
+            Your course teacher and coding guide. OffCourse connects the lesson,
+            your attempt, and your recorded runs to help you reason out the next
+            step.
+          </p>
+          <ul class="detail-list">
+            <li>Each course keeps its own sources and conversation.</li>
+            <li>Course answers cite the material you explicitly import.</li>
+            <li>Progressive hints help you predict, try, and check.</li>
+            <li>
+              Practice invitations connect learning to projects and suitable
+              public issues.
+            </li>
+          </ul>
+        </div>
+        <div class="agent-console" data-reveal="">
+          <div class="agent-console-bar">
+            <span><i class="status-dot"></i> OffCourse</span
+            ><span>Illustrative conversation</span>
+          </div>
+          <div class="agent-context-pills">
+            <span>main.py</span><span>Recorded run</span
+            ><span>Collections lesson</span>
+          </div>
+          <p class="agent-question">
+            It works for one event. The second event replaces the total.
+          </p>
+          <div class="agent-response">
+            <span class="agent-avatar">✧</span>
+            <p>
+              What should happen to the existing total when that user appears
+              again?
+            </p>
+            <p>
+              Trace two events on paper. Compare the value before and after the
+              second update.
+            </p>
+            <div class="agent-citation">
+              <svg class="icon" aria-hidden="true">
+                <use href="assets/icons.svg#book"></use>
+              </svg>
+              Working with collections <small>Imported source · example</small>
+            </div>
+          </div>
+          <div class="reasoning-loop">
+            <span>Predict</span
+            ><svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#right"></use></svg
+            ><span>Try</span
+            ><svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#right"></use></svg
+            ><span>Check</span>
+          </div>
+        </div>
+      </section>
+      <section id="architect" class="agent-profile architect-profile wrap">
+        <div class="agent-profile-copy" data-reveal="">
+          <div class="agent-name">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#code"></use>
+            </svg>
+            Architect
+          </div>
+          <h2>Give your idea<br /><span>somewhere to go.</span></h2>
+          <p>
+            A separate software architect for your ideas. Connect what you’re
+            learning to a useful problem, make the tradeoffs clear, and find the
+            smallest experiment worth building.
+          </p>
+          <ul class="detail-list">
+            <li>
+              Your idea notebook and project decisions have their own memory.
+            </li>
+            <li>Share context from selected courses explicitly.</li>
+            <li>Opt into notes drawn from saved reflections.</li>
+            <li>
+              Revisit the problem, users, constraints, and next decision as the
+              idea grows.
+            </li>
+          </ul>
+        </div>
+        <div class="architecture-canvas" data-reveal="">
+          <div class="agent-console-bar">
+            <span><i class="status-dot"></i> Architect</span
+            ><span>Illustrative plan</span>
+          </div>
+          <div class="architecture-root">
+            Campus activity finder<small>Your idea</small>
+          </div>
+          <div class="architecture-connect"></div>
+          <div class="architecture-branches">
+            <div>Understand the need<small>Talk to 3 students</small></div>
+            <div>Test one interaction<small>Find an event nearby</small></div>
+          </div>
+          <div class="architecture-decision">
+            <span>Next decision</span>
+            <p>Which single problem would make this useful enough to try?</p>
+          </div>
+          <div class="architecture-memory">
+            <span class="memory-node"></span><span>Notebook</span
+            ><span class="memory-node"></span><span>Shared course context</span>
+          </div>
+        </div>
+      </section>
+      <section class="agent-boundaries wrap">
+        <h2>
+          You bring the judgment.<br /><span
+            >Your agents bring perspective.</span
+          >
+        </h2>
+        <div class="boundary-columns">
+          <div>
+            <h3>Your work stays yours.</h3>
+            <p>
+              You write the code, run the checks, and choose when to publish.
+              The agents guide; they have no tools to edit files or execute
+              commands for you.
+            </p>
+          </div>
+          <div>
+            <h3>Context you can inspect.</h3>
+            <p>
+              Course material is imported by you. Citations open real passages.
+              Architect uses explicitly linked notes and courses, and
+              distinguishes evidence from suggestions.
+            </p>
+          </div>
+          <div>
+            <h3>Choose your connection.</h3>
+            <p>
+              Use a personal OpenAI key or a compatible local model. Included AI
+              is currently a test-account preview.
+            </p>
+            <a class="text-link" href="account.html"
+              >Account &amp; included AI
+              <svg class="icon" aria-hidden="true">
+                <use href="assets/icons.svg#arrow"></use></svg
+            ></a>
+          </div>
+        </div>
+      </section>
+      <section class="subpage-cta wrap">
+        <h2>Your next idea<br /><span>starts with you.</span></h2>
+        <a class="button primary" href="download.html"
+          >Get OutClass
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/icons.svg#arrow"></use></svg
+        ></a>
+      </section>
+    </main>
+    <footer class="site-footer wrap">
+      <div class="footer-top">
+        <a class="wordmark" href="./" aria-label="OutClass home"
+          ><img
+            class="brand-orbit"
+            src="assets/orbital-logo.webp"
+            width="54"
+            height="36"
+            alt=""
+          />OutClass</a
+        >
+        <nav aria-label="Footer navigation">
+          <a href="agents.html">Agents</a><a href="setup.html">Setup</a
+          ><a href="privacy.html">Privacy</a
+          ><a
+            href="https://github.com/aayups31/OutClass"
+            target="_blank"
+            rel="noopener noreferrer"
+            >GitHub
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#arrow"></use></svg
+          ></a>
+        </nav>
+        <span class="footer-copyright">© 2026 OutClass</span>
+      </div>
+    </footer>
+  </body>
+</html>

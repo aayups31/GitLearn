@@ -7,7 +7,12 @@ test("the local app opens the independently built product and setup guide", asyn
   await page.getByRole("link", { name: "Product & guide" }).click();
   await expect(page).toHaveURL(/\/welcome\/$/);
   await expect(page).toHaveTitle("OutClass · Break free from tutorial hell");
+  await page.getByRole("link", { name: "How it works", exact: true }).click();
+  await expect(page).toHaveURL(/\/welcome\/setup.html$/);
   await expect(page.locator(".guide-list li")).toHaveCount(8);
+  await page
+    .getByRole("link", { name: "Get the downloads", exact: true })
+    .click();
   await expect(page.locator("#extension-status")).toContainText(
     "pending review",
   );

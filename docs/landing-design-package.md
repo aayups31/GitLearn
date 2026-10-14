@@ -1,45 +1,48 @@
-# GitLearn release design
+# OutClass web and account design — October 14, 2026
 
-## Premise
+The public website presents a local learning workspace with two specialized guides. The Windows app owns courses, files, execution, learning history, and its separate AI connection.
 
-A self-learning workspace that connects the lesson you watch to the code you write and the progress you keep. The first release keeps the GitLearn name and focuses on Udemy. The public web is marketing and documentation; the Windows download contains the workspace and first-run setup.
+## Website
 
-## Direction
+- The opening hero contains the supplied orbital identity and one glass-tile scene. The scene has no rocky floor or mountains and is not repeated elsewhere.
+- The software showcase stays large. Its three panes communicate courses, code, and OffCourse without relying on long marketing copy.
+- Native horizontal journey cards show practice, an evolving project, and a contribution brief. The assistant example remains keyboard accessible and explicitly illustrative.
+- Decorative chapter labels, micro headlines, repeated slogans, the old giant footer wordmark, and image captions naming courses/code/contributions have been removed. Useful release, example, and privacy information remains.
+- Product, Agents, Setup, Download, Account, and Privacy each have their own page. Navigation includes a functional mobile menu with Escape dismissal and focus return.
+- The Agents page gives OffCourse and Architect separate introductions and concrete examples. Its spheres and architecture graph are built in HTML/CSS, not a repeated image or a live Blender render.
 
-Software-led editorial design, informed by Linear's product density and Claude's clear contextual assistance. The signature is an actual three-pane GitLearn workspace, rather than a generated illustration or video. This deliberately adapts the 10k-websites cinematic defaults to the product. No paid generation is needed.
+## Art
 
-Customer-language research: recurring learner concerns are being stuck watching tutorials, knowing how to follow along but not build independently, and losing context between practice sessions. References: https://www.reddit.com/r/learnprogramming/comments/1e40e8g and https://www.reddit.com/r/learnprogramming/comments/qbduch. These inform the problem and workflow; they are not endorsements or testimonials.
+The supplied `Glossy Futuristic Orbital Emblem.png` is used as the website mark, resized and encoded as `src/site/assets/orbital-logo.webp` without changing the silhouette.
 
-## Tokens and typography
+The one hero asset is `src/site/assets/hero-tiles.webp` (271,008 bytes). It was edited using the built-in image-generation tool from the previously generated orbital scene. A real GitHub SVG is positioned on its blank tile. The final asset has an alpha channel, no floor, and no terrain. It is used once in visible page content. Original generation files remain in the user's Codex generated-images directory.
 
-- Canvas #101216; raised surface #181c24; text #f3f5fa; secondary text #a5adbd.
-- Blue #7399ff for focus and rare emphasis; primary button #456fe3 with white text.
-- Display: Manrope, self-hosted variable, weights 500 through 700. Body: existing self-hosted Inter. Mono: system monospace.
-- Spacious editorial copy, compact product detail, mild rounded corners, consistent thin separators. No repeated boxed feature grid.
+Final edit prompt:
 
-## Page, copy, and pacing
+> Edit target: attached OutClass orbital scene. Remove ALL mountains, rocky ground, crystalline floor, terrain, ground haze, star dust and background. Keep ONLY the five existing floating beveled glass tiles, their exact embossed blue orbital brand symbol / code brackets / ascending bars / graduation cap, and the thin luminous blue orbital light trails, on a genuinely transparent background. The top-left tile stays blank for an actual GitHub SVG overlay. Preserve original tile arrangement, positions, perspective, proportions and recognizable brand silhouette exactly; do not add anything, no labels. Refine the lighting to premium ice-blue and cobalt polished glass, tasteful violet underside highlights. Trim the ground entirely without cutting or covering the bottom-right graduation-cap tile. Landscape composition same 3:2 dimensions, keep safe transparent margins. This is a premium AI learning company's hero asset, refined and photorealistic 3D studio-render quality. No floor, no horizon, no mountain, no rocks, no atmospheric environment, no text.
 
-1. Header: mark, Product, How it works, FAQ, Download. Hero: “Go beyond the lesson.” Supporting copy describes Udemy, local coding, notes, and sourced help. Primary action: Download GitLearn, opening the download section. Secondary: Explore the workspace.
-2. Actual workspace proof with an explicit example caption. Tall desktop image; a scrollable, labeled detail on narrow screens rather than illegible scaled text.
-3. An editorial problem statement followed by three connected workflow steps: Watch with context, Make it your own, Keep what you learn. Distinct layouts from the hero.
-4. Designed interactive moment: choose Code help or Ask the course, see the corresponding example answer and source. Clearly labeled demonstration. No fake live AI or automatic editing claim.
-5. Local-first explanation with a simple folder tree: one learning folder, multiple courses, optional one private GitHub repository.
-6. Complete start guide: install app and Git, choose parent folder, optionally add API key, install and pair extension, open Udemy, start lesson and code, review checkpoint, optionally sync GitHub.
-7. FAQ: VS Code optional, GitHub optional, supported runtimes, explicit transcript import and limitations, API billing, Windows preview signing.
-8. Download: actual release assets and current store state. No invented store URL, reviews, customer logos, pricing, metrics, or availability. Footer includes privacy and source repository.
+## Motion
 
-## Motion and interaction
+GSAP introduces the hero with controlled stagger, gives the artwork pointer depth, and adds scroll-driven depth as the following surface wipes upward over the opening. The software frame unfolds from a shallow perspective. Journey visuals, agent spheres, and the architecture graph have restrained staged movement.
 
-One subtle entrance for the workspace proof; static content remains visible without JavaScript. No scroll hijacking, pinned hero, ongoing animation, or video downloads. Hover and focus transition only opacity or transform. Live reduced-motion preferences disable motion. Assistant example switches are keyboard operable and expose selection and panel state.
+All motion reverses or restores ordinary styles when reduced motion is enabled. Mobile uses normal document flow. Browser scrolling, anchors, touch, and carousel keyboard controls remain native. There is no wheel interception, autoplay carousel, or dependence on animation scripts for downloads and documentation.
 
-## Delivery and QA
+## Account and billing
 
-Plain static HTML/CSS/JS in src/site, independently deployable dist/site. Workspace React build remains local. Relative assets support root or subdirectory hosting. Self-hosted licensed fonts. Sources and download URLs are release metadata, separate from local workspace API. App and extension archives contain no developer .env or local data.
+The public Account page has email and verification steps, cooldown for resend, invalid-code feedback, loading/error states, allowance progress, refresh, sign-out, and Stripe checkout/portal handoff. The page never receives provider access or refresh tokens in JavaScript. The server sets host-only `__Host-` cookies with Secure, HttpOnly, SameSite=Strict, and no Domain attribute. All account responses use private/no-store cache headers. Mutation requests must originate at the configured HTTPS public origin and contain JSON.
 
-Verify desktop 1280/1440 and mobile 375/390, keyboard navigation, no-JS completion, live reduced motion, every link/action, contrast, console errors, overflow, installer launch, native directory picker/API-key boundary, local editor execution, first-run wizard, and existing course/checkpoint/RAG regressions. Scan copy for em dashes and stock language. Record measured artifact sizes and checks in release notes. Public deployment follows review of the finished artifact.
+Session identity is verified with Supabase. Expired sessions refresh on the server; provider outages retain cookies. Sign-out clears browser cookies and attempts to revoke only the current provider session, including a refresh-only session. Billing always uses the verified user ID, never an account identifier supplied by the page. Hosted checkout URLs must belong to Stripe. Price, currency, and test/live mode come from the validated configured Stripe price.
 
-## OutClass visual refresh — October 11, 2026
+Payment-return pages use the same design and check actual allowance state. A success URL cannot grant access or prove payment; signed Stripe notifications remain authoritative. Browser and desktop sessions are separate. The desktop AI settings now use focused email-code forms, resend cooldown, allowance progress, and clear billing controls while preserving its Windows-encrypted account persistence.
 
-The public landing now uses an original blue ribbon that rises out of a loop, oversized two-line typography, a quieter navigation bar, a larger workspace introduction, and a pale editorial section for the tutorial-loop problem. Inspiration: Linear's software detail, Framer's visual confidence, and Scale's generous editorial pacing. No reference assets or customer claims are copied.
+Included AI remains restricted to the connected email test account. Billing is in Stripe test mode. A verified sending domain and commercial activation are still required for public learner accounts and live subscriptions. No new email, payment, provider key, database migration, or public account activation was performed by this UI pass.
 
-The SVG artwork is local and lightweight. Existing GSAP entrance, scroll parallax, workspace perspective, chapter progress, and reduced-motion handling are retained. All download/setup details and preview availability remain explicit. Verified at 1440px and 390px visually; the three site Playwright tests pass, including narrow viewports, keyboard tabs, no JavaScript, blocked GSAP, and changing reduced-motion preferences.
+## Validation
+
+The public-site suite covers seven pages at 1440, 768, 375, and 320 pixels, internal asset paths, keyboard tabs, carousel completion, backward scroll restoration, changing reduced-motion preferences, blocked GSAP, no JavaScript, mobile navigation, and an account/Stripe handoff using fixtures. Screenshots are retained in `.local/test-results/site/`.
+
+Gateway, browser-account, Stripe-billing, and provider tests use isolated fixtures and cover secure cookies, origin checks, token non-exposure, expired-session refresh, outage recovery, sign-out, allowance controls, invalid codes, and rejected billing hosts. The application build and focused local learning-loop regression cover the desktop connection forms and bundled guide navigation. Actual provider email delivery was verified in the preceding infrastructure task; this pass sends no new owner email and submits no payment.
+
+The source and docs stay in the existing Git repository. Public deployment uses the existing Vercel project and `main` integration. The Windows installer links continue to point to the published v0.7.1 preview; the updated desktop account styling is in source and local builds until a new installer is packaged.
+
+Implementation references: [Supabase server session guidance](https://supabase.com/docs/guides/auth/server-side/advanced-guide) and [local sign-out scope](https://supabase.com/docs/reference/javascript/auth-signout).

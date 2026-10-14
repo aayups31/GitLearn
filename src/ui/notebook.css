@@ -404,6 +404,160 @@
 .ai-access .onboarding-actions {
   flex-wrap: wrap;
 }
+.ai-sign-in-flow {
+  background: linear-gradient(140deg, var(--accent-soft), var(--surface) 60%);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 25px;
+  margin-top: 24px;
+}
+.ai-sign-in-heading {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 23px;
+}
+.ai-sign-in-heading > svg {
+  color: var(--accent);
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+.ai-sign-in-heading h3 {
+  font-size: 18px;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+.ai-sign-in-heading p {
+  font-size: 11px;
+  line-height: 1.8;
+  color: var(--muted);
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+}
+.ai-sign-in-flow form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.ai-sign-in-flow form + form {
+  margin-top: 22px;
+}
+.ai-sign-in-flow .button {
+  align-self: flex-start;
+  min-height: 39px;
+}
+.ai-sign-in-flow label {
+  gap: 8px;
+  font-size: 11px;
+}
+.ai-sign-in-flow .ai-code-input {
+  font: 22px/1.5 monospace;
+  letter-spacing: 0.3em;
+  text-align: center;
+  max-width: 290px;
+  min-height: 52px;
+}
+.ai-sign-in-flow .text-button {
+  font-size: 10px;
+  margin-top: 17px;
+  margin-right: 17px;
+}
+.ai-sign-in-flow .hint {
+  margin-top: 19px;
+  font-size: 10px;
+  line-height: 1.9;
+}
+.ai-account-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  padding: 17px 19px;
+  border-radius: 9px;
+  margin: 22px 0 16px;
+  font-size: 12px;
+}
+.ai-account-summary svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.ai-account-summary > svg:last-child {
+  margin-left: auto;
+}
+.ai-account-summary small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+.ai-allowance-summary {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--soft);
+  padding: 23px;
+}
+.ai-allowance-summary > div {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--muted);
+}
+.ai-allowance-summary p {
+  display: flex;
+  align-items: baseline;
+  gap: 13px;
+  margin: 16px 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+.ai-allowance-summary p strong {
+  font-size: 35px;
+  letter-spacing: -1.4px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.ai-allowance-summary progress {
+  display: block;
+  width: 100%;
+  height: 4px;
+  appearance: none;
+  border: 0;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--line);
+}
+.ai-allowance-summary progress::-webkit-progress-bar {
+  background: var(--line);
+}
+.ai-allowance-summary progress::-webkit-progress-value {
+  background: var(--accent);
+}
+.ai-allowance-summary small {
+  display: block;
+  color: var(--muted);
+  font-size: 9px;
+  margin-top: 13px;
+}
+.ai-access .ai-service-details {
+  border-top: 1px solid var(--line);
+  padding-top: 15px;
+}
+@media (max-width: 600px) {
+  .ai-sign-in-flow {
+    padding: 20px;
+  }
+  .ai-sign-in-flow .button {
+    width: 100%;
+    justify-content: center;
+  }
+  .ai-sign-in-flow .ai-code-input {
+    max-width: none;
+  }
+  .ai-allowance-summary {
+    padding: 18px;
+  }
+}
 @media (max-width: 900px) {
   .notebook-body {
     grid-template-columns: 1fr;

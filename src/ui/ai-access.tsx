@@ -1,5 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { Sparkles, Check, Loader2 } from "lucide-react";
+import React, { useEffect, useState, useRef } from "react";
+import {
+  Sparkles,
+  Check,
+  Loader2,
+  Mail,
+  ShieldCheck,
+  CreditCard,
+} from "lucide-react";
 import type { AIConfig } from "../server/ai-provider";
 import type { AIUsage } from "../ai-contract";
 type Api = <T>(route: string, body?: unknown) => Promise<T>;
@@ -17,6 +24,7 @@ export function AIAccessSettings({
   onRefresh: () => Promise<unknown>;
   enabled: boolean;
 }) {
+  const actionPending = useRef(false);
   const [access, setAccess] = useState<Access>(),
     [savedAccess, setSavedAccess] = useState<Access>(),
     [usage, setUsage] = useState<AIUsage>(),
@@ -26,7 +34,17 @@ export function AIAccessSettings({
     [pendingEmail, setPendingEmail] = useState(""),
     [usageNotice, setUsageNotice] = useState(""),
     [busy, setBusy] = useState(false),
-    [notice, setNotice] = useState("");
+    [notice, setNotice] = useState(""),
+    [resendUntil, setResendUntil] = useState(0),
+    [resendIn, setResendIn] = useState(0);
+  useEffect(() => {
+    if (!resendUntil) return;
+    const update = () =>
+      setResendIn(Math.max(0, Math.ceil((resendUntil - Date.now()) / 1000)));
+    update();
+    const timer = window.setInterval(update, 1000);
+    return () => window.clearInterval(timer);
+  }, [resendUntil]);
   const load = async () => {
     const a = await api<Access>("ai-access");
     setAccess(a);
@@ -47,6 +65,8 @@ export function AIAccessSettings({
     void load().catch((e) => setNotice(e.message));
   }, []);
   const act = async (action: () => Promise<unknown>) => {
+    if (actionPending.current) return;
+    actionPending.current = true;
     setBusy(true);
     setNotice("");
     try {
@@ -58,6 +78,7 @@ export function AIAccessSettings({
         e instanceof Error ? e.message : "This connection is unavailable.",
       );
     } finally {
+      actionPending.current = false;
       setBusy(false);
     }
   };
@@ -91,7 +112,7 @@ export function AIAccessSettings({
           <Sparkles size={23} />
         </span>
         <div>
-          <h2>OffCourse & the Architect</h2>
+          <h2>Your AI guides</h2>
           <p>
             Choose how your learning guides connect. Your projects and execution
             stay local.
@@ -139,10 +160,7 @@ export function AIAccessSettings({
       </div>
       {access.mode === "included" ? (
         <>
-          <p>
-            Sign in without owning an AI provider key. The hosted service
-            receives the relevant context you send with each question.
-          </p>
+          <p>Connect OffCourse and Architect with an OutClass account.</p>
           <details
             className="ai-service-details"
             open={!access.service || undefined}
@@ -169,14 +187,32 @@ export function AIAccessSettings({
           )}
           {access.account ? (
             <>
-              <p>
-                <Check size={13} /> Signed in as {access.account.email}
-              </p>
+              <div className="ai-account-summary">
+                <Check size={16} />
+                <div>
+                  Signed in<small>{access.account.email}</small>
+                </div>
+                <ShieldCheck size={16} />
+              </div>
               {usage && (
-                <p>
-                  {usage.remaining} of {usage.limit} answers remaining ·{" "}
-                  {usage.plan} plan · resets monthly ({usage.period})
-                </p>
+                <div className="ai-allowance-summary">
+                  <div>
+                    <span>Included AI</span>
+                    <span>
+                      {usage.plan === "paid" ? "OutClass Plus" : "Free preview"}
+                    </span>
+                  </div>
+                  <p>
+                    <strong>{usage.remaining}</strong>{" "}
+                    <span>of {usage.limit} answers remaining</span>
+                  </p>
+                  <progress
+                    value={usage.remaining}
+                    max={Math.max(1, usage.limit)}
+                    aria-label="Monthly answers remaining"
+                  />
+                  <small>Calendar month: {usage.period} · resets in UTC</small>
+                </div>
               )}
               {usageNotice && (
                 <p role="status" className="hint">
@@ -220,71 +256,128 @@ export function AIAccessSettings({
                     })
                   }
                 >
-                  Manage upgrade
+                  <CreditCard size={13} />{" "}
+                  {usage?.plan === "paid"
+                    ? "Manage subscription"
+                    : "Open billing"}
                 </button>
               </div>
+              <p className="hint">
+                Stripe opens securely in your browser. Review the current plan
+                and payment details before confirming.
+              </p>
             </>
           ) : (
-            <>
-              <label>
-                Email
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  disabled={busy || sent}
-                />
-              </label>
-              <button
-                className="button secondary"
-                disabled={busy || !email || !access.service}
-                onClick={() =>
-                  void act(async () => {
-                    await api("ai-config", access);
-                    const address = email.trim();
-                    await api("ai-sign-in", { email: address });
-                    setPendingEmail(address);
-                    setSent(true);
-                    setNotice(
-                      `A sign-in code was requested for ${address}. Check your email, including spam.`,
-                    );
-                  })
-                }
+            <div className="ai-sign-in-flow">
+              <div className="ai-sign-in-heading">
+                <Mail size={19} />
+                <div>
+                  <h3>{sent ? "Check your inbox." : "Welcome to OutClass."}</h3>
+                  <p>
+                    {sent
+                      ? `Enter the code sent to ${pendingEmail}.`
+                      : "Sign in with an email code. No password to remember."}
+                  </p>
+                </div>
+              </div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!sent && !busy && email && access.service)
+                    void act(async () => {
+                      await api("ai-config", access);
+                      const address = email.trim();
+                      await api("ai-sign-in", { email: address });
+                      setPendingEmail(address);
+                      setSent(true);
+                      setResendUntil(Date.now() + 60000);
+                      setNotice(
+                        `A sign-in code was requested for ${address}. Check your email, including spam.`,
+                      );
+                    });
+                }}
               >
-                {sent ? "Resend sign-in code" : "Email a sign-in code"}
-              </button>
+                <label>
+                  Email
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    disabled={busy || sent}
+                  />
+                </label>
+                <button
+                  className="button secondary"
+                  type="submit"
+                  disabled={busy || sent || !email || !access.service}
+                >
+                  {busy ? (
+                    <Loader2 size={13} className="spin" />
+                  ) : (
+                    <Mail size={13} />
+                  )}{" "}
+                  {sent ? "Code requested" : "Email a sign-in code"}
+                </button>
+              </form>
               {sent && (
                 <>
-                  <label>
-                    Email verification code
-                    <input
-                      value={code}
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      maxLength={8}
-                      disabled={busy}
-                      onChange={(e) =>
-                        setCode(e.target.value.replace(/\D/g, ""))
-                      }
-                    />
-                  </label>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!busy && /^\d{6,8}$/.test(code))
+                        void act(async () => {
+                          await api("ai-verify", { email: pendingEmail, code });
+                          await api("assistant-enable", { enabled: true });
+                          setCode("");
+                          setSent(false);
+                          setNotice(
+                            "Signed in. OffCourse and the Architect are ready in your workspace.",
+                          );
+                        });
+                    }}
+                  >
+                    <label>
+                      Email verification code
+                      <input
+                        value={code}
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        maxLength={8}
+                        className="ai-code-input"
+                        autoFocus
+                        placeholder="000000"
+                        disabled={busy}
+                        onChange={(e) =>
+                          setCode(e.target.value.replace(/\D/g, ""))
+                        }
+                      />
+                    </label>
+                    <button
+                      className="button primary"
+                      type="submit"
+                      disabled={busy || !/^\d{6,8}$/.test(code)}
+                    >
+                      Sign in & enable AI guides
+                    </button>
+                  </form>
                   <button
-                    className="button primary"
-                    disabled={busy || !/^\d{6,8}$/.test(code)}
+                    className="text-button"
+                    disabled={busy || resendIn > 0}
                     onClick={() =>
                       void act(async () => {
-                        await api("ai-verify", { email: pendingEmail, code });
-                        await api("assistant-enable", { enabled: true });
-                        setCode("");
-                        setSent(false);
+                        await api("ai-sign-in", { email: pendingEmail });
+                        setResendUntil(Date.now() + 60000);
                         setNotice(
-                          "Signed in. OffCourse and the Architect are ready in your workspace.",
+                          "A new code was requested. Use the latest email.",
                         );
                       })
                     }
                   >
-                    Sign in & enable AI guides
+                    {resendIn > 0
+                      ? `Resend in ${resendIn}s`
+                      : "Resend sign-in code"}
                   </button>
                   <button
                     className="text-button"
@@ -298,7 +391,10 @@ export function AIAccessSettings({
                   </button>
                 </>
               )}
-            </>
+              <p className="hint ai-sign-in-preview">
+                Included AI is currently limited to the connected test account.
+              </p>
+            </div>
           )}
         </>
       ) : access.mode === "local" ? (
