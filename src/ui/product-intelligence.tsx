@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Sparkles, Play, CheckCircle2, Download } from "lucide-react";
 import type { CompiledProject } from "../server/academy-compiler";
 import type { ProductAgentRun } from "../server/product-agents";
+import { ShareProposal } from "./agent-handoffs";
 type API = <T>(route: string, body?: unknown) => Promise<T>;
 export function AgentPanel({
   domain,
@@ -10,7 +11,7 @@ export function AgentPanel({
   api,
   onApply,
 }: {
-  domain: "academy" | "creative" | "growth";
+  domain: "academy" | "creative" | "growth" | "analytics";
   entity?: { id: string; revision: number };
   dirty: boolean;
   api: API;
@@ -45,7 +46,9 @@ export function AgentPanel({
       ? "Academy Architect"
       : domain === "creative"
         ? "Creative Director"
-        : "Growth Strategist";
+        : domain === "analytics"
+          ? "Analytics specialist"
+          : "Growth Strategist";
   return (
     <section className="product-intelligence">
       <div className="product-panel-heading">
@@ -116,6 +119,12 @@ export function AgentPanel({
               {l}
             </p>
           ))}
+          <ShareProposal
+            api={api}
+            runId={run.id}
+            from={domain}
+            disabled={dirty || entity?.revision !== run.revision}
+          />
           <div className="product-actions">
             {onApply && (
               <button

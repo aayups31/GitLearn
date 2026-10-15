@@ -20,6 +20,8 @@ import type {
 import "./products.css";
 import { CreatorDesign } from "./creator-design";
 import { HostedAcademyPanel } from "./academy-hosted";
+import { LearnPackageEditor } from "./learn-package";
+import { HandoffInbox } from "./agent-handoffs";
 import { GTMOperations } from "./gtm-operations";
 import { CreatorMedia } from "./creator-media";
 import { AgentPanel, CompilerPanel } from "./product-intelligence";
@@ -201,6 +203,16 @@ export function ProductWorkspace({
         </p>
       )}
       <fieldset disabled={busy} className="product-fieldset">
+        <HandoffInbox
+          api={api}
+          domain={
+            mode === "gtm"
+              ? "growth"
+              : mode === "creator"
+                ? "creative"
+                : "academy"
+          }
+        />
         {mode === "academy" && (
           <>
             <div className="product-columns">
@@ -303,9 +315,22 @@ export function ProductWorkspace({
                         onClick={() => {
                           setCourse({
                             ...course,
-                            lessons: course.lessons.filter(
-                              (_, index) => index !== i,
-                            ),
+                            lessons: course.lessons
+                              .filter((_, index) => index !== i)
+                              .map((l) =>
+                                l.learn
+                                  ? {
+                                      ...l,
+                                      learn: {
+                                        ...l.learn,
+                                        prerequisiteLessons:
+                                          l.learn.prerequisiteLessons
+                                            .filter((n) => n !== i)
+                                            .map((n) => (n > i ? n - 1 : n)),
+                                      },
+                                    }
+                                  : l,
+                              ),
                           });
                           changed();
                         }}
@@ -361,6 +386,20 @@ export function ProductWorkspace({
                         )}
                       </label>
                     ))}
+                    <LearnPackageEditor
+                      index={i}
+                      value={lesson.learn}
+                      lessonTitles={course.lessons.map((l) => l.title)}
+                      onChange={(learn) => {
+                        setCourse({
+                          ...course,
+                          lessons: course.lessons.map((l, n) =>
+                            n === i ? { ...l, learn } : l,
+                          ),
+                        });
+                        changed();
+                      }}
+                    />
                   </section>
                 ))}
                 <button
@@ -488,6 +527,22 @@ export function ProductWorkspace({
                     </span>
                     <h3>{r.title}</h3>
                     <p>{r.outcome}</p>
+                    {data.courses.some((c) => c.id === r.courseId) && (
+                      <button
+                        className="button"
+                        onClick={() =>
+                          void action(async () => {
+                            const result = await api<{ courseId: string }>(
+                              `expansion/releases/${r.id}/preview`,
+                              { lessonIndex: 0 },
+                            );
+                            onCode(result.courseId);
+                          })
+                        }
+                      >
+                        Preview as a learner
+                      </button>
+                    )}
                     {data.enrollments.some((e) => e.releaseId === r.id) ? (
                       r.lessons.map((l, i) => (
                         <button
@@ -1060,6 +1115,12 @@ export function ProductWorkspace({
                 api={api}
                 campaign={selectedCampaign}
                 dirty={dirty}
+              />
+              <AgentPanel
+                domain="analytics"
+                entity={selectedCampaign}
+                dirty={dirty}
+                api={api}
               />
               <p className="product-limit">
                 Proposed budgets are plans, never spending instructions. Connect

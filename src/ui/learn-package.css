@@ -1,0 +1,49 @@
+.learn-package-editor {
+  margin: 22px 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.learn-starter {
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+.learn-assignment {
+  padding: 20px;
+  margin: 0 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  font-size: 13px;
+}
+.learn-assignment summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.learn-assignment p {
+  line-height: 1.7;
+  color: var(--muted);
+}
+.learn-assignment fieldset {
+  display: grid;
+  gap: 12px;
+  border: 0;
+  padding: 0;
+  margin: 18px 0;
+}
+.learn-assignment textarea {
+  width: 100%;
+  min-height: 85px;
+}
+.learn-assignment .product-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.6;
+}
+.learn-assignment .product-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}

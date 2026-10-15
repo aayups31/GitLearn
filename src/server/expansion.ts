@@ -23,6 +23,9 @@ import path from "node:path";
 import { ProductAgents } from "./product-agents.js";
 import { designExport } from "./creator-design.js";
 import { CourseLibrary } from "./library.js";
+import { learnPackageIssues } from "../learn-package-contract.js";
+import { LearnDelivery } from "./learn-delivery.js";
+import { AgentHandoffs, agentDomain } from "./agent-handoffs.js";
 
 const key = "expansion:v1";
 const stamp = () => new Date().toISOString();
@@ -36,13 +39,17 @@ const releaseRequest = z
   .object({ expectedRevision: z.number().int(), approve: z.literal(true) })
   .strict();
 export function validateCourse(course: AcademyDraft) {
-  const issues: string[] = [];
+  const issues: string[] = learnPackageIssues(course.lessons);
   if (!course.audience) issues.push("Describe who the course is for.");
   if (!course.outcome)
     issues.push("Define what the learner will build or demonstrate.");
   if (!course.rightsConfirmed)
     issues.push("Confirm your rights to the course material.");
   if (!course.lessons.length) issues.push("Add at least one lesson.");
+  if (JSON.stringify(course).length > 300000)
+    issues.push(
+      "Keep a course release under 300,000 characters; split large source files into linked resources.",
+    );
   course.lessons.forEach((lesson, i) => {
     for (const field of ["title", "objective", "practice", "content"] as const)
       if (!lesson[field]) issues.push(`Lesson ${i + 1}: add ${field}.`);
@@ -222,21 +229,27 @@ export class Expansion {
     this.enroll(release.id);
     return this.launch(release.id, payload.lessonIndex);
   }
-  async launch(releaseId: string, lessonIndex: number) {
+  async launch(releaseId: string, lessonIndex: number, preview = false) {
     const expansion = this.state();
     const release = expansion.releases.find((r) => r.id === releaseId);
     if (
       !release ||
-      !expansion.enrollments.some((e) => e.releaseId === releaseId)
+      (!preview &&
+        !expansion.enrollments.some((e) => e.releaseId === releaseId))
     )
       throw new UserError(
         "Enroll in this local release before opening Learn.",
         403,
       );
     const lesson = release.lessons[lessonIndex];
+    if (preview && !expansion.courses.some((c) => c.id === release.courseId))
+      throw new UserError(
+        "Instructor preview is available for your authored local courses.",
+        403,
+      );
     if (!lesson) throw new UserError("Lesson not found.", 404);
     const state = this.app.configured();
-    const courseId = `academy:${releaseId}`,
+    const courseId = `${preview ? "academy-preview" : "academy"}:${releaseId}`,
       lessonId = `lesson-${lessonIndex}`;
     if (state.session) {
       if (
@@ -255,7 +268,7 @@ export class Expansion {
         platform: "academy",
         title: release.title,
         url: `https://git-learn-black.vercel.app/academy#${releaseId}`,
-        path: `academy-${slug(release.title)}-${releaseId.slice(0, 8)}`,
+        path: `${preview ? "academy-preview" : "academy"}-${slug(release.title)}-${releaseId.slice(0, 8)}`,
         mirrored: false,
         observedAt: stamp(),
         lessons: release.lessons.map((l, i) => ({
@@ -270,6 +283,9 @@ export class Expansion {
     }
     await this.app.mirror(courseId);
     await this.app.start(courseId, lessonId);
+    const delivery = new LearnDelivery(this.app);
+    delivery.bind(courseId, release, preview);
+    await delivery.seed(courseId, lessonId);
     if (
       release.project?.verified ||
       this.app.store.get(`academy:template:${release.id}`) ===
@@ -306,7 +322,8 @@ export class Expansion {
         `${l.content}\n\nObjective: ${l.objective}\n\nPractice: ${l.practice}`,
         "academy",
         `lesson-${i}`,
-        `academy:${releaseId}:${i}`,
+        `${courseId}:${i}`,
+        true,
       ),
     );
     await this.app.saveNote(
@@ -407,7 +424,7 @@ export function expansionRoutes(app: Application) {
   router.post("/agents/run", async (req, res) => {
     const input = z
       .object({
-        domain: z.enum(["academy", "creative", "growth"]),
+        domain: agentDomain,
         entityId: z.string().uuid(),
         expectedRevision: z.number().int(),
         approveProvider: z.literal(true),
@@ -419,6 +436,22 @@ export function expansionRoutes(app: Application) {
     );
   });
   router.get("/state", (_req, res) => res.json(expansion.state()));
+  const handoffs = new AgentHandoffs(app);
+  router.get("/handoffs", (_req, res) => res.json(handoffs.list()));
+  router.post("/handoffs/offer", (req, res) => {
+    const input = z
+      .object({ runId: z.string().uuid(), to: agentDomain })
+      .strict()
+      .parse(req.body);
+    res.json(handoffs.offer(input.runId, input.to));
+  });
+  router.post("/handoffs/:id/accept", (req, res) => {
+    const input = z
+      .object({ hash: z.string().length(64), approve: z.literal(true) })
+      .strict()
+      .parse(req.body);
+    res.json(handoffs.accept(req.params.id, input.hash));
+  });
   router.get("/hosted/mine", async (_req, res) =>
     res.json(await app.ai.platform("mine")),
   );
@@ -492,6 +525,17 @@ export function expansionRoutes(app: Application) {
     res.json(
       await app.serial(() =>
         expansion.launch(req.params.id, input.lessonIndex),
+      ),
+    );
+  });
+  router.post("/releases/:id/preview", async (req, res) => {
+    const input = z
+      .object({ lessonIndex: z.number().int().min(0).max(29) })
+      .strict()
+      .parse(req.body);
+    res.json(
+      await app.serial(() =>
+        expansion.launch(req.params.id, input.lessonIndex, true),
       ),
     );
   });

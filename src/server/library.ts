@@ -11,6 +11,7 @@ import {
 import type { Application } from "./application.js";
 import { assertClean, child, collect, UserError } from "./safety.js";
 import { IdeaNotebook } from "./notebook.js";
+import { LearnDelivery } from "./learn-delivery.js";
 
 export interface Evidence {
   id: string;
@@ -158,6 +159,7 @@ export class CourseLibrary {
     kind: string,
     lessonId = "",
     generatedId?: string,
+    preserveSource = false,
   ) {
     const course = this.course(courseId);
     if (lessonId && !course.lessons.some((item) => item.id === lessonId))
@@ -178,7 +180,15 @@ export class CourseLibrary {
     const existing = this.app.store.db
       .prepare("SELECT hash FROM rag_documents WHERE id=? AND course_id=?")
       .get(id, courseId) as { hash: string } | undefined;
-    if (existing?.hash === hash) return id;
+    if (existing?.hash === hash) {
+      if (preserveSource)
+        this.app.store.db
+          .prepare(
+            "UPDATE rag_documents SET generated=0 WHERE id=? AND course_id=?",
+          )
+          .run(id, courseId);
+      return id;
+    }
     const parts = chunks(content);
     const count = this.app.store.db
       .prepare(
@@ -216,7 +226,7 @@ export class CourseLibrary {
           lessonId,
           content,
           hash,
-          generatedId ? 1 : 0,
+          generatedId && !preserveSource ? 1 : 0,
           new Date().toISOString(),
         );
       for (const [i, part] of parts.entries()) {
@@ -573,6 +583,10 @@ export class CourseLibrary {
             content: item.text.slice(0, 4000),
           }));
         const context = JSON.stringify({
+          instructorAssignment: new LearnDelivery(this.app).teacherContext(
+            courseId,
+            state.session?.courseId === courseId ? state.session.lessonId : "",
+          ),
           course: course.title,
           lesson:
             state.session?.courseId === courseId

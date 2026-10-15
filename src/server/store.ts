@@ -72,11 +72,12 @@ export class Store {
   save(state: AppState) {
     this.put("state", state);
   }
-  transaction(fn: () => void) {
+  transaction<T>(fn: () => T): T {
     this.db.exec("BEGIN IMMEDIATE");
     try {
-      fn();
+      const result = fn();
       this.db.exec("COMMIT");
+      return result;
     } catch (error) {
       this.db.exec("ROLLBACK");
       throw error;

@@ -23,3 +23,9 @@ Learner files, conversations and private Git history are excluded from creator a
 5. Verify connected workflows and update source documentation. Packaging a new installer is deferred at the user's request. Platform account configuration remains a separate live-validation step.
 
 Use the existing local Node/React/SQLite stack and hosted account gateway. No framework migration, unbounded agent loops, implicit external publishing, fabricated metrics or automatic paid ad campaigns. Commit and push tested functional milestones to main; report limits accurately.
+
+## Implemented connected learning milestone
+
+Instructor-authored lesson packages now carry acceptance criteria, prerequisite lesson links, progressive hints, reflection prompts, transfer challenges and safe starter files. Release validation rejects cyclic prerequisites, duplicate paths and excessive content. Learn receives the immutable package, preserves existing files, displays the assignment, protects unsaved reviews and shares only revealed hints with OffCourse. Instructor preview uses a separate local course/workspace and review history. Self-review is explicitly not automated grading or mastery evidence.
+
+Academy lesson sources now survive workspace reindexing. A separate Analytics specialist can interpret provider observations and deterministic manual-report metrics. Reviewed agent handoffs pin the source release/hash; accepting a handoff adds labeled context for another specialist without applying changes or forwarding learner conversations. Focused domain tests and a real browser course → Learn → Creator → GTM flow verify this milestone without paid model calls.

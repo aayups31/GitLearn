@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { learnPackage } from "./learn-package-contract.js";
 import type { CompiledProject } from "./server/academy-compiler.js";
 
 const text = (max = 4000) => z.string().trim().max(max);
@@ -8,6 +9,7 @@ export const academyLesson = z
     objective: text(1000),
     practice: text(2000),
     content: text(8000),
+    learn: learnPackage.optional(),
   })
   .strict();
 export const courseDraft = z

@@ -61,6 +61,21 @@ test("author a course, launch Learn, approve grounded copy and prepare a manual 
     .fill("A dictionary can retain each student's running total.");
   await page.getByLabel("I own or have permission").check();
   await page
+    .getByRole("button", {
+      name: "Add Learn experience to lesson 1",
+      exact: true,
+    })
+    .click();
+  await page
+    .getByLabel("Acceptance criteria · one per line 1", { exact: true })
+    .fill("Handle repeated students\nReturn zero for empty input");
+  await page
+    .getByLabel("Progressive hints · one per line 1", { exact: true })
+    .fill("Predict one student’s running total first.");
+  await page
+    .getByRole("button", { name: "Add starter file", exact: true })
+    .click();
+  await page
     .getByRole("button", { name: "Save course draft", exact: true })
     .click();
   await expect(page.locator(".product-message[role=status]")).toContainText(
@@ -93,6 +108,22 @@ test("author a course, launch Learn, approve grounded copy and prepare a manual 
     .click();
   await expect(page.locator(".topbar")).toContainText("Code & learn");
   expect(store.state().session?.note).toContain("Handle empty input");
+  await expect(page.locator(".learn-assignment")).toContainText(
+    "Handle repeated students",
+  );
+  await page.getByLabel("Handle repeated students", { exact: true }).check();
+  await page.getByLabel("Return zero for empty input", { exact: true }).check();
+  await page
+    .getByLabel("Assignment reflection", { exact: true })
+    .fill(
+      "I compared repeated students and empty input using my own examples.",
+    );
+  await page
+    .getByRole("button", { name: "Complete self-review", exact: true })
+    .click();
+  await expect(page.locator(".learn-assignment")).toContainText(
+    "learner-reported progress",
+  );
   expect(
     store.db
       .prepare(

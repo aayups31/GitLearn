@@ -7,9 +7,10 @@ import {
 } from "../product-agent-contract.js";
 import { UserError } from "./safety.js";
 import { GTMAnalytics } from "./gtm-analytics.js";
+import { AgentHandoffs, type AgentDomain } from "./agent-handoffs.js";
 export type ProductAgentRun = {
   id: string;
-  domain: "academy" | "creative" | "growth";
+  domain: AgentDomain;
   entityId: string;
   revision: number;
   startedAt: string;
@@ -46,7 +47,7 @@ export class ProductAgents {
               r.id ===
               state.creatives.find((c) => c.id === entityId)!.releaseId,
           )
-        : domain === "growth"
+        : domain === "growth" || domain === "analytics"
           ? state.releases.find(
               (r) =>
                 r.id ===
@@ -66,7 +67,7 @@ export class ProductAgents {
         2000,
       ),
     }));
-    if (domain === "growth")
+    if (domain === "growth" || domain === "analytics")
       for (const r of new GTMAnalytics(this.app, this.state)
         .view(entityId)
         .reports.slice(-4))
@@ -75,6 +76,37 @@ export class ProductAgents {
           title: `Manually supplied ${r.source} report · ${r.date}`,
           text: JSON.stringify(r).slice(0, 2000),
         });
+    if (domain === "growth" || domain === "analytics") {
+      const posts = (
+        this.app.store.get<
+          {
+            id: string;
+            campaignId: string;
+            provider: string;
+            state: string;
+            metrics?: unknown;
+          }[]
+        >("gtm:publication:v1") || []
+      )
+        .filter((p) => p.campaignId === entityId && p.metrics)
+        .slice(-4);
+      for (const post of posts)
+        sources.push({
+          id: `observation:${post.id}`,
+          title: `${post.provider} provider observation`,
+          text: JSON.stringify({
+            state: post.state,
+            metrics: post.metrics,
+          }).slice(0, 2000),
+        });
+    }
+    sources.push(
+      ...new AgentHandoffs(this.app).sources(
+        domain,
+        release?.id,
+        domain === "academy" ? entityId : undefined,
+      ),
+    );
     return {
       entity,
       revision: entity.revision,
@@ -143,6 +175,11 @@ export class ProductAgents {
         }),
       });
       const ids = new Set(context.sources.map((s) => s.id));
+      if (this.context(domain, entityId).revision !== revision)
+        throw new UserError(
+          "The draft changed during this proposal. Run the agent again for the current revision.",
+          409,
+        );
       if (answer.steps.some((s) => s.sourceIds.some((id) => !ids.has(id))))
         throw new UserError(
           "The proposal referenced a source that was not supplied. It was not applied.",

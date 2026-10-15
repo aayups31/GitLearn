@@ -42,6 +42,7 @@ export const hostedRequest = z.object({
     "academy",
     "creative",
     "growth",
+    "analytics",
   ]),
   context: z.string().min(1).max(90000),
   history: z

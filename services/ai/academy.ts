@@ -120,6 +120,10 @@ export class HostedAcademy {
       validation = validateCourse(value.course);
     if (!validation.valid) throw new UserError(validation.issues.join(" "));
     assertClean(JSON.stringify(value.course), "public course");
+    if (Buffer.byteLength(JSON.stringify(value.course)) > 350000)
+      throw new UserError(
+        "This public release exceeds the 350 KB course-content limit. Reduce embedded starter files.",
+      );
     const body = {
         course: value.course,
         projectTemplate: value.projectTemplate,

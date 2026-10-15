@@ -289,7 +289,8 @@ export class AIProvider {
       | "checkpoint"
       | "academy"
       | "creative"
-      | "growth";
+      | "growth"
+      | "analytics";
     schema: T;
     name: string;
     instructions: string;

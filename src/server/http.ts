@@ -26,6 +26,7 @@ import { CreatorProduction } from "./creator-production.js";
 import { SocialConnections } from "./social-connections.js";
 import { GTMPublishing } from "./gtm-publishing.js";
 import { GTMAnalytics } from "./gtm-analytics.js";
+import { LearnDelivery } from "./learn-delivery.js";
 
 const text = z.string().max(2000);
 function matches(a: string, b: string) {
@@ -318,6 +319,30 @@ export function createApp(
   );
   workspaceFeatures(app, application, notebook);
   app.use("/api/expansion", expansionRoutes(application));
+  const delivery = new LearnDelivery(application);
+  app.get("/api/learn-assignment", (req, res) =>
+    res.json(
+      delivery.snapshot(
+        text.parse(req.query.courseId),
+        text.parse(req.query.lessonId),
+      ),
+    ),
+  );
+  app.post("/api/learn-assignment", (req, res) => {
+    const input = z
+      .object({ courseId: text, lessonId: text, progress: z.unknown() })
+      .strict()
+      .parse(req.body);
+    res.json(delivery.save(input.courseId, input.lessonId, input.progress));
+  });
+  app.post("/api/learn-assignment/hint", async (req, res) => {
+    const input = z
+      .object({ courseId: text, lessonId: text })
+      .strict()
+      .parse(req.body);
+    await learning.assertFresh(input.courseId);
+    res.json(delivery.hint(input.courseId, input.lessonId));
+  });
   app.use("/api/expansion/media", creatorProduction.routes());
   app.use("/api/expansion/social", social.routes());
   app.use("/api/expansion/publishing", publishing.routes());

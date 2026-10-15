@@ -46,6 +46,7 @@ import { IntegratedTerminal } from "./terminal";
 import { ArchitectNotebook, type NotebookState } from "./notebook";
 import { SessionDirection } from "./session-direction";
 import type { PracticeTask } from "../server/practice";
+import { LearnAssignment } from "./learn-package";
 
 type Api = <T>(route: string, body?: unknown) => Promise<T>;
 type File = {
@@ -304,6 +305,7 @@ export function Studio({
     reset: resetLayout,
   } = useWorkspaceLayout();
   const session = state.session?.courseId === course?.id ? state.session : null;
+  const [assignmentDirty, setAssignmentDirty] = useState(false);
   const note = session ? sessionNote : "";
   const [files, setFiles] = useState<{ path: string; size: number }[]>([]),
     [drafts, setDrafts] = useState<Record<string, File>>({}),
@@ -400,9 +402,9 @@ export function Studio({
     return () => clearTimeout(timer);
   }, [session?.id, active, cursor]);
   const dirtyRef = useRef(false);
-  dirtyRef.current = dirty;
+  dirtyRef.current = dirty || assignmentDirty;
   useEffect(() => {
-    onDirty(dirty);
+    onDirty(dirty || assignmentDirty);
     const protect = (event: BeforeUnloadEvent) => {
       if (dirtyRef.current) {
         event.preventDefault();
@@ -414,7 +416,7 @@ export function Studio({
       window.removeEventListener("beforeunload", protect);
       onDirty(false);
     };
-  }, [dirty]);
+  }, [dirty, assignmentDirty]);
   useEffect(() => {
     if (!session || note === savedNote) return;
     let cancelled = false;
@@ -881,6 +883,12 @@ export function Studio({
           </div>
         ) : (
           <>
+            <LearnAssignment
+              api={api}
+              onDirty={setAssignmentDirty}
+              courseId={course.id}
+              lessonId={session.lessonId}
+            />
             {session.contributionId ? (
               <div className="contribution-context">
                 Contribution workspace · you write the change; the teacher
