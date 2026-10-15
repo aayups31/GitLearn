@@ -145,7 +145,7 @@ download and exact export approval work. Source files stay local; no cloud rende
 charges. Jobs survive as receipts; an interrupted job is marked failed and requires
 explicit resubmission, not a hidden restart. Python and FFmpeg/FFprobe are required.
 Real fixture rendering and media QA passed.
-# Delivered workflow extension
+## Delivered workflow extension
 
 The source preview now includes a private Supabase Academy schema and authenticated free-course catalog. Creators explicitly publish immutable versions; enrollment is idempotent; five-minute, account-bound, hashed, one-use grants import assignments into the existing Learn workspace. Lesson text becomes local RAG evidence. No learner code or progress is uploaded. The real database test exercises ownership and replay rejection inside a rollback-only transaction. Public email onboarding still needs a verified sender domain; the configured Resend test sender is owner-only.
 

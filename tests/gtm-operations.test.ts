@@ -66,6 +66,37 @@ it("uses one-time scoped OAuth and never exposes tokens for all four channels", 
     vi.unstubAllEnvs();
   }
 });
+it("verifies missing LinkedIn scopes through token introspection instead of trusting requested permissions", async () => {
+  vi.stubEnv("OUTCLASS_LINKEDIN_CLIENT_ID", "fixture");
+  vi.stubEnv("OUTCLASS_LINKEDIN_CLIENT_SECRET", "fixture-secret");
+  try {
+    for (const active of [true, false]) {
+      const transport = vi.fn(
+        async (url: string | URL | Request) =>
+          new Response(
+            JSON.stringify(
+              String(url).includes("introspectToken")
+                ? { active, scope: "openid,profile,w_member_social" }
+                : String(url).includes("accessToken")
+                  ? { access_token: "private-token", expires_in: 3600 }
+                  : { sub: "member", name: "Fixture member" },
+            ),
+          ),
+      );
+      const social = new SocialConnections(47848, transport as typeof fetch),
+        auth = social.authorize("linkedin"),
+        result = await social.callback(
+          "linkedin",
+          new URL(auth.url).searchParams.get("state")!,
+          "code",
+        );
+      expect(result?.canPublish).toBe(active);
+      expect(JSON.stringify(result)).not.toContain("private-token");
+    }
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});
 it("requires exact post approval, deduplicates retries, confirms provider evidence and keeps unknown metrics unknown", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "outclass-growth-")),
     store = new Store(dir),

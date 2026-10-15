@@ -15,6 +15,7 @@ import { randomUUID } from "node:crypto";
 import dotenv from "dotenv";
 import type { DesktopEnvironment } from "./bridge";
 import { LocalTerminals } from "./terminal";
+import { approvedSocialLink } from "./social-links";
 
 app.setName("OutClass");
 // Keep the encrypted key and saved workspace in the existing installation.
@@ -41,6 +42,7 @@ const keyFile = path.join(app.getPath("userData"), "openai-key.encrypted");
 const accountFile = path.join(app.getPath("userData"), "ai-account.encrypted");
 const acknowledgements = new Map<string, () => void>();
 const allowedExternal = new Set([
+  "git-learn-black.vercel.app",
   "github.com",
   "git-scm.com",
   "www.python.org",
@@ -75,6 +77,7 @@ function external(url: string) {
   if (
     target.protocol !== "https:" ||
     (!allowedExternal.has(target.hostname) &&
+      !approvedSocialLink(target) &&
       !(
         /^(?:[a-z0-9-]+\.)*udemy\.com$/.test(target.hostname) &&
         target.pathname.startsWith("/course/")

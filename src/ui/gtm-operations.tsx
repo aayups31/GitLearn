@@ -190,7 +190,14 @@ export function GTMOperations({
             </div>
             {!c.configured && (
               <small>
-                Developer-app credentials required on the companion.
+                Developer-app credentials required on the companion.{" "}
+                <a
+                  href="https://github.com/aayups31/OutClass/blob/main/docs/social-publishing.md#create-the-developer-apps"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Setup instructions ↗
+                </a>
               </small>
             )}
           </article>

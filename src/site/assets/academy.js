@@ -42,6 +42,7 @@ async function load() {
   try {
     const { courses } = await request("catalog");
     catalog.replaceChildren();
+    notice.textContent = "";
     if (!courses.length) {
       catalog.append(
         element(

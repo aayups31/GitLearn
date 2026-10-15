@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Film, Plus, Play, Download, CheckCircle2, X } from "lucide-react";
 import type { Creative } from "../expansion-contract";
 import type {
@@ -37,6 +37,11 @@ export function CreatorMedia({
     [previewJob, setPreviewJob] = useState<RenderJob>();
   const [timelineRevision, setTimelineRevision] = useState(0),
     [timelineDirty, setTimelineDirty] = useState(false);
+  const [sourcePreview, setSourcePreview] = useState("");
+  const sourcePlayer = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    setSourcePreview("");
+  }, [assetId]);
   const mark = () => {
     setTimelineDirty(true);
     onTimelineDirty(true);
@@ -194,6 +199,37 @@ export function CreatorMedia({
           ))}
         </select>
       </label>
+      <button
+        className="button"
+        disabled={busy || !assetId}
+        onClick={() =>
+          void act(async () => {
+            const result = await api<{ url: string }>(
+              `expansion/media/${assetId}/access`,
+              { kind: "source" },
+            );
+            setSourcePreview(result.url);
+          })
+        }
+      >
+        <Play size={14} /> Preview source footage
+      </button>
+      {sourcePreview && (
+        <div className="creator-source-player">
+          <video
+            ref={sourcePlayer}
+            controls
+            playsInline
+            preload="metadata"
+            src={sourcePreview}
+            aria-label="Source footage preview"
+          />
+          <p>
+            Scrub the source, then mark each scene’s start and end below. The
+            original footage stays unchanged.
+          </p>
+        </div>
+      )}
       <label>
         Output composition
         <select
@@ -222,6 +258,46 @@ export function CreatorMedia({
                 <X size={14} />
               </button>
             </div>
+            {sourcePreview && (
+              <div className="product-actions">
+                <button
+                  className="button small"
+                  onClick={() => {
+                    const time = sourcePlayer.current?.currentTime || 0;
+                    if (!asset || time >= scene.end) {
+                      setError("Choose a source time before this scene’s end.");
+                      return;
+                    }
+                    updateScenes(
+                      scenes.map((s, n) =>
+                        n === i ? { ...s, start: Number(time.toFixed(3)) } : s,
+                      ),
+                    );
+                  }}
+                >
+                  Mark start from video
+                </button>
+                <button
+                  className="button small"
+                  onClick={() => {
+                    const time = sourcePlayer.current?.currentTime || 0;
+                    if (time <= scene.start) {
+                      setError(
+                        "Choose a source time after this scene’s start.",
+                      );
+                      return;
+                    }
+                    updateScenes(
+                      scenes.map((s, n) =>
+                        n === i ? { ...s, end: Number(time.toFixed(3)) } : s,
+                      ),
+                    );
+                  }}
+                >
+                  Mark end from video
+                </button>
+              </div>
+            )}
             <div className="product-input-row">
               <label>
                 Start seconds

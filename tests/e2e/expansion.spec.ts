@@ -146,6 +146,20 @@ test("author a course, launch Learn, approve grounded copy and prepare a manual 
   await expect(page.getByLabel("Source library")).not.toHaveValue("", {
     timeout: 15000,
   });
+  await page
+    .getByRole("button", { name: "Preview source footage", exact: true })
+    .click();
+  const footage = page.getByLabel("Source footage preview");
+  await expect
+    .poll(() => footage.evaluate((v: HTMLVideoElement) => v.duration))
+    .toBeGreaterThan(19);
+  await footage.evaluate((v: HTMLVideoElement) => {
+    v.currentTime = 0.5;
+  });
+  await page
+    .getByRole("button", { name: "Mark start from video", exact: true })
+    .click();
+  await expect(page.getByLabel("Start seconds 1")).toHaveValue("0.5");
   await page.getByLabel("End seconds 1").fill("2");
   await page.getByLabel("Caption 1").fill("Practice the actual concept");
   await page
