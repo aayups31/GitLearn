@@ -12,7 +12,11 @@ export const starterPath = z
         .every(
           (part) =>
             /^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(part) &&
-            part !== "node_modules" &&
+            !/^(node_modules|dist|build|coverage|venv|__pycache__)$/i.test(
+              part,
+            ) &&
+            !/\.(pem|key|p12|pfx|cer|sqlite|db|log)$/i.test(part) &&
+            !/^(credentials|id_rsa|id_ed25519|LEARN_BRIEF\.md)$/i.test(part) &&
             !/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part),
         ),
     "Use a relative file path without hidden folders, parent traversal or reserved names.",

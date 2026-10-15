@@ -120,7 +120,15 @@ Stop the running companion before `npm run test:e2e`; the browser suite starts i
 
 ## Preview boundaries
 
-This is a working unsigned Windows x64/Chrome preview with a downloadable installer. The desktop app bundles its JavaScript runtime; Git is required for checkpoints, and Python is needed for Python execution. Running from source requires Node 24+. It uses authenticated loopback HTTP, an embedded CodeMirror editor, optional VS Code CLI integration, and Node's built-in SQLite. No hosted backend, account system, or separate vector database is required. Project console supports explicit dependency installation, local dev servers and bounded line input. Full terminal emulation, debuggers and language-server integration remain outside this focused editor.
+### Connected product source preview
+
+The latest source adds instructor-authored Academy Learn packages, separate instructor preview, reviewed agent handoffs, GTM-owned promotional posts/graphics/video previews, a local approved-publication queue and timestamped platform evidence. See [connected product roles and verified scope](docs/connected-products.md) and [social developer-app setup](docs/social-publishing.md).
+
+From the running source app, use Academy to author and release a lesson, add its Learn experience, and preview it. In GTM, **Promotion studio** creates channel drafts from an authorized release; **Campaigns & insights** handles distribution and evidence. Source-based drafting uses no model call; AI drafting asks for approval and uses one bounded call. Preparing assets does not publish them. Scheduled posts run only while the app is open and connected, under the exact content/account consent recorded for the job.
+
+These additions are not in the currently published v0.7.1 installer. Packaging an updated installer is deferred. Real social publishing still requires eligible developer apps and live account validation. Academy payments/payouts and an always-on hosted scheduler are not included in this source milestone.
+
+This is an unsigned Windows x64/Chrome preview with a downloadable installer. The desktop app bundles its JavaScript runtime; Git is required for checkpoints, and Python is needed for Python execution. Running from source requires Node 24+. It uses authenticated loopback HTTP, an embedded CodeMirror editor, optional VS Code integration, and Node's built-in SQLite. Core local Learn features do not require a hosted account; included AI and the Academy web catalog use the hosted account service. The source desktop app has an integrated terminal; Project console also supports explicit dependency installation, local dev servers and bounded line input. Full debugger and language-server integration remain outside the current editor.
 
 Real authenticated Udemy layouts vary and need live validation on your course. The complete workflow is covered by fixtures plus manual fallback. Ignore rules, hard exclusions, and credential patterns reduce leakage risk; they cannot detect every sensitive value. Inspect previews and select only learner-owned source folders.
 

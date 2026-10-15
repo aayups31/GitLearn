@@ -11,6 +11,7 @@ import {
 } from "./social-connections.js";
 import { CreatorProduction } from "./creator-production.js";
 import { UserError } from "./safety.js";
+import { recordProviderObservation } from "./gtm-analytics.js";
 const prepared = z
   .object({
     campaignId: z.string().uuid(),
@@ -99,6 +100,7 @@ export class GTMPublishing {
       ...this.rows().filter((r) => r.id !== row.id),
       row,
     ]);
+    recordProviderObservation(this.app, row);
   }
   prepare(raw: unknown) {
     const input = prepared.parse(raw),

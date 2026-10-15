@@ -3,7 +3,11 @@ import { Link2, ArrowUpRight, BarChart3, CheckCircle2 } from "lucide-react";
 import type { Campaign } from "../expansion-contract";
 import type { PublishReview } from "../server/gtm-publishing";
 import type { RenderJob } from "../server/creator-production";
-import type { ReportSnapshot, reportMetrics } from "../server/gtm-analytics";
+import type {
+  ReportSnapshot,
+  reportMetrics,
+  GTMAnalytics,
+} from "../server/gtm-analytics";
 import { PublicationSchedule } from "./publication-schedule";
 type API = <T>(route: string, body?: unknown) => Promise<T>;
 type Channel = {
@@ -54,6 +58,9 @@ export function GTMOperations({
       refundMinor: "",
       feeMinor: "",
     });
+  const [trends, setTrends] = useState<
+    ReturnType<GTMAnalytics["view"]>["trends"]
+  >([]);
   const refresh = async () => {
     const [accounts, rows, production] = await Promise.all([
       api<Channel[]>("expansion/social"),
@@ -64,10 +71,12 @@ export function GTMOperations({
     setPosts(rows);
     setMedia(production.jobs);
     if (campaign) {
-      const data = await api<{ reports: typeof reports }>(
-        `expansion/analytics/${campaign.id}`,
-      );
+      const data = await api<{
+        reports: typeof reports;
+        trends: typeof trends;
+      }>(`expansion/analytics/${campaign.id}`);
       setReports(data.reports);
+      setTrends(data.trends || []);
     }
   };
   useEffect(() => {
@@ -85,10 +94,14 @@ export function GTMOperations({
           setMedia(production.jobs);
         }
         if (campaign) {
-          const data = await api<{ reports: typeof reports }>(
-            `expansion/analytics/${campaign.id}`,
-          );
-          if (active) setReports(data.reports);
+          const data = await api<{
+            reports: typeof reports;
+            trends: typeof trends;
+          }>(`expansion/analytics/${campaign.id}`);
+          if (active) {
+            setReports(data.reports);
+            setTrends(data.trends || []);
+          }
         }
       } catch (err) {
         if (active)
@@ -398,6 +411,37 @@ export function GTMOperations({
         </h2>
         <span>Reports are not verified financial orders</span>
       </div>
+      {trends.map((trend) => (
+        <article
+          className="platform-evidence"
+          key={trend.current.publicationId}
+        >
+          <h3>
+            {titles[trend.current.provider as keyof typeof titles] ||
+              trend.current.provider}{" "}
+            · platform evidence
+          </h3>
+          <small>
+            Observed {new Date(trend.current.observedAt).toLocaleString()}
+          </small>
+          <p>
+            Views: {trend.current.views ?? "unavailable"} · Likes:{" "}
+            {trend.current.likes ?? "unavailable"} · Comments:{" "}
+            {trend.current.comments ?? "unavailable"}
+          </p>
+          {trend.previousObservedAt && (
+            <p>
+              Reported count change since{" "}
+              {new Date(trend.previousObservedAt).toLocaleString()}: views{" "}
+              {trend.reportedCountChanges.views ?? "unavailable"}, likes{" "}
+              {trend.reportedCountChanges.likes ?? "unavailable"}, comments{" "}
+              {trend.reportedCountChanges.comments ?? "unavailable"}. Counts can
+              be corrected by the platform; these are not unique learners or
+              sales.
+            </p>
+          )}
+        </article>
+      ))}
       <p>
         Record actual channel reports for this campaign. Leave unavailable
         fields blank. Calculations stay separate per source and date, so

@@ -111,6 +111,7 @@ export function ProductWorkspace({
   const [dirty, setDirty] = useState(false);
   const [mediaDirty, setMediaDirty] = useState(false);
   const [promotionDirty, setPromotionDirty] = useState(false);
+  const [gtmTab, setGtmTab] = useState<"create" | "campaigns">("create");
   useEffect(
     () => onDirty(dirty || mediaDirty || promotionDirty),
     [dirty, mediaDirty, promotionDirty, onDirty],
@@ -124,7 +125,16 @@ export function ProductWorkspace({
     let live = true;
     api<ExpansionState>("expansion/state")
       .then((value) => {
-        if (live) setData(value);
+        if (live) {
+          setData(value);
+          if (mode === "gtm") {
+            const last = value.campaigns.at(-1);
+            if (last) {
+              setSelectedCampaign(last);
+              setCampaign(campaignValues(last));
+            }
+          }
+        }
       })
       .catch((err) => {
         if (live) setError(err.message);
@@ -209,21 +219,47 @@ export function ProductWorkspace({
       )}
       <fieldset disabled={busy} className="product-fieldset">
         {mode === "gtm" && (
-          <GTMStudioPanel
-            api={api}
-            onDirty={setPromotionDirty}
-            releases={data.releases}
-            onCampaign={async (id) => {
-              if (!canSwitch()) return;
-              const next = await reload(),
-                found = next.campaigns.find((c) => c.id === id);
-              if (found) {
-                setSelectedCampaign(found);
-                setCampaign(campaignValues(found));
-                clean();
-              }
-            }}
-          />
+          <nav
+            className="product-section-tabs"
+            aria-label="GTM workspace sections"
+          >
+            <button
+              type="button"
+              className={gtmTab === "create" ? "selected" : ""}
+              aria-pressed={gtmTab === "create"}
+              onClick={() => setGtmTab("create")}
+            >
+              Promotion studio
+            </button>
+            <button
+              type="button"
+              className={gtmTab === "campaigns" ? "selected" : ""}
+              aria-pressed={gtmTab === "campaigns"}
+              onClick={() => setGtmTab("campaigns")}
+            >
+              Campaigns & insights
+            </button>
+          </nav>
+        )}
+        {mode === "gtm" && (
+          <div hidden={gtmTab !== "create"}>
+            <GTMStudioPanel
+              api={api}
+              onDirty={setPromotionDirty}
+              releases={data.releases}
+              onCampaign={async (id) => {
+                if (!canSwitch()) return;
+                const next = await reload(),
+                  found = next.campaigns.find((c) => c.id === id);
+                if (found) {
+                  setSelectedCampaign(found);
+                  setCampaign(campaignValues(found));
+                  setGtmTab("campaigns");
+                  clean();
+                }
+              }}
+            />
+          </div>
         )}
         <HandoffInbox
           api={api}
@@ -889,7 +925,7 @@ export function ProductWorkspace({
           </div>
         )}
         {mode === "gtm" && (
-          <div className="product-columns">
+          <div className="product-columns" hidden={gtmTab !== "campaigns"}>
             <aside className="product-drafts">
               <h2>Campaign drafts</h2>
               <button
@@ -927,7 +963,7 @@ export function ProductWorkspace({
                   }}
                 >
                   {c.title}
-                  <small>Manual handoff · Draft v{c.revision}</small>
+                  <small>Campaign plan · Draft v{c.revision}</small>
                 </button>
               ))}
               <div className="product-data-health">
@@ -1112,7 +1148,10 @@ export function ProductWorkspace({
                   <li>
                     Review the course destination and consent requirements.
                   </li>
-                  <li>Post the approved copy manually on your own channel.</li>
+                  <li>
+                    Review an exact post, then submit it or authorize its
+                    scheduled publication.
+                  </li>
                   <li>
                     Connect first-party enrollment events before evaluating
                     conversion.

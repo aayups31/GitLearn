@@ -26,6 +26,57 @@ export type ReportSnapshot = z.infer<typeof input> & {
   recordedAt: string;
   provenance: "manual_report";
 };
+export type ProviderObservation = {
+  id: string;
+  publicationId: string;
+  campaignId: string;
+  provider: string;
+  observedAt: string;
+  views: number | null;
+  likes: number | null;
+  comments: number | null;
+  provenance: "platform_api";
+};
+export function recordProviderObservation(
+  app: Application,
+  row: {
+    id: string;
+    campaignId: string;
+    provider: string;
+    metrics?: {
+      source: string;
+      observedAt: string;
+      views?: number;
+      likes?: number;
+      comments?: number;
+    };
+  },
+) {
+  if (
+    row.metrics?.source !== "platform" ||
+    !Number.isFinite(Date.parse(row.metrics.observedAt))
+  )
+    return;
+  const number = (v: unknown) =>
+    typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : null;
+  const content = {
+      publicationId: row.id,
+      campaignId: row.campaignId,
+      provider: row.provider,
+      observedAt: row.metrics.observedAt,
+      views: number(row.metrics.views),
+      likes: number(row.metrics.likes),
+      comments: number(row.metrics.comments),
+      provenance: "platform_api" as const,
+    },
+    id = createHash("sha256").update(JSON.stringify(content)).digest("hex"),
+    rows = app.store.get<ProviderObservation[]>("gtm:observations:v1") || [];
+  if (!rows.some((r) => r.id === id))
+    app.store.put(
+      "gtm:observations:v1",
+      [...rows, { ...content, id }].slice(-1000),
+    );
+}
 export function reportMetrics(
   r: Pick<
     ReportSnapshot,
@@ -66,12 +117,46 @@ export class GTMAnalytics {
     const rows = this.rows().filter((r) => r.campaignId === campaignId),
       latest = new Map<string, ReportSnapshot>();
     for (const row of rows) latest.set(row.source + ":" + row.date, row);
+    const observations = (
+        this.app.store.get<ProviderObservation[]>("gtm:observations:v1") || []
+      )
+        .filter((o) => o.campaignId === campaignId)
+        .sort((a, b) => a.observedAt.localeCompare(b.observedAt)),
+      perPost = new Map<string, ProviderObservation[]>();
+    for (const observation of observations)
+      perPost.set(
+        observation.publicationId,
+        [...(perPost.get(observation.publicationId) || []), observation].slice(
+          -2,
+        ),
+      );
+    const trends = [...perPost.values()].map((values) => {
+      const current = values.at(-1)!,
+        prior = values.length === 2 ? values[0] : undefined;
+      const change = (key: "views" | "likes" | "comments") =>
+        current[key] === null ||
+        prior?.[key] === null ||
+        prior?.[key] === undefined
+          ? null
+          : current[key]! - prior[key]!;
+      return {
+        current,
+        previousObservedAt: prior?.observedAt || null,
+        reportedCountChanges: {
+          views: change("views"),
+          likes: change("likes"),
+          comments: change("comments"),
+        },
+      };
+    });
     return {
       reports: [...latest.values()].map((r) => ({
         ...r,
         metrics: reportMetrics(r),
       })),
       historyCount: rows.length,
+      observations: observations.slice(-100),
+      trends,
       financialTruth: "unverified_manual_reports",
       attribution: "not_connected",
       note: "Calculations use the supplied report only. Reports from multiple channels are not combined into sales or revenue; platform attribution may overlap.",

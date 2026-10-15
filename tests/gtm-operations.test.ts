@@ -8,7 +8,11 @@ import { Expansion } from "../src/server/expansion";
 import { SocialConnections, providers } from "../src/server/social-connections";
 import { CreatorProduction } from "../src/server/creator-production";
 import { GTMPublishing } from "../src/server/gtm-publishing";
-import { GTMAnalytics, reportMetrics } from "../src/server/gtm-analytics";
+import {
+  GTMAnalytics,
+  reportMetrics,
+  recordProviderObservation,
+} from "../src/server/gtm-analytics";
 it("uses one-time scoped OAuth and never exposes tokens for all four channels", async () => {
   const transport = vi.fn(
     async (url: string | URL | Request, init?: RequestInit) => {
@@ -201,6 +205,24 @@ it("requires exact post approval, deduplicates retries, confirms provider eviden
     expect(confirmed.state).toBe("confirmed");
     expect(confirmed.metrics?.views).toBeUndefined();
     expect(confirmed.metrics?.likes).toBe(3);
+    expect(
+      new GTMAnalytics(app, () => e.state()).view(campaign.id).observations,
+    ).toHaveLength(1);
+    recordProviderObservation(app, {
+      ...confirmed,
+      metrics: {
+        ...confirmed.metrics!,
+        observedAt: new Date(
+          Date.parse(confirmed.metrics!.observedAt) + 60000,
+        ).toISOString(),
+        likes: 5,
+      },
+    });
+    const trend = new GTMAnalytics(app, () => e.state()).view(campaign.id)
+      .trends[0];
+    expect(trend.reportedCountChanges.likes).toBe(2);
+    expect(trend.reportedCountChanges.views).toBeNull();
+    expect(trend.current.provenance).toBe("platform_api");
     const analytics = new GTMAnalytics(app, () => e.state()),
       report = {
         campaignId: campaign.id,

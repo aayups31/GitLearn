@@ -201,6 +201,9 @@ test("author a course, launch Learn, approve grounded copy and prepare a manual 
   );
   await page.getByRole("button", { name: "GTM", exact: true }).click();
   await page
+    .getByRole("button", { name: "Campaigns & insights", exact: true })
+    .click();
+  await page
     .getByLabel("Campaign title", { exact: true })
     .fill("Python launch");
   const creative = store.get<any>("expansion:v1").creatives[0];
@@ -236,6 +239,9 @@ test("author a course, launch Learn, approve grounded copy and prepare a manual 
     .getByRole("button", { name: "Export manual handoff", exact: true })
     .click();
   expect((await download).suggestedFilename()).toContain("outclass-campaign-");
+  await page
+    .getByRole("button", { name: "Promotion studio", exact: true })
+    .click();
   await page
     .getByLabel("Promotion course release", { exact: true })
     .selectOption(release.id);
@@ -277,6 +283,9 @@ test("author a course, launch Learn, approve grounded copy and prepare a manual 
     "Collections promotion · linkedin",
   );
   await page.reload();
+  await page
+    .getByRole("button", { name: "Campaigns & insights", exact: true })
+    .click();
   await expect(
     page.getByRole("button", { name: /Python launch/ }),
   ).toBeVisible();

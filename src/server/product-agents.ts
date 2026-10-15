@@ -88,6 +88,14 @@ export class ProductAgents {
           text: JSON.stringify(r).slice(0, 2000),
         });
     if (domain === "growth" || domain === "analytics") {
+      for (const trend of new GTMAnalytics(this.app, this.state)
+        .view(entityId)
+        .trends.slice(-4))
+        sources.push({
+          id: `trend:${trend.current.id}`,
+          title: `${trend.current.provider} observed count history`,
+          text: JSON.stringify(trend).slice(0, 2000),
+        });
       const posts = (
         this.app.store.get<
           {

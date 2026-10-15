@@ -77,7 +77,8 @@ export class SocialConnections {
         provider,
         configured:
           !!config.id &&
-          (!["linkedin", "instagram"].includes(provider) || !!config.secret),
+          (!["youtube", "linkedin", "instagram"].includes(provider) ||
+            !!config.secret),
         account: session
           ? {
               id: session.id,
@@ -104,7 +105,8 @@ export class SocialConnections {
     const config = this.config(provider);
     if (
       !config.id ||
-      (["linkedin", "instagram"].includes(provider) && !config.secret)
+      (["youtube", "linkedin", "instagram"].includes(provider) &&
+        !config.secret)
     )
       throw new UserError(
         `Configure the ${provider} developer application's client credentials privately before connecting.`,

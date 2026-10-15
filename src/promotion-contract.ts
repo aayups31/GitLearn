@@ -1,14 +1,26 @@
 import { z } from "zod";
 export const socialProvider = z.enum(["youtube", "linkedin", "x", "instagram"]);
-export const promotionPost = z
-  .object({
-    provider: socialProvider,
-    headline: z.string().trim().min(1).max(100),
-    text: z.string().trim().min(1).max(2200),
-    caption: z.string().trim().max(150),
-    sourceIds: z.array(z.string().max(100)).min(1).max(4),
-  })
-  .strict();
+const postFields = {
+  headline: z.string().trim().min(1).max(100),
+  caption: z.string().trim().max(150),
+  sourceIds: z.array(z.string().max(100)).min(1).max(4),
+};
+export const promotionPost = z.discriminatedUnion("provider", [
+  z
+    .object({
+      ...postFields,
+      provider: z.literal("x"),
+      text: z.string().trim().min(1).max(170),
+    })
+    .strict(),
+  z
+    .object({
+      ...postFields,
+      provider: z.enum(["youtube", "linkedin", "instagram"]),
+      text: z.string().trim().min(1).max(2200),
+    })
+    .strict(),
+]);
 export const promotionAnswer = z
   .object({
     summary: z.string().max(1200),

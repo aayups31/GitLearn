@@ -60,6 +60,7 @@ export function GTMStudioPanel({
       .then(([p, m]) => {
         if (live) {
           setPlans(p);
+          setSelected(p.at(-1)?.id || "");
           setAssets(m.assets);
           setJobs(m.jobs);
         }
