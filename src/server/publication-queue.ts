@@ -240,7 +240,6 @@ export class PublicationQueue {
       const accepted = this.list().find(
         (r) =>
           r.state === "accepted" &&
-          r.provider !== "linkedin" &&
           r.checks < 12 &&
           Date.parse(r.nextCheckAt || r.updatedAt) <= now &&
           now <= Date.parse(r.expiresAt),

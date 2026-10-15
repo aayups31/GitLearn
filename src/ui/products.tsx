@@ -111,10 +111,11 @@ export function ProductWorkspace({
   const [dirty, setDirty] = useState(false);
   const [mediaDirty, setMediaDirty] = useState(false);
   const [promotionDirty, setPromotionDirty] = useState(false);
+  const [composerDirty, setComposerDirty] = useState(false);
   const [gtmTab, setGtmTab] = useState<"create" | "campaigns">("create");
   useEffect(
-    () => onDirty(dirty || mediaDirty || promotionDirty),
-    [dirty, mediaDirty, promotionDirty, onDirty],
+    () => onDirty(dirty || mediaDirty || promotionDirty || composerDirty),
+    [dirty, mediaDirty, promotionDirty, composerDirty, onDirty],
   );
   const reload = async () => {
     const result = await api<ExpansionState>("expansion/state");
@@ -150,11 +151,11 @@ export function ProductWorkspace({
   }
   function clean() {
     setDirty(false);
-    onDirty(mediaDirty || promotionDirty);
+    onDirty(mediaDirty || promotionDirty || composerDirty);
   }
   function canSwitch() {
     return (
-      !(dirty || mediaDirty || promotionDirty) ||
+      !(dirty || mediaDirty || promotionDirty || composerDirty) ||
       confirm("Discard unsaved changes to this draft?")
     );
   }
@@ -1173,6 +1174,7 @@ export function ProductWorkspace({
                 }}
               />
               <GTMOperations
+                onDirty={setComposerDirty}
                 api={api}
                 campaign={selectedCampaign}
                 dirty={dirty}

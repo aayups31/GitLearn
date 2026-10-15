@@ -128,6 +128,7 @@ export function createApp(
   });
   app.use(express.json({ limit: "1mb" }));
   app.use("/creator-media", creatorProduction.publicRoutes());
+  app.use("/social-image", publishing.images.publicRoutes());
   app.use("/social/callback", social.callbacks());
   app.get("/api/health", (_req, res) =>
     res.json({ ok: true, name: "GitLearn", version: "0.4.2" }),
@@ -359,6 +360,7 @@ export function createApp(
   );
   app.use("/api/expansion/social", social.routes());
   app.use("/api/expansion/publishing", publishing.routes());
+  app.use("/api/expansion/social-images", publishing.images.routes());
   app.use("/api/expansion/queue", publicationQueue.routes());
   app.use(
     "/api/expansion/analytics",

@@ -25,7 +25,13 @@ const settings = {
   x: {
     auth: "https://x.com/i/oauth2/authorize",
     token: "https://api.x.com/2/oauth2/token",
-    scopes: ["tweet.read", "tweet.write", "users.read", "offline.access"],
+    scopes: [
+      "tweet.read",
+      "tweet.write",
+      "users.read",
+      "offline.access",
+      "media.write",
+    ],
     pkce: true,
     write: "tweet.write",
   },

@@ -9,6 +9,8 @@ import type {
   GTMAnalytics,
 } from "../server/gtm-analytics";
 import { PublicationSchedule } from "./publication-schedule";
+import { SocialComposer } from "./social-composer";
+import { SocialPostPreview } from "./social-post-preview";
 type API = <T>(route: string, body?: unknown) => Promise<T>;
 type Channel = {
   provider: "youtube" | "linkedin" | "x" | "instagram";
@@ -28,23 +30,19 @@ export function GTMOperations({
   api,
   campaign,
   dirty,
+  onDirty,
 }: {
   api: API;
   campaign?: Campaign;
   dirty: boolean;
+  onDirty: (dirty: boolean) => void;
 }) {
   const [channels, setChannels] = useState<Channel[]>([]),
     [posts, setPosts] = useState<PublishReview[]>([]),
     [media, setMedia] = useState<RenderJob[]>([]),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
-  const [provider, setProvider] = useState<Channel["provider"]>("linkedin"),
-    [mediaId, setMediaId] = useState(""),
-    [publicUrl, setPublicUrl] = useState(""),
-    [privacy, setPrivacy] = useState<"unlisted" | "private" | "public">(
-      "unlisted",
-    ),
-    [authLink, setAuthLink] = useState("");
+  const [authLink, setAuthLink] = useState("");
   const [reports, setReports] = useState<
       (ReportSnapshot & { metrics: ReturnType<typeof reportMetrics> })[]
     >([]),
@@ -128,7 +126,6 @@ export function GTMOperations({
       setBusy(false);
     }
   }
-  const channel = channels.find((c) => c.provider === provider);
   const money = (n: number | null) =>
     n === null
       ? "Not supplied"
@@ -233,94 +230,16 @@ export function GTMOperations({
           Continue platform authorization <ArrowUpRight size={14} />
         </a>
       )}
-      <div className="product-input-row">
-        <label>
-          Publishing channel
-          <select
-            aria-label="Publishing channel"
-            value={provider}
-            onChange={(e) => setProvider(e.target.value as Channel["provider"])}
-          >
-            {Object.entries(titles).map(([p, name]) => (
-              <option key={p} value={p}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </label>
-        {["youtube", "instagram"].includes(provider) && (
-          <label>
-            Approved video export
-            <select
-              aria-label="Approved video export"
-              value={mediaId}
-              onChange={(e) => setMediaId(e.target.value)}
-            >
-              <option value="">Choose exact reviewed export</option>
-              {media
-                .filter(
-                  (j) =>
-                    j.approval && j.creativeHash === campaign?.creativeHash,
-                )
-                .map((j) => (
-                  <option key={j.id} value={j.id}>
-                    {j.timeline.format} · {j.output?.duration.toFixed(1)}s ·{" "}
-                    {j.id.slice(0, 8)}
-                  </option>
-                ))}
-            </select>
-          </label>
-        )}
-      </div>
-      {provider === "youtube" && (
-        <label>
-          YouTube visibility
-          <select
-            aria-label="YouTube visibility"
-            value={privacy}
-            onChange={(e) => setPrivacy(e.target.value as typeof privacy)}
-          >
-            <option value="unlisted">Unlisted</option>
-            <option value="private">Private</option>
-            <option value="public">
-              Public · subject to YouTube project approval
-            </option>
-          </select>
-        </label>
+      {campaign && !dirty && (
+        <SocialComposer
+          api={api}
+          campaign={campaign}
+          channels={channels}
+          media={media}
+          onPrepared={refresh}
+          onDirty={onDirty}
+        />
       )}
-      {provider === "instagram" && (
-        <label>
-          Public URL of the approved export
-          <input
-            type="url"
-            value={publicUrl}
-            onChange={(e) => setPublicUrl(e.target.value)}
-            placeholder="https://your-owned-media-host/export.mp4"
-          />
-        </label>
-      )}
-      <button
-        className="button"
-        disabled={busy || dirty || !campaign || !channel?.canPublish}
-        onClick={() =>
-          void act(() =>
-            api("expansion/publishing/prepare", {
-              campaignId: campaign!.id,
-              expectedRevision: campaign!.revision,
-              provider,
-              ...(["youtube", "instagram"].includes(provider)
-                ? { mediaJobId: mediaId }
-                : {}),
-              ...(provider === "instagram"
-                ? { publicMediaUrl: publicUrl }
-                : {}),
-              privacy,
-            }),
-          )
-        }
-      >
-        Prepare exact post for review
-      </button>
       {posts
         .filter((p) => p.campaignId === campaign?.id)
         .map((post) => (
@@ -331,7 +250,21 @@ export function GTMOperations({
               </h3>
               <span>{post.state}</span>
             </div>
-            <p className="product-preserve">{post.text}</p>
+            <SocialPostPreview
+              api={api}
+              provider={post.provider}
+              accountName={post.accountName}
+              text={post.text}
+              title={post.title}
+              images={post.images}
+              imageAlts={post.composition?.imageAlts}
+              mediaJobId={post.mediaJobId}
+              thumbnail={post.thumbnail}
+              privacy={post.privacy}
+            />
+            {post.thumbnailState && (
+              <small>Custom thumbnail: {post.thumbnailState}</small>
+            )}
             {post.mediaHash && (
               <small>
                 Approved video hash: {post.mediaHash.slice(0, 16)} ·{" "}
@@ -361,7 +294,7 @@ export function GTMOperations({
                   Approve & submit to platform
                 </button>
               )}
-              {post.postId && (
+              {(post.postId || post.uploadState?.phase === "processing") && (
                 <button
                   className="button"
                   disabled={busy}
