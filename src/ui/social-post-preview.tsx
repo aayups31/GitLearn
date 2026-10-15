@@ -56,6 +56,7 @@ export function SocialPostPreview({
     [watch, setWatch] = useState(false),
     [dark, setDark] = useState(provider === "x"),
     [urls, setUrls] = useState<Record<string, string>>({}),
+    [reload, setReload] = useState(0),
     [error, setError] = useState("");
   const imageKey = [
     ...images.map((i) => i.id),
@@ -97,7 +98,7 @@ export function SocialPostPreview({
     return () => {
       live = false;
     };
-  }, [api, imageKey, mediaJobId]);
+  }, [api, imageKey, mediaJobId, reload]);
   const index = Math.min(slide, Math.max(0, images.length - 1));
   const avatar = (
     <span className="social-avatar" aria-hidden="true">
@@ -269,6 +270,11 @@ export function SocialPostPreview({
           <button type="button" onClick={() => setDark(!dark)}>
             {dark ? "Light" : "Dark"}
           </button>
+          {(imageKey || mediaJobId) && (
+            <button type="button" onClick={() => setReload((r) => r + 1)}>
+              Reload media
+            </button>
+          )}
         </div>
       </div>
       {provider === "youtube" && (
@@ -356,9 +362,8 @@ export function SocialPostPreview({
         </div>
       </div>
       <p className="social-preview-note">
-        Exact selected content · approximate platform layout. Cropping, link
-        cards and playback processing are controlled by{" "}
-        {platformNames[provider]}. No engagement counts are simulated.
+        Exact text and selected media. Final layout, link cards and video
+        processing may vary on {platformNames[provider]}.
       </p>
     </section>
   );

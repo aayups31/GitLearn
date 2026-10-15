@@ -146,6 +146,7 @@ function ComposerForm({
     [error, setError] = useState(""),
     [message, setMessage] = useState(""),
     [file, setFile] = useState<File>(),
+    [tagText, setTagText] = useState(""),
     [rights, setRights] = useState(false),
     [imageId, setImageId] = useState("");
   useEffect(() => {
@@ -166,6 +167,7 @@ function ComposerForm({
         setImages(library);
         if (saved) {
           setDraft(saved);
+          setTagText(saved.composition.tags.join(", "));
           if (saved.campaignRevision !== campaign.revision)
             setError(
               "This campaign changed since the draft was saved. Reset to the current campaign before preparing it.",
@@ -193,6 +195,28 @@ function ComposerForm({
     video?.output,
     thumbnail,
   );
+  if (provider === "instagram") {
+    const urls = draft.mediaJobId
+      ? [draft.publicMediaUrl]
+      : draft.publicImageUrls;
+    if (
+      (draft.mediaJobId || selected.length) &&
+      (urls.length !== (draft.mediaJobId ? 1 : selected.length) ||
+        urls.some((value) => {
+          try {
+            const url = new URL(value);
+            return (
+              url.protocol !== "https:" || !!url.username || !!url.password
+            );
+          } catch {
+            return true;
+          }
+        }))
+    )
+      check.errors.push(
+        "Add a public HTTPS URL for each exact Instagram attachment.",
+      );
+  }
   function change(patch: Partial<Draft>) {
     setDraft((d) => ({ ...d, ...patch }));
     setDirty(true);
@@ -300,11 +324,21 @@ function ComposerForm({
           >
             {check.count.toLocaleString()} / {check.limit.toLocaleString()}{" "}
             {provider === "x" ? "weighted characters" : "characters"} ·
-            destination link included
+            {draft.composition.includeLink
+              ? "destination link included"
+              : "without destination link"}
           </span>
           <label>
             Destination link
             <input readOnly value={campaign.trackedUrl} />
+          </label>
+          <label className="product-checkbox">
+            <input
+              type="checkbox"
+              checked={draft.composition.includeLink}
+              onChange={(e) => compose({ includeLink: e.target.checked })}
+            />
+            Include the campaign link in this post
           </label>
           <label>
             {provider === "youtube" || provider === "instagram"
@@ -505,15 +539,16 @@ function ComposerForm({
               <label>
                 Tags (comma-separated)
                 <input
-                  defaultValue={draft.composition.tags.join(", ")}
-                  onBlur={(e) =>
+                  value={tagText}
+                  onChange={(e) => {
+                    setTagText(e.target.value);
                     compose({
                       tags: e.target.value
                         .split(",")
                         .map((t) => t.trim())
                         .filter(Boolean),
-                    })
-                  }
+                    });
+                  }}
                 />
               </label>
             </>
@@ -664,6 +699,7 @@ function ComposerForm({
               confirm("Replace these edits with the campaign's approved copy?")
             ) {
               setDraft({ ...initial(), revision: draft.revision });
+              setTagText("");
               setDirty(true);
               setError("");
             }

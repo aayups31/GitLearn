@@ -112,6 +112,7 @@ export function ProductWorkspace({
   const [mediaDirty, setMediaDirty] = useState(false);
   const [promotionDirty, setPromotionDirty] = useState(false);
   const [composerDirty, setComposerDirty] = useState(false);
+  const [composerSession, setComposerSession] = useState(0);
   const [gtmTab, setGtmTab] = useState<"create" | "campaigns">("create");
   useEffect(
     () => onDirty(dirty || mediaDirty || promotionDirty || composerDirty),
@@ -245,6 +246,7 @@ export function ProductWorkspace({
         {mode === "gtm" && (
           <div hidden={gtmTab !== "create"}>
             <GTMStudioPanel
+              postDirty={composerDirty}
               api={api}
               onDirty={setPromotionDirty}
               releases={data.releases}
@@ -254,6 +256,7 @@ export function ProductWorkspace({
                   found = next.campaigns.find((c) => c.id === id);
                 if (found) {
                   setSelectedCampaign(found);
+                  setComposerSession((v) => v + 1);
                   setCampaign(campaignValues(found));
                   setGtmTab("campaigns");
                   clean();
@@ -1174,6 +1177,7 @@ export function ProductWorkspace({
                 }}
               />
               <GTMOperations
+                key={`${selectedCampaign?.id || "new"}:${composerSession}`}
                 onDirty={setComposerDirty}
                 api={api}
                 campaign={selectedCampaign}

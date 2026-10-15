@@ -1,6 +1,6 @@
 # Social publishing source preview
 
-GTM has real API adapters for YouTube uploads, LinkedIn member text posts, X text posts and Instagram professional-account Reels. These are not yet live-validated with the owner's platform accounts. Public access also depends on each developer application's platform review and API tier. No posts were sent during implementation.
+GTM has API adapters for YouTube videos and custom thumbnails, LinkedIn member text/image/multi-image/video posts, X text/image/video posts, and Instagram professional-account photos/carousels/Reels. These are not yet live-validated with the owner's platform accounts. Public access also depends on each developer application's platform review and API tier. No posts were sent during implementation.
 
 In development, put the following fields in the ignored `.local/creator-platform.env`. Never commit credentials or distribute confidential application secrets inside an installer.
 
@@ -55,7 +55,7 @@ Official guides: [Share on LinkedIn](https://learn.microsoft.com/en-us/linkedin/
 
 1. Open [X Developer Console](https://console.x.com/) and create an OutClass app in the account's available project/workspace.
 2. Configure user authentication for **OAuth 2.0** with **Read and write** access. Choose the appropriate confidential web-app client type for this companion workflow.
-3. Add the exact `/x` callback above and the OutClass website. Requested scopes are `tweet.read`, `tweet.write`, `users.read`, and `offline.access`.
+3. Add the exact `/x` callback above and the OutClass website. Requested scopes are `tweet.read`, `tweet.write`, `users.read`, `offline.access`, and `media.write`. Existing connections need reconnection to grant media upload access.
 4. Save the OAuth 2.0 client ID and, if issued for this client type, client secret in `OUTCLASS_X_*`. A bearer token for app-only authentication is not a substitute for a user's posting permission.
 5. Check the account's current API access, billing and limits yourself before enabling a real post. No API plan or credits are purchased by this setup. Connect in GTM and verify the displayed username.
 
@@ -80,10 +80,25 @@ Start with a course, approved creative and campaign. Prepare the exact posting p
 
 The HTTPS relay only sends a one-use authorization code and state to the running companion on port 47831. The companion validates its expiring state before exchanging a code. Tokens stay in process memory, so restart or expiration requires reconnection. Requested scopes are not assumed to have been granted; publishing is disabled until the provider confirms the write scope. This can require platform-specific token inspection. A hosted OAuth broker and encrypted long-lived token vault are prerequisites for distributing these integrations to ordinary users without developer credentials.
 
-YouTube defaults to unlisted and uses an approved local export. LinkedIn and X currently publish text. Instagram requires a public HTTPS URL on an explicitly allowed owned host; its bytes must match the approved export hash. Local files cannot be fetched by Instagram. Preparing a media container and finalizing a Reel are separate, durable steps.
+YouTube defaults to unlisted and uses an approved local export; the composer also sends the reviewed title, description, tags, audience setting and optional custom thumbnail. A thumbnail failure is reported separately without re-uploading the video. LinkedIn and X upload and attach selected images or an approved video; no selected attachment is silently dropped. Platform video processing may require Check / finish publication before the post can be created. Instagram requires public HTTPS URLs on an explicitly allowed owned host; every hosted file must match its reviewed local hash and byte length. Photo carousel URLs follow the reviewed slide order. Local files cannot be fetched by Instagram. Creating a media container and finalizing publication are separate, durable steps.
 
 Reviews pin account identity, content, campaign revision, media hash and visibility. Submission requires an exact approval hash. Repeated submission does not repeat a write. A timeout or interruption after a write is classified as uncertain, requiring investigation rather than an automatic repost. Accepted is not proof of public availability.
 
 Manual analytics preserve source, date, currency and nulls. Ratios are per report, not summed across channels. They are not an attribution system or settled revenue evidence.
 
 References: [Google OAuth](https://developers.google.com/identity/protocols/oauth2/), [YouTube uploads](https://developers.google.com/youtube/v3/docs/videos/insert), [LinkedIn posts](https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api), [LinkedIn token introspection](https://learn.microsoft.com/en-us/linkedin/shared/authentication/token-introspection), [X create post](https://docs.x.com/x-api/posts/create-post), [Meta Instagram API](https://www.postman.com/meta/instagram/folder/1z5vxzu/instagram-api-with-instagram-login).
+
+
+## Platform composers and previews
+
+In **GTM → Campaigns & insights**, select a campaign, then use **Create your post**. Each platform has an independent, revision-checked local draft. Edit copy, add approved video or photos, order photos, write alt text, and inspect the live feed preview. YouTube also has a watch-page view, editable title/description, tags, audience, visibility and a playable approved export with the selected custom thumbnail. Save drafts before changing campaigns or leaving the workspace.
+
+**Promotion studio → Create graphic & open post** rasterizes the source-grounded course graphic, imports its prepared JPEG and attaches it to a saved post draft (or the YouTube thumbnail field). A generated graphic is still a draft: review it before posting. No image model call or external upload occurs here. Owned JPEG/PNG files can also be imported in the composer. Imports are bounded to 10 MB/32 megapixels, re-encoded to one metadata-free JPEG at up to 1440px width, with a 5 MB output cap. The prepared bytes are used in the preview and the upload; originals are not uploaded. Each image's hash is pinned in the final review.
+
+Preview display supports mobile/desktop and light/dark modes. Instagram photos have slide navigation; X and LinkedIn multi-image posts use feed-style grids. These are **platform-style previews, not screenshots or embedded native platform composers**. Exact text and selected files are shared with the publisher. Platform fonts, feed width, profile photos, truncation, link-card generation, final crops and transcoding can differ. Counts are not fabricated. Public platform links are available after submission. Nothing promises a pixel-identical final feed.
+
+Local preflight uses X's official `twitter-text` parser for real weighted URL/emoji counts. It checks final text including the tracked link when enabled, attachment presence/count, duplicates, supported image ratios, video requirements, YouTube title/description syntax and thumbnail size. These are conservative supported-format checks, not every possible platform entitlement or feature. Instagram supports up to ten photos here; LinkedIn uses organic MultiImage rather than a sponsored carousel. Mixed image/video posts, document carousels, native music, stickers, mentions with verified entity IDs, polls, Shorts-specific controls and custom Reel covers are not implemented. Public app approval, API access and final server validation remain necessary.
+
+Validation evidence: `tests/social-composer.test.ts` exercises exact image bytes, text payloads, immutable approval, X processing resume, YouTube metadata/thumbnail and Instagram hosted-file mismatch. Browser coverage in `tests/e2e/expansion.spec.ts` verifies saved drafts, generated graphics, the four preview layouts and actual video playback. Provider responses in publishing tests are simulated; no live social post was sent.
+
+Implementation references: [X character counting](https://docs.x.com/fundamentals/counting-characters), [X media upload](https://docs.x.com/x-api/media/quickstart/media-upload-chunked), [LinkedIn images](https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/images-api), [LinkedIn videos](https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/videos-api), [LinkedIn MultiImage](https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/multiimage-post-api), [YouTube thumbnails](https://developers.google.com/youtube/v3/docs/thumbnails/set).

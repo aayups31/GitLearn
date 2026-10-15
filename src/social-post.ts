@@ -4,6 +4,7 @@ export type PostProvider = "x" | "linkedin" | "instagram" | "youtube";
 export const postComposition = z
   .object({
     copy: z.string().max(5000),
+    includeLink: z.boolean().default(true),
     title: z.string().max(150),
     imageIds: z.array(z.string().uuid()).max(10).default([]),
     imageAlts: z.array(z.string().max(1000)).max(10).default([]),
@@ -29,8 +30,8 @@ export type PostVideo = {
   duration: number;
   bytes: number;
 };
-export const postText = (copy: string, link: string) =>
-  `${copy.trim()}\n\n${link}`;
+export const postText = (copy: string, link: string, includeLink = true) =>
+  includeLink ? `${copy.trim()}\n\n${link}` : copy.trim();
 export const weightedLength = (text: string) =>
   twitter.parseTweet(text).weightedLength;
 export function postPreflight(
@@ -43,7 +44,7 @@ export function postPreflight(
 ) {
   const errors: string[] = [],
     warnings: string[] = [],
-    text = postText(composition.copy, link);
+    text = postText(composition.copy, link, composition.includeLink);
   const count = provider === "x" ? weightedLength(text) : text.length;
   const limit = { x: 280, linkedin: 3000, instagram: 2200, youtube: 5000 }[
     provider
@@ -66,6 +67,11 @@ export function postPreflight(
   if (provider === "x" && images.length > 4)
     errors.push("X posts support up to four images in this composer.");
   if (provider === "youtube") {
+    if (
+      composition.tags.length > 30 ||
+      composition.tags.some((t) => t.length > 100)
+    )
+      errors.push("Use up to 30 tags, each no longer than 100 characters.");
     if (!video) errors.push("YouTube needs an approved video.");
     if (
       !composition.title.trim() ||

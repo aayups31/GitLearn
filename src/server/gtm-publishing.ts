@@ -72,9 +72,7 @@ const key = "gtm:publication:v1",
   now = () => new Date().toISOString(),
   hash = (value: unknown) =>
     createHash("sha256").update(JSON.stringify(value)).digest("hex");
-// Conservative v3 weighting for copy; the known appended HTTPS link uses t.co's
-// fixed 23-character allowance. Complex emoji sequences may be overcounted.
-// https://github.com/twitter/twitter-text/blob/master/config/v3.json
+// Official twitter-text parsing handles URL detection, normalization and emoji sequences.
 export function xPostLength(copy: string) {
   return weightedLength(postText(copy, "https://example.com"));
 }
@@ -153,8 +151,6 @@ export class GTMPublishing {
     const text = preflight.text;
     let mediaHash: string | undefined;
     if (input.mediaJobId) {
-      if (!input.mediaJobId)
-        throw new UserError("This channel requires an approved video export.");
       const { job } = this.media.approvedExport(input.mediaJobId);
       if (job.creativeHash !== c.creativeHash)
         throw new UserError(
@@ -675,7 +671,7 @@ export class GTMPublishing {
             headers: {
               "Content-Type": "application/json",
               "Linkedin-Version":
-                process.env.OUTCLASS_LINKEDIN_VERSION || "202605",
+                process.env.OUTCLASS_LINKEDIN_VERSION || "202609",
               "X-Restli-Protocol-Version": "2.0.0",
             },
             body: JSON.stringify({

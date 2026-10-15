@@ -282,6 +282,154 @@ test("author a course, launch Learn, approve grounded copy and prepare a manual 
   await expect(page.getByLabel("Campaign title", { exact: true })).toHaveValue(
     "Collections promotion · linkedin",
   );
+  const composer = page.getByRole("region", {
+    name: "Platform post composer",
+    exact: true,
+  });
+  await expect(composer.getByLabel("LinkedIn post text")).toHaveValue(
+    "Practice dictionaries by building your own activity report.",
+  );
+  await composer
+    .getByLabel("LinkedIn post text")
+    .fill(
+      "A post I would actually write.\n\nTry a dictionary with repeated names, then handle empty input.",
+    );
+  await expect(composer.locator(".social-copy")).toContainText(
+    "A post I would actually write.",
+  );
+  await composer
+    .getByRole("button", { name: "Save post draft", exact: true })
+    .click();
+  await expect(composer.getByRole("status")).toContainText(
+    "Draft saved on this device.",
+  );
+  await page
+    .getByRole("button", { name: "Promotion studio", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Create graphic & open post", exact: true })
+    .first()
+    .click();
+  await expect(composer.locator(".social-image-grid img")).toBeVisible();
+  await expect(composer.locator(".social-image-grid img")).toHaveJSProperty(
+    "naturalWidth",
+    1200,
+  );
+  await composer.scrollIntoViewIfNeeded();
+  await composer.screenshot({
+    path: ".local/landing-refresh/social-composer-linkedin.png",
+  });
+  await composer
+    .getByRole("button", { name: "Mobile preview", exact: true })
+    .click();
+  await expect(composer.locator(".social-preview-stage")).toHaveClass(/mobile/);
+  await composer
+    .getByRole("button", { name: "Instagram", exact: true })
+    .click();
+  await expect(
+    composer.getByLabel("Instagram post preview", { exact: true }),
+  ).toBeVisible();
+  await expect(composer.locator(".post-validation")).toContainText(
+    "Instagram needs a photo",
+  );
+  const photoId = store.get<any[]>("gtm:images:v1")![0].id;
+  await composer.getByLabel("Post image attachment").selectOption(photoId);
+  await composer
+    .getByRole("button", { name: "Attach photo", exact: true })
+    .click();
+  await expect(composer.locator(".social-carousel > img")).toHaveJSProperty(
+    "naturalWidth",
+    1200,
+  );
+  await composer
+    .getByRole("button", { name: "Save post draft", exact: true })
+    .click();
+  await composer.screenshot({
+    path: ".local/landing-refresh/social-composer-instagram.png",
+  });
+  await composer.getByRole("button", { name: "X", exact: true }).click();
+  await composer
+    .getByLabel("X post text")
+    .fill("A short observation about practicing what you learn. 👨‍👩‍👧‍👦");
+  await expect(
+    composer.getByLabel("X post preview", { exact: true }),
+  ).toBeVisible();
+  await composer
+    .getByRole("button", { name: "Save post draft", exact: true })
+    .click();
+  await composer.screenshot({
+    path: ".local/landing-refresh/social-composer-x.png",
+  });
+  await composer.getByRole("button", { name: "YouTube", exact: true }).click();
+  await composer
+    .getByLabel("YouTube video title")
+    .fill("Build a report from real inputs");
+  await composer.getByLabel("YouTube audience").selectOption("false");
+  const campaignForVideo = store
+    .get<any>("expansion:v1")
+    .campaigns.find((c: any) => c.title === "Collections promotion · linkedin");
+  const production = store.get<any>("creator:production:v1");
+  const headers = {
+    Authorization: `Bearer ${store.get<string>("localToken")}`,
+  };
+  const rendered = await request.post(base + "/api/expansion/media/render", {
+    headers,
+    data: {
+      creativeId: campaignForVideo.creativeId,
+      expectedRevision: 1,
+      assetId: production.assets[0].id,
+      format: "landscape",
+      scenes: [{ start: 0, end: 4, caption: "Practice a new concept" }],
+      approveRender: true,
+    },
+  });
+  expect(rendered.ok()).toBe(true);
+  const renderedJob = await rendered.json();
+  await expect
+    .poll(
+      () =>
+        store
+          .get<any>("creator:production:v1")
+          .jobs.find((j: any) => j.id === renderedJob.id).state,
+      { timeout: 30000 },
+    )
+    .toBe("ready");
+  expect(
+    (
+      await request.post(
+        base + `/api/expansion/media/${renderedJob.id}/approve`,
+        { headers, data: { approveReviewed: true } },
+      )
+    ).ok(),
+  ).toBe(true);
+  await expect(
+    composer
+      .getByLabel("Post video attachment")
+      .locator(`option[value="${renderedJob.id}"]`),
+  ).toBeAttached({ timeout: 10000 });
+  await composer
+    .getByLabel("Post video attachment")
+    .selectOption(renderedJob.id);
+  await composer.getByLabel("YouTube thumbnail").selectOption(photoId);
+  await composer
+    .getByRole("button", { name: "Play approved video", exact: true })
+    .click();
+  await expect(composer.locator("video")).toHaveJSProperty("duration", 4);
+  await composer
+    .getByRole("button", { name: "Watch page", exact: true })
+    .click();
+  await expect(composer.locator(".social-video-title")).toHaveText(
+    "Build a report from real inputs",
+  );
+  await expect(composer.locator(".post-validation")).toContainText(
+    "Text and selected media pass",
+  );
+  await composer
+    .getByRole("button", { name: "Save post draft", exact: true })
+    .click();
+  await composer.screenshot({
+    path: ".local/landing-refresh/social-composer-youtube.png",
+  });
   await page.reload();
   await page
     .getByRole("button", { name: "Campaigns & insights", exact: true })
@@ -289,6 +437,16 @@ test("author a course, launch Learn, approve grounded copy and prepare a manual 
   await expect(
     page.getByRole("button", { name: /Python launch/ }),
   ).toBeVisible();
+  await page
+    .getByRole("button", { name: /Collections promotion · linkedin/ })
+    .click();
+  await page
+    .getByRole("region", { name: "Platform post composer", exact: true })
+    .getByRole("button", { name: "YouTube", exact: true })
+    .click();
+  await expect(page.getByLabel("YouTube video title")).toHaveValue(
+    "Build a report from real inputs",
+  );
   expect(errors).toEqual([]);
   await page.screenshot({
     path: ".local/landing-refresh/gtm-workspace.png",

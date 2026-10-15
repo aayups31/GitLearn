@@ -232,6 +232,7 @@ export function GTMOperations({
       )}
       {campaign && !dirty && (
         <SocialComposer
+          key={campaign.id}
           api={api}
           campaign={campaign}
           channels={channels}

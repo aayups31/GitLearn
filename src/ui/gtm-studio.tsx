@@ -2,6 +2,13 @@ import React, { useEffect, useState } from "react";
 import type { CourseRelease } from "../expansion-contract";
 import type { PromotionPlan } from "../server/gtm-studio";
 import type { MediaAsset, RenderJob } from "../server/creator-production";
+import type { ExpansionState } from "../expansion-contract";
+import {
+  postComposition,
+  type PostComposition,
+  type PostImage,
+} from "../social-post";
+import { postGraphic } from "./post-graphic";
 type API = <T>(route: string, body?: unknown) => Promise<T>;
 const providers = ["youtube", "linkedin", "x", "instagram"] as const;
 export function GTMStudioPanel({
@@ -9,11 +16,13 @@ export function GTMStudioPanel({
   releases,
   onCampaign,
   onDirty,
+  postDirty = false,
 }: {
   api: API;
   releases: CourseRelease[];
   onCampaign: (id: string) => Promise<void>;
   onDirty: (dirty: boolean) => void;
+  postDirty?: boolean;
 }) {
   const [plans, setPlans] = useState<PromotionPlan[]>([]),
     [selected, setSelected] = useState(""),
@@ -324,6 +333,106 @@ export function GTMStudioPanel({
                         }
                       >
                         Open {post.provider} campaign
+                      </button>
+                      <button
+                        className="button small"
+                        disabled={busy || postDirty}
+                        onClick={() =>
+                          void act(async () => {
+                            const state =
+                                await api<ExpansionState>("expansion/state"),
+                              campaign = state.campaigns.find(
+                                (c) => c.id === artifact.campaignId,
+                              );
+                            if (!campaign)
+                              throw Error(
+                                "Reload the campaign before preparing its graphic.",
+                              );
+                            const existing = await api<{
+                              revision: number;
+                              campaignRevision: number;
+                              composition: PostComposition;
+                              mediaJobId?: string;
+                              publicMediaUrl: string;
+                              publicImageUrls: string[];
+                              privacy: string;
+                            } | null>(
+                              `expansion/publishing/draft/${campaign.id}/${post.provider}`,
+                            );
+                            if (
+                              existing &&
+                              existing.campaignRevision !== campaign.revision
+                            )
+                              throw Error(
+                                "Reset the stale post draft to this campaign before adding a graphic.",
+                              );
+                            if (
+                              existing?.mediaJobId &&
+                              post.provider !== "youtube"
+                            )
+                              throw Error(
+                                "This post already has a video. Remove it in the composer before adding a photo.",
+                              );
+                            const composition =
+                              existing?.composition ||
+                              postComposition.parse({
+                                copy: campaign.creativeSnapshot.copy,
+                                title: post.headline,
+                              });
+                            if (
+                              composition.imageIds.length >=
+                              (post.provider === "x" ? 4 : 10)
+                            )
+                              throw Error("This post's photo slots are full.");
+                            const design = await api<{ svg: string }>(
+                                `expansion/promotions/${plan.id}/design`,
+                                { provider: post.provider },
+                              ),
+                              file = await postGraphic(
+                                design.svg,
+                                `outclass-${post.provider}.png`,
+                              ),
+                              image = await api<PostImage>(
+                                `expansion/social-images/import?name=${encodeURIComponent(file.name)}&rights=confirmed`,
+                                file,
+                              );
+                            await api("expansion/publishing/draft", {
+                              campaignId: campaign.id,
+                              campaignRevision: campaign.revision,
+                              provider: post.provider,
+                              expectedRevision: existing?.revision || 0,
+                              composition: {
+                                ...composition,
+                                ...(post.provider === "youtube"
+                                  ? { thumbnailId: image.id }
+                                  : {
+                                      imageIds: [
+                                        ...composition.imageIds,
+                                        image.id,
+                                      ],
+                                      imageAlts: [
+                                        ...composition.imageIds.map(
+                                          (_, i) =>
+                                            composition.imageAlts[i] || "",
+                                        ),
+                                        `Course preview: ${post.headline}`,
+                                      ],
+                                    }),
+                              },
+                              ...(existing?.mediaJobId
+                                ? { mediaJobId: existing.mediaJobId }
+                                : {}),
+                              publicMediaUrl: existing?.publicMediaUrl || "",
+                              publicImageUrls: existing?.publicImageUrls || [],
+                              privacy: existing?.privacy || "unlisted",
+                            });
+                            await onCampaign(campaign.id);
+                          })
+                        }
+                      >
+                        {post.provider === "youtube"
+                          ? "Create thumbnail & open post"
+                          : "Create graphic & open post"}
                       </button>
                       <button
                         className="button small"

@@ -124,6 +124,9 @@ Stop the running companion before `npm run test:e2e`; the browser suite starts i
 
 The latest source adds instructor-authored Academy Learn packages, separate instructor preview, reviewed agent handoffs, GTM-owned promotional posts/graphics/video previews, a local approved-publication queue and timestamped platform evidence. See [connected product roles and verified scope](docs/connected-products.md) and [social developer-app setup](docs/social-publishing.md).
 
+GTM's **Create your post** composer provides platform-style X, LinkedIn and Instagram previews plus a playable YouTube feed/watch preview. Save channel-specific drafts, attach exact reviewed photos/videos, order photos, add alt text, and edit YouTube upload settings. Generated course graphics can open directly in the composer. The adapters attach selected media; feed layout remains an approximation until the provider renders the published post. See the social publishing guide for supported formats and pending live account validation.
+
+
 From the running source app, use Academy to author and release a lesson, add its Learn experience, and preview it. In GTM, **Promotion studio** creates channel drafts from an authorized release; **Campaigns & insights** handles distribution and evidence. Source-based drafting uses no model call; AI drafting asks for approval and uses one bounded call. Preparing assets does not publish them. Scheduled posts run only while the app is open and connected, under the exact content/account consent recorded for the job.
 
 These additions are not in the currently published v0.7.1 installer. Packaging an updated installer is deferred. Real social publishing still requires eligible developer apps and live account validation. Academy payments/payouts and an always-on hosted scheduler are not included in this source milestone.

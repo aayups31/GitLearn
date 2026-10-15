@@ -114,10 +114,12 @@ export class SocialImages {
         mime: "image/jpeg",
         createdAt: new Date().toISOString(),
       };
+      await rm(path.join(dir, "input"));
       this.app.store.put("gtm:images:v1", [...this.list(), image]);
       return image;
     } catch (error) {
-      await rm(dir, { recursive: true, force: true });
+      if (path.resolve(dir).startsWith(path.resolve(this.root) + path.sep))
+        await rm(dir, { recursive: true, force: true });
       throw error;
     } finally {
       this.importing = false;

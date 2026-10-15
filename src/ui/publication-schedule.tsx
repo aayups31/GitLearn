@@ -79,7 +79,7 @@ export function PublicationSchedule({
               }
               if (
                 !confirm(
-                  `Authorize automatic submission of this exact reviewed post to ${post.accountName} on ${post.provider} at ${date.toLocaleString()}? OutClass must remain running and connected. This includes completing an Instagram media container when applicable and up to 12 confirmation/metrics checks; platform API quotas may apply. No paid ads are created.`,
+                  `Authorize automatic submission of this exact reviewed post to ${post.accountName} on ${post.provider} at ${date.toLocaleString()}? OutClass must remain running and connected. This includes waiting for uploaded video processing, creating the approved post when ready, completing an Instagram media container when applicable, and up to 12 confirmation/metrics checks; platform API quotas may apply. No paid ads are created.`,
                 )
               )
                 return;
