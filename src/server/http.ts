@@ -27,6 +27,8 @@ import { SocialConnections } from "./social-connections.js";
 import { GTMPublishing } from "./gtm-publishing.js";
 import { GTMAnalytics } from "./gtm-analytics.js";
 import { LearnDelivery } from "./learn-delivery.js";
+import { GTMStudio } from "./gtm-studio.js";
+import { PublicationQueue } from "./publication-queue.js";
 
 const text = z.string().max(2000);
 function matches(a: string, b: string) {
@@ -53,6 +55,12 @@ export function createApp(
       creatorProduction,
     );
   const workspace = new Workspace(application);
+  const publicationQueue = new PublicationQueue(
+    application,
+    publishing,
+    social,
+  );
+  publicationQueue.start();
   const practice = new Practice(application, workspace);
   const runtime = new ProjectRuntime(application, workspace);
   const live = new LiveWork(application, workspace, runtime, practice);
@@ -66,6 +74,7 @@ export function createApp(
   app.locals.stopPrograms = async () => {
     app.locals.closing = true;
     creatorProduction.stop();
+    publicationQueue.stop();
     live.stopAll();
     runtime.stopAll();
     await workspace.stopAll();
@@ -344,8 +353,13 @@ export function createApp(
     res.json(delivery.hint(input.courseId, input.lessonId));
   });
   app.use("/api/expansion/media", creatorProduction.routes());
+  app.use(
+    "/api/expansion/promotions",
+    new GTMStudio(application, creatorProduction).routes(),
+  );
   app.use("/api/expansion/social", social.routes());
   app.use("/api/expansion/publishing", publishing.routes());
+  app.use("/api/expansion/queue", publicationQueue.routes());
   app.use(
     "/api/expansion/analytics",
     new GTMAnalytics(application, () =>

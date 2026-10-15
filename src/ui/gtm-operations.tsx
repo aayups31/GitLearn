@@ -4,6 +4,7 @@ import type { Campaign } from "../expansion-contract";
 import type { PublishReview } from "../server/gtm-publishing";
 import type { RenderJob } from "../server/creator-production";
 import type { ReportSnapshot, reportMetrics } from "../server/gtm-analytics";
+import { PublicationSchedule } from "./publication-schedule";
 type API = <T>(route: string, body?: unknown) => Promise<T>;
 type Channel = {
   provider: "youtube" | "linkedin" | "x" | "instagram";
@@ -379,6 +380,7 @@ export function GTMOperations({
                 </a>
               )}
             </div>
+            <PublicationSchedule api={api} post={post} />
             {post.metrics && (
               <p>
                 Platform observation ·{" "}

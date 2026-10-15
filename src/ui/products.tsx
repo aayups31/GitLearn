@@ -22,6 +22,7 @@ import { CreatorDesign } from "./creator-design";
 import { HostedAcademyPanel } from "./academy-hosted";
 import { LearnPackageEditor } from "./learn-package";
 import { HandoffInbox } from "./agent-handoffs";
+import { GTMStudioPanel } from "./gtm-studio";
 import { GTMOperations } from "./gtm-operations";
 import { CreatorMedia } from "./creator-media";
 import { AgentPanel, CompilerPanel } from "./product-intelligence";
@@ -109,7 +110,11 @@ export function ProductWorkspace({
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign>();
   const [dirty, setDirty] = useState(false);
   const [mediaDirty, setMediaDirty] = useState(false);
-  useEffect(() => onDirty(dirty || mediaDirty), [dirty, mediaDirty, onDirty]);
+  const [promotionDirty, setPromotionDirty] = useState(false);
+  useEffect(
+    () => onDirty(dirty || mediaDirty || promotionDirty),
+    [dirty, mediaDirty, promotionDirty, onDirty],
+  );
   const reload = async () => {
     const result = await api<ExpansionState>("expansion/state");
     setData(result);
@@ -135,11 +140,11 @@ export function ProductWorkspace({
   }
   function clean() {
     setDirty(false);
-    onDirty(mediaDirty);
+    onDirty(mediaDirty || promotionDirty);
   }
   function canSwitch() {
     return (
-      !(dirty || mediaDirty) ||
+      !(dirty || mediaDirty || promotionDirty) ||
       confirm("Discard unsaved changes to this draft?")
     );
   }
@@ -203,6 +208,23 @@ export function ProductWorkspace({
         </p>
       )}
       <fieldset disabled={busy} className="product-fieldset">
+        {mode === "gtm" && (
+          <GTMStudioPanel
+            api={api}
+            onDirty={setPromotionDirty}
+            releases={data.releases}
+            onCampaign={async (id) => {
+              if (!canSwitch()) return;
+              const next = await reload(),
+                found = next.campaigns.find((c) => c.id === id);
+              if (found) {
+                setSelectedCampaign(found);
+                setCampaign(campaignValues(found));
+                clean();
+              }
+            }}
+          />
+        )}
         <HandoffInbox
           api={api}
           domain={

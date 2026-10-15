@@ -1,5 +1,9 @@
 import { z } from "zod";
 import {
+  promotionAnswer,
+  promotionInstructions,
+} from "./promotion-contract.js";
+import {
   productAgentAnswer,
   productAgentInstructions,
 } from "./product-agent-contract.js";
@@ -43,6 +47,7 @@ export const hostedRequest = z.object({
     "creative",
     "growth",
     "analytics",
+    "promotion",
   ]),
   context: z.string().min(1).max(90000),
   history: z
@@ -62,6 +67,7 @@ export type AIUsage = {
   plan: "free" | "paid";
 };
 export function answerSchema(task: z.infer<typeof hostedRequest>["task"]) {
+  if (task === "promotion") return promotionAnswer;
   return task === "teacher"
     ? teacherAnswer
     : task === "checkpoint"
@@ -73,6 +79,7 @@ export function answerSchema(task: z.infer<typeof hostedRequest>["task"]) {
 export function answerInstructions(
   task: z.infer<typeof hostedRequest>["task"],
 ) {
+  if (task === "promotion") return promotionInstructions;
   return task === "teacher"
     ? teacherInstructions
     : task === "checkpoint"

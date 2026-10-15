@@ -59,7 +59,18 @@ export class ProductAgents {
       domain === "academy"
         ? state.courses.find((c) => c.id === entityId)!.lessons
         : release?.lessons || [];
-    const sources = lessons.slice(0, 6).map((l, i) => ({
+    const focus =
+      domain === "creative"
+        ? state.creatives.find((c) => c.id === entityId)?.lessonIndex
+        : domain === "growth" || domain === "analytics"
+          ? state.campaigns.find((c) => c.id === entityId)?.creativeSnapshot
+              .lessonIndex
+          : undefined;
+    const sourceLessons = lessons
+      .map((lesson, index) => ({ lesson, index }))
+      .filter((item) => focus === undefined || item.index === focus)
+      .slice(0, 6);
+    const sources = sourceLessons.map(({ lesson: l, index: i }) => ({
       id: `lesson:${i}`,
       title: l.title,
       text: `Objective: ${l.objective}\nPractice: ${l.practice}\n${l.content}`.slice(

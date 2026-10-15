@@ -54,6 +54,25 @@ const key = "gtm:publication:v1",
   now = () => new Date().toISOString(),
   hash = (value: unknown) =>
     createHash("sha256").update(JSON.stringify(value)).digest("hex");
+// Conservative v3 weighting for copy; the known appended HTTPS link uses t.co's
+// fixed 23-character allowance. Complex emoji sequences may be overcounted.
+// https://github.com/twitter/twitter-text/blob/master/config/v3.json
+export function xPostLength(copy: string) {
+  return Array.from((copy + "\n\n").normalize("NFC")).reduce((n, c) => {
+    const p = c.codePointAt(0)!;
+    return (
+      n +
+      (/\p{Extended_Pictographic}/u.test(c)
+        ? 2
+        : p <= 4351 ||
+            (p >= 8192 && p <= 8205) ||
+            (p >= 8208 && p <= 8223) ||
+            (p >= 8242 && p <= 8247)
+          ? 1
+          : 2)
+    );
+  }, 23);
+}
 export class GTMPublishing {
   private active = new Set<string>();
   constructor(
@@ -95,9 +114,9 @@ export class GTMPublishing {
         "The local publication history limit has been reached.",
       );
     const text = c.creativeSnapshot.copy + "\n\n" + c.trackedUrl;
-    if (input.provider === "x" && Array.from(text).length > 280)
+    if (input.provider === "x" && xPostLength(c.creativeSnapshot.copy) > 280)
       throw new UserError(
-        "Edit an X-specific copy variant to fit 280 characters including the tagged link.",
+        "Edit an X-specific copy variant to fit 280 weighted characters including its link. Complex emoji are counted conservatively.",
       );
     if (input.provider === "linkedin" && text.length > 3000)
       throw new UserError("LinkedIn copy must fit 3000 characters.");

@@ -236,6 +236,46 @@ test("author a course, launch Learn, approve grounded copy and prepare a manual 
     .getByRole("button", { name: "Export manual handoff", exact: true })
     .click();
   expect((await download).suggestedFilename()).toContain("outclass-campaign-");
+  await page
+    .getByLabel("Promotion course release", { exact: true })
+    .selectOption(release.id);
+  await page
+    .getByLabel("Promotion title", { exact: true })
+    .fill("Collections promotion");
+  await page
+    .getByLabel("Promotion audience", { exact: true })
+    .fill("Beginners ready to use dictionaries in a real project");
+  await page
+    .getByLabel("Promotion destination", { exact: true })
+    .fill("https://example.com/python");
+  await page
+    .getByLabel(
+      "I have permission to promote this course and use its selected material.",
+      { exact: true },
+    )
+    .check();
+  await page
+    .getByRole("button", { name: "Create channel drafts", exact: true })
+    .click();
+  await expect(page.locator(".gtm-promotion-grid")).toContainText("linkedin");
+  await page
+    .getByLabel("Promotional copy linkedin", { exact: true })
+    .fill("Practice dictionaries by building your own activity report.");
+  await page
+    .getByRole("button", { name: "Save promotional copy", exact: true })
+    .click();
+  await page
+    .getByRole("button", {
+      name: "Approve copy & prepare campaigns",
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole("button", { name: "Open linkedin campaign", exact: true })
+    .click();
+  await expect(page.getByLabel("Campaign title", { exact: true })).toHaveValue(
+    "Collections promotion · linkedin",
+  );
   await page.reload();
   await expect(
     page.getByRole("button", { name: /Python launch/ }),

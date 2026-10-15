@@ -290,7 +290,8 @@ export class AIProvider {
       | "academy"
       | "creative"
       | "growth"
-      | "analytics";
+      | "analytics"
+      | "promotion";
     schema: T;
     name: string;
     instructions: string;
