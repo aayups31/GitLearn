@@ -57,8 +57,16 @@ test("packaged account sessions use Windows encryption, restore and sign out wit
     const bundledGuide = await page.evaluate(async () =>
       (await fetch("/welcome/assets/release.json")).json(),
     );
-    expect(bundledGuide.version).toBe(version);
-    expect(bundledGuide.windows.url).toContain(`OutClass-Setup-${version}.exe`);
+    expect(await desktop.evaluate(({ app }) => app.getVersion())).toBe(version);
+    // A local preview may be newer than the published downloads. Keep those
+    // links pinned to the public release until its new assets are published.
+    const publishedGuide = JSON.parse(
+      await readFile("src/site/assets/release.json", "utf8"),
+    );
+    expect(bundledGuide).toEqual(publishedGuide);
+    expect(bundledGuide.windows.url).toContain(
+      `OutClass-Setup-${publishedGuide.version}.exe`,
+    );
     await page.evaluate(
       async (root) => {
         const { token } = await (

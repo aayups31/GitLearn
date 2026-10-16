@@ -178,6 +178,18 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
       reopened.getByRole("textbox", { name: "Code editor" }),
     ).toBeVisible();
     await expect(reopened.locator(".studio-bottom")).toBeHidden();
+    const dimensions = await reopened.evaluate(() => ({
+      width: innerWidth,
+      height: innerHeight,
+    }));
+    const codingSurface = (await reopened
+      .locator(".code-editor")
+      .boundingBox())!;
+    expect(codingSurface.width).toBeGreaterThan(dimensions.width * 0.65);
+    expect(codingSurface.height).toBeGreaterThan(dimensions.height * 0.65);
+    await reopened.screenshot({
+      path: ".local/design/outclass-minimal-desktop.png",
+    });
     await reopened
       .locator(".studio-dock-tabs")
       .getByRole("button", { name: "Output", exact: true })
