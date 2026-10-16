@@ -9,9 +9,10 @@ import { Application } from "../../src/server/application";
 import { createApp } from "../../src/server/http";
 const base = "http://127.0.0.1:47836";
 let directory: string, store: Store, server: Server;
+let web: express.Express;
 async function startServer() {
   const application = new Application(store, "unit-only-placeholder");
-  const app = createApp(application, 47836);
+  const app = (web = createApp(application, 47836));
   app.use(express.static(path.resolve("dist/web")));
   server = app.listen(47836, "127.0.0.1");
   await new Promise<void>((resolve) => server.once("listening", resolve));
@@ -39,6 +40,7 @@ test.beforeAll(async () => {
     });
 });
 test.afterAll(async () => {
+  await web.locals.stopPrograms();
   await new Promise<void>((resolve) => server.close(() => resolve()));
   store.close();
   await rm(directory, { recursive: true, force: true });
@@ -79,6 +81,9 @@ test("course project → actual error → hint → fix → reviewed checkpoints 
     page.getByLabel("Program output", { exact: true }),
   ).toContainText("ReferenceError");
   const run = store.get<any[]>("runs:javascript")![0];
+  await page
+    .getByRole("button", { name: "Show OffCourse", exact: true })
+    .click();
   await page
     .getByRole("button", { name: "Enable learning assistant", exact: true })
     .click();
@@ -127,7 +132,7 @@ test("course project → actual error → hint → fix → reviewed checkpoints 
   await expect(
     page.getByLabel("Program output", { exact: true }),
   ).toContainText("Built independently");
-  await page.locator(".studio-notes summary").click();
+  await page.getByRole("button", { name: "Notes", exact: true }).click();
   await page
     .getByLabel("Studio session notes")
     .fill("Next: add input validation, starting from my own greeting.");
@@ -155,7 +160,7 @@ test("course project → actual error → hint → fix → reviewed checkpoints 
   await expect(
     page.getByLabel("Program output", { exact: true }),
   ).toContainText("true");
-  await page.locator(".studio-notes summary").click();
+  await page.getByRole("button", { name: "Notes", exact: true }).click();
   await page
     .getByLabel("Studio session notes")
     .fill("Next: reject an empty name.");
@@ -168,6 +173,7 @@ test("course project → actual error → hint → fix → reviewed checkpoints 
     .click();
   await expect(page.getByRole("dialog")).toBeHidden();
   await page.goto("about:blank");
+  await web.locals.stopPrograms();
   await new Promise<void>((resolve) => server.close(() => resolve()));
   store.close();
   store = new Store(path.join(directory, "data"));
@@ -179,6 +185,10 @@ test("course project → actual error → hint → fix → reviewed checkpoints 
     .getByRole("button", { name: "Continue", exact: true })
     .click();
   await expect(editor).toContainText("const validate");
+  await page
+    .locator(".studio-dock-tabs")
+    .getByRole("button", { name: "Output", exact: true })
+    .click();
   await expect(
     page.getByLabel("Program output", { exact: true }),
   ).toContainText("true");

@@ -71,6 +71,10 @@ test("a during-course suggestion becomes learner-written work, real checks, hint
     .filter({ hasText: "javascript" })
     .getByRole("button", { name: "Start", exact: true })
     .click();
+  await page
+    .locator(".layout-tools")
+    .getByRole("button", { name: "Lesson", exact: true })
+    .click();
   await expect(page.locator(".task-guide > summary")).toContainText(
     "price calculator",
   );
@@ -93,6 +97,7 @@ test("a during-course suggestion becomes learner-written work, real checks, hint
   await expect(page.locator(".task-guide > summary")).toContainText(
     "Checks passed",
   );
+  await page.locator(".workspace-more > summary").click();
   await page
     .getByRole("button", { name: "Learn by doing", exact: true })
     .click();
@@ -124,7 +129,7 @@ test("a during-course suggestion becomes learner-written work, real checks, hint
     "practical task",
   );
   expect(store.get<any[]>("practice:tasks")).toHaveLength(2);
-  await page.locator(".project-console summary").click();
+  await page.getByRole("button", { name: "Project", exact: true }).click();
   await page.getByLabel("Project command").fill("node --version");
   await page.getByRole("button", { name: "Run command", exact: true }).click();
   await expect(page.getByLabel("Project command output")).toContainText(/v\d+/);

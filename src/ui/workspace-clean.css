@@ -1,0 +1,602 @@
+/* Keep the working surface quiet. Details belong in panels opened on demand. */
+.shell .sidebar {
+  padding: 20px 12px 12px;
+}
+.shell .sidebar .brand {
+  margin-bottom: 25px;
+  padding-inline: 9px;
+}
+.shell .sidebar .brand small,
+.shell .nav-caption,
+.shell .connection .version {
+  display: none;
+}
+.shell .sidebar .nav {
+  font-size: 12px;
+  min-height: 36px;
+  padding: 8px 10px;
+  gap: 9px;
+  border-radius: 5px;
+}
+.workspace-more {
+  position: relative;
+}
+.workspace-more > summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 36px;
+  padding: 8px 10px;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  list-style: none;
+  border-radius: 5px;
+}
+.workspace-more > summary::-webkit-details-marker {
+  display: none;
+}
+.workspace-more > summary:hover {
+  color: var(--ink);
+  background: var(--hover);
+}
+.workspace-more > summary:focus-visible,
+.layout-menu > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.workspace-more[open] > summary {
+  color: var(--ink);
+}
+.workspace-more-items {
+  padding-top: 5px;
+  max-height: 44dvh;
+  overflow: auto;
+}
+.workspace-more-items .nav:nth-child(6) {
+  margin-top: 10px;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  padding-top: 14px;
+}
+.shell .sidebar-course-list {
+  margin: 27px 0 12px;
+}
+.shell .sidebar-course-list > button {
+  padding: 8px 10px;
+  gap: 7px;
+  align-items: center;
+}
+.shell .sidebar-course-list > button > span {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+}
+.shell .sidebar-course-list > button small {
+  display: none;
+}
+.shell .sidebar-course-list > button > svg {
+  margin-top: 0;
+  flex-shrink: 0;
+}
+.shell .sidebar-course-list i {
+  margin-top: 0;
+}
+.shell .sidebar-course-caption {
+  padding: 0 10px 9px;
+}
+.shell .connection {
+  font-size: 10px;
+  margin: 12px 10px 0;
+}
+.studio-shell > main > .topbar {
+  height: 36px;
+  padding: 0 16px;
+  font-size: 11px;
+}
+.studio-shell > main > .topbar .workspace-guide,
+.studio-shell > main > .topbar .local-pill {
+  display: none;
+}
+.studio-shell > main > .content {
+  height: calc(100dvh - 36px);
+}
+.studio.editor-focused .studio-context {
+  display: none;
+}
+@media (min-width: 1021px) {
+  .studio-shell:has(.editor-focused) > main > .topbar {
+    display: none;
+  }
+  .studio-shell:has(.editor-focused) > main > .content {
+    height: 100dvh;
+  }
+}
+.studio [hidden] {
+  display: none !important;
+}
+.studio .layout-tools {
+  min-height: 40px;
+  height: 40px;
+  padding: 0 10px;
+  gap: 5px;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+  background: var(--paper);
+}
+.studio .layout-tools button {
+  font-size: 11px;
+  padding: 6px 9px;
+  min-height: 28px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.studio .layout-tools button:hover,
+.layout-menu > summary:hover {
+  background: var(--hover);
+}
+.studio .layout-tools button[aria-expanded="true"],
+.studio .layout-tools button[aria-pressed="true"] {
+  background: var(--active);
+  color: var(--accent);
+}
+.studio .layout-tools .layout-icon {
+  width: 28px;
+  padding: 4px;
+  flex-shrink: 0;
+}
+.studio .practice-ready {
+  width: 5px;
+  height: 5px;
+  background: var(--accent);
+}
+.studio .layout-tools .workspace-course-name {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  margin: 0 auto 0 6px;
+}
+.layout-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+.layout-menu > summary {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  list-style: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+.layout-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.layout-menu > div {
+  position: absolute;
+  top: 34px;
+  right: 0;
+  z-index: 15;
+  width: 190px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  box-shadow: 0 12px 35px #0003;
+}
+.studio .layout-menu > div > button {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 9px;
+  font-size: 11px;
+}
+.studio .studio-context {
+  min-height: 48px;
+  padding: 8px 16px;
+  gap: 12px;
+}
+.studio .studio-context h1 {
+  font-size: 14px;
+  letter-spacing: -0.2px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.studio .studio-checkpoint {
+  min-height: 28px !important;
+  padding: 5px 9px !important;
+}
+.studio .studio-toolbar {
+  height: 36px;
+  padding: 0 14px;
+}
+.studio .studio-toolbar > div {
+  gap: 15px;
+}
+.studio .editor-tabs {
+  height: 33px;
+  min-height: 33px;
+}
+.studio .file-explorer {
+  padding-top: 12px;
+}
+.studio .file-explorer > button {
+  padding-block: 6px;
+}
+.studio-dock-tabs {
+  display: flex;
+  align-items: center;
+  height: 33px;
+  flex-shrink: 0;
+  gap: 17px;
+  padding: 0 14px;
+  border-top: 1px solid var(--line);
+}
+.studio .studio-dock-tabs > button {
+  height: 33px;
+  font-size: 10px;
+  padding: 0;
+  border-bottom: 1px solid transparent;
+}
+.studio .studio-dock-tabs > button.selected {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+.studio-dock-tabs small {
+  font-size: 9px;
+  color: var(--muted);
+}
+.studio .success {
+  color: var(--success);
+}
+.studio .failure {
+  color: var(--warning);
+}
+.studio-dock-tabs .dock-close {
+  margin-left: auto;
+}
+.studio .studio-bottom {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 43dvh;
+  border-top: 0;
+}
+.dock-project,
+.dock-output {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+}
+.dock-output {
+  display: flex;
+  flex-direction: column;
+}
+.studio .program-output {
+  flex: 1;
+  min-height: 45px;
+  height: auto;
+}
+.studio .output-header {
+  min-height: 29px;
+  padding: 6px 16px 4px;
+  flex-shrink: 0;
+}
+.studio .run-evidence-note {
+  flex-shrink: 0;
+}
+.studio .runner-note {
+  flex-shrink: 0;
+  font-size: 9px;
+}
+.studio .studio-notes {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border: 0;
+  padding: 0 16px;
+}
+.studio .studio-notes summary {
+  padding: 9px 0;
+}
+.studio .studio-notes textarea {
+  height: calc(100% - 49px);
+  min-height: 65px;
+  max-height: none;
+  resize: none;
+}
+.studio .project-console.embedded > summary {
+  display: none;
+}
+.studio .project-console.embedded {
+  border: 0;
+}
+.studio .local-terminal {
+  border-top: 0;
+}
+.studio .assistant-mobile-close {
+  display: inline-flex !important;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+.studio .assistant-header {
+  height: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+}
+.studio .assistant-tabs {
+  gap: 12px;
+  padding-inline: 14px;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+.studio .assistant-tabs > button {
+  white-space: nowrap;
+  font-size: 10px;
+}
+.studio .assistant-tag {
+  margin-left: auto;
+  font-size: 9px;
+}
+.lesson-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 20px 16px;
+}
+.lesson-panel-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+.lesson-panel-heading > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--accent);
+}
+.lesson-panel-heading h2 {
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 500;
+  letter-spacing: -0.25px;
+}
+.lesson-panel-section {
+  color: var(--muted);
+  font-size: 11px;
+  margin: 7px 0 20px 26px;
+}
+.lesson-panel .session-direction,
+.lesson-panel .practice-prompt,
+.lesson-panel .task-guide {
+  margin: 15px 0;
+  max-width: 100%;
+}
+.lesson-panel .learn-assignment {
+  margin: 0 0 15px;
+}
+.studio .lesson-panel .session-direction,
+.studio .lesson-panel .practice-prompt {
+  padding: 14px 0;
+}
+.studio .lesson-panel .session-direction {
+  flex-wrap: wrap;
+}
+.studio .lesson-panel .session-direction span {
+  white-space: normal;
+}
+.studio .lesson-panel .task-guide-content {
+  max-height: none;
+  overflow: visible;
+}
+.studio .chat-intro {
+  padding-top: 28px;
+}
+.studio .chat-intro h2 {
+  font-size: 22px;
+}
+.studio .chat-intro .chat-orbit {
+  width: 43px;
+  height: 43px;
+  margin-bottom: 20px;
+}
+.studio .tutor-controls {
+  display: block;
+  padding: 0;
+  margin: 0 0 8px;
+}
+.tutor-controls > summary {
+  color: var(--muted);
+  font-size: 10px;
+  padding: 7px 0;
+  cursor: pointer;
+}
+.studio .tutor-controls label {
+  margin: 7px 0;
+}
+.studio .tutor-controls small {
+  display: block;
+  margin-block: 7px;
+}
+@media (min-width: 1021px) {
+  .studio.explorer-hidden .explorer-divider {
+    display: none;
+  }
+}
+@media (max-width: 1020px) {
+  .shell .sidebar {
+    width: 64px;
+    padding: 19px 7px 12px;
+  }
+  .shell .sidebar .brand {
+    padding: 0;
+    margin-bottom: 30px;
+  }
+  .shell .sidebar .nav {
+    padding: 9px 0;
+    margin-bottom: 3px;
+  }
+  .workspace-more > summary {
+    justify-content: center;
+    padding: 9px 0;
+  }
+  .workspace-more > summary > span,
+  .sidebar-course-list {
+    display: none;
+  }
+  .workspace-more-items {
+    position: absolute;
+    top: 0;
+    left: 54px;
+    width: 205px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 6px;
+    z-index: 20;
+    box-shadow: 0 12px 35px #0003;
+    max-height: 65dvh;
+  }
+  .shell .workspace-more-items .nav {
+    justify-content: flex-start;
+    gap: 9px;
+    padding: 10px;
+  }
+  .workspace-more-items .nav-label {
+    display: inline;
+    font-size: 12px;
+  }
+  .shell > main {
+    margin-left: 64px;
+  }
+  .studio.adjustable-studio {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 40px minmax(0, 1fr);
+    padding-top: 0;
+    position: relative;
+  }
+  .studio .layout-tools {
+    padding-right: 112px;
+  }
+  .studio .studio-mobile-switch {
+    display: flex !important;
+    inset: 0 8px auto auto;
+    width: auto;
+    height: 40px;
+    padding: 0;
+    gap: 12px;
+    background: transparent;
+    border: 0;
+  }
+  .studio .studio-mobile-switch > button {
+    height: 40px;
+  }
+  .studio.mobile-editor > .studio-assistant,
+  .studio.mobile-assistant > .studio-main {
+    display: none;
+  }
+  .studio .studio-assistant {
+    width: 100%;
+    max-width: none;
+    border-left: 0;
+  }
+  .studio.explorer-hidden .file-explorer {
+    display: none;
+  }
+  .studio .file-explorer {
+    width: 120px;
+  }
+}
+@media (max-width: 760px) {
+  .shell .sidebar {
+    inset: auto 0 0;
+    width: 100%;
+    height: 58px;
+    padding: 4px 12px;
+    gap: 6px;
+  }
+  .shell .sidebar .brand {
+    display: none;
+  }
+  .shell .sidebar .nav {
+    flex-direction: column;
+    padding: 5px 0;
+    margin: 0;
+    min-height: 42px;
+  }
+  .shell .sidebar nav {
+    align-items: center;
+    gap: 8px;
+  }
+  .shell .sidebar .nav-label {
+    font-size: 9px;
+  }
+  .workspace-more {
+    flex: 1;
+  }
+  .workspace-more > summary {
+    flex-direction: column;
+    gap: 4px;
+    font-size: 9px;
+    padding: 5px 0;
+  }
+  .workspace-more > summary > span {
+    display: block;
+  }
+  .workspace-more-items {
+    top: auto;
+    bottom: 56px;
+    left: auto;
+    right: 0;
+  }
+  .shell .workspace-more-items .nav {
+    flex-direction: row;
+    min-height: 36px;
+    padding: 9px;
+  }
+  .shell .workspace-more-items .nav-label {
+    font-size: 12px;
+  }
+  .shell > main {
+    margin-left: 0;
+    padding-bottom: 58px;
+  }
+  .studio-shell > main > .content {
+    height: calc(100dvh - 94px);
+  }
+  .studio .studio-context {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  .studio .studio-context h1 {
+    font-size: 12px;
+  }
+  .studio .workspace-course-name {
+    display: none;
+  }
+  .studio .layout-tools {
+    gap: 3px;
+  }
+  .studio .layout-menu {
+    margin-left: auto;
+  }
+  .studio .studio-toolbar > span {
+    max-width: 28%;
+  }
+  .studio .studio-toolbar button {
+    font-size: 10px;
+  }
+  .studio .file-explorer {
+    width: 105px;
+  }
+  .studio .studio-dock-tabs {
+    gap: 17px;
+    padding-inline: 12px;
+  }
+}

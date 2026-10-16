@@ -26,6 +26,10 @@ import {
   Loader2,
   MessageSquare,
   PanelRightClose,
+  PanelLeft,
+  Maximize2,
+  Minimize2,
+  Settings2,
   Play,
   Plus,
   RefreshCw,
@@ -305,7 +309,59 @@ export function Studio({
     reset: resetLayout,
   } = useWorkspaceLayout();
   const session = state.session?.courseId === course?.id ? state.session : null;
+  const [dock, setDock] = useState<"none" | "output" | "project" | "notes">(
+    "none",
+  );
+  const focusRestore = useRef<{
+    layout: typeof layout;
+    dock: typeof dock;
+  } | null>(null);
+  const outputOpen = dock === "output" && !layout.terminalOpen;
+  const focused =
+    layout.hideSidebar &&
+    layout.hideExplorer &&
+    layout.hideAssistant &&
+    !layout.terminalOpen &&
+    dock === "none";
+  const setOutputOpen = (open: boolean) => {
+    setDock(open ? "output" : "none");
+    if (open) updateLayout({ terminalOpen: false, terminalMax: false });
+  };
+  const toggleDock = (panel: typeof dock) => {
+    setDock(dock === panel && !layout.terminalOpen ? "none" : panel);
+    updateLayout({ terminalOpen: false, terminalMax: false });
+  };
+  const toggleFocus = () => {
+    if (focused) {
+      updateLayout(
+        focusRestore.current?.layout || {
+          hideSidebar: false,
+          hideExplorer: false,
+          hideAssistant: true,
+        },
+      );
+      setDock(focusRestore.current?.dock || "none");
+    } else {
+      focusRestore.current = { layout, dock };
+      updateLayout({
+        hideSidebar: true,
+        hideExplorer: true,
+        hideAssistant: true,
+        terminalOpen: false,
+        terminalMax: false,
+      });
+      setMobileTab("editor");
+      setDock("none");
+    }
+  };
+  const openAssistant = (tab: typeof rightTab) => {
+    setRightTab(tab);
+    setMobileTab("assistant");
+    updateLayout({ hideAssistant: false });
+  };
+
   const [assignmentDirty, setAssignmentDirty] = useState(false);
+  const [practiceReady, setPracticeReady] = useState(false);
   const note = session ? sessionNote : "";
   const [files, setFiles] = useState<{ path: string; size: number }[]>([]),
     [drafts, setDrafts] = useState<Record<string, File>>({}),
@@ -315,7 +371,6 @@ export function Studio({
   const [newFile, setNewFile] = useState(false),
     [fileName, setFileName] = useState("main.py");
   const [output, setOutput] = useState(""),
-    [outputOpen, setOutputOpen] = useState(false),
     [exitCode, setExitCode] = useState<number | null>(null),
     [running, setRunning] = useState(false),
     [previewUrl, setPreviewUrl] = useState("");
@@ -355,9 +410,9 @@ export function Studio({
     [notice, setNotice] = useState("");
   const [mode, setMode] = useState<"help" | "course">("help"),
     [attachCode, setAttachCode] = useState(true),
-    [rightTab, setRightTab] = useState<"chat" | "sources" | "architect">(
-      "chat",
-    ),
+    [rightTab, setRightTab] = useState<
+      "chat" | "sources" | "architect" | "lesson"
+    >("chat"),
     [mobileTab, setMobileTab] = useState<"editor" | "assistant">("editor");
   useEffect(() => {
     setSharedProject("");
@@ -512,7 +567,7 @@ export function Studio({
           setFiles(result.files);
           setLastRun(result.lastRun);
           setOutput(result.lastRun?.output || "");
-          setOutputOpen(!!result.lastRun);
+          setDock("none");
           setExitCode(result.lastRun?.exitCode ?? null);
           const first =
             result.files.find((item) => item.path === result.anchor?.file) ||
@@ -731,7 +786,7 @@ export function Studio({
     );
   return (
     <div
-      className={`studio adjustable-studio ${layout.assistantSide === "left" ? "assistant-left" : ""} ${layout.hideAssistant ? "assistant-hidden" : ""} ${layout.hideExplorer ? "explorer-hidden" : ""} ${layout.terminalMax && layout.terminalOpen ? "terminal-focus" : ""} ${mobileTab === "assistant" ? "mobile-assistant" : "mobile-editor"}`}
+      className={`studio adjustable-studio ${focused ? "editor-focused" : ""} ${layout.assistantSide === "left" ? "assistant-left" : ""} ${layout.hideAssistant ? "assistant-hidden" : ""} ${layout.hideExplorer ? "explorer-hidden" : ""} ${layout.terminalMax && layout.terminalOpen ? "terminal-focus" : ""} ${mobileTab === "assistant" ? "mobile-assistant" : "mobile-editor"}`}
       style={
         {
           "--assistant-size": `${layout.assistant}px`,
@@ -740,42 +795,110 @@ export function Studio({
       }
     >
       <div className="layout-tools" aria-label="Workspace layout">
-        <span>YOUR LEARNING WORKSPACE</span>
         <button
           data-wide
+          className="layout-icon"
+          aria-label={layout.hideSidebar ? "Show courses" : "Hide courses"}
+          title={layout.hideSidebar ? "Show courses" : "Hide courses"}
           onClick={() => updateLayout({ hideSidebar: !layout.hideSidebar })}
         >
-          {layout.hideSidebar ? "Show courses" : "Hide courses"}
+          <PanelLeft size={16} />
         </button>
         <button
-          data-wide
+          className="layout-icon"
+          aria-label={layout.hideExplorer ? "Show files" : "Hide files"}
+          title={layout.hideExplorer ? "Show files" : "Hide files"}
           onClick={() => updateLayout({ hideExplorer: !layout.hideExplorer })}
         >
-          {layout.hideExplorer ? "Show files" : "Hide files"}
+          <Folder size={15} />
         </button>
+        <span className="workspace-course-name" title={course.title}>
+          {course.title}
+        </span>
         <button
-          data-wide
-          onClick={() => updateLayout({ hideAssistant: !layout.hideAssistant })}
-        >
-          {layout.hideAssistant ? "Show OffCourse" : "Focus editor"}
-        </button>
-        <button
-          data-wide
-          onClick={() =>
-            updateLayout({
-              assistantSide:
-                layout.assistantSide === "right" ? "left" : "right",
-            })
+          className="lesson-toggle"
+          aria-label="Lesson"
+          title={
+            practiceReady
+              ? "Lesson guidance · A practice opportunity is ready"
+              : "Lesson guidance & practice"
           }
+          aria-expanded={!layout.hideAssistant && rightTab === "lesson"}
+          onClick={() => {
+            if (
+              !layout.hideAssistant &&
+              rightTab === "lesson" &&
+              mobileTab === "assistant"
+            ) {
+              updateLayout({ hideAssistant: true });
+              setMobileTab("editor");
+            } else openAssistant("lesson");
+          }}
         >
-          Teacher {layout.assistantSide === "right" ? "←" : "→"}
+          <BookOpen size={14} />
+          Lesson
+          {practiceReady && (
+            <span
+              className="dot practice-ready"
+              aria-label="Practice available"
+            />
+          )}
         </button>
         <button
-          onClick={() => updateLayout({ terminalOpen: !layout.terminalOpen })}
+          data-wide
+          className="assistant-toggle"
+          aria-label={
+            layout.hideAssistant || rightTab === "lesson"
+              ? "Show OffCourse"
+              : "Hide OffCourse"
+          }
+          aria-expanded={!layout.hideAssistant && rightTab !== "lesson"}
+          onClick={() => {
+            if (!layout.hideAssistant && rightTab !== "lesson")
+              updateLayout({ hideAssistant: true });
+            else openAssistant("chat");
+          }}
         >
-          Terminal
+          <MessageSquare size={14} />
+          OffCourse
         </button>
-        <button onClick={resetLayout}>Reset layout</button>
+        <button
+          data-wide
+          className="layout-icon"
+          onClick={toggleFocus}
+          aria-label={focused ? "Exit focus mode" : "Focus editor"}
+          title={focused ? "Exit focus mode" : "Focus editor"}
+          aria-pressed={focused}
+        >
+          {focused ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+        </button>
+        <details className="layout-menu">
+          <summary aria-label="Layout options" title="Layout options">
+            <Settings2 size={15} />
+          </summary>
+          <div>
+            <button
+              onClick={() =>
+                updateLayout({
+                  assistantSide:
+                    layout.assistantSide === "right" ? "left" : "right",
+                })
+              }
+            >
+              Assistant on the{" "}
+              {layout.assistantSide === "right" ? "left" : "right"}
+            </button>
+            <button
+              onClick={() => {
+                resetLayout();
+                setDock("none");
+                setMobileTab("editor");
+              }}
+            >
+              Reset layout
+            </button>
+          </div>
+        </details>
       </div>
       <div className="studio-mobile-switch">
         <button
@@ -787,7 +910,7 @@ export function Studio({
         </button>
         <button
           className={mobileTab === "assistant" ? "selected" : ""}
-          onClick={() => setMobileTab("assistant")}
+          onClick={() => openAssistant("chat")}
         >
           <MessageSquare size={14} />
           Assistant
@@ -796,15 +919,13 @@ export function Studio({
       <section className="studio-main" aria-label="Local coding workspace">
         <div className="studio-context">
           <div>
-            <span>
-              <span className="dot" />{" "}
-              {session ? "Learning session" : "Course workspace"}
-            </span>
-            <h1>{session?.lessonTitle || course.title}</h1>
-            <small>
-              {session?.section ||
-                `${course.lessons.length} discovered lessons`}
-            </small>
+            <h1
+              title={[session?.section, session?.lessonTitle || course.title]
+                .filter(Boolean)
+                .join(" · ")}
+            >
+              {session?.lessonTitle || course.title}
+            </h1>
           </div>
           <a
             href={course.url}
@@ -883,62 +1004,6 @@ export function Studio({
           </div>
         ) : (
           <>
-            <LearnAssignment
-              api={api}
-              onDirty={setAssignmentDirty}
-              courseId={course.id}
-              lessonId={session.lessonId}
-            />
-            {session.contributionId ? (
-              <div className="contribution-context">
-                Contribution workspace · you write the change; the teacher
-                guides your reasoning.
-                <button onClick={onLive}>Plan & review</button>
-              </div>
-            ) : (
-              <>
-                <SessionDirection
-                  api={api}
-                  courseId={course.id}
-                  changed={workspaceRevision}
-                  onOpen={onPath}
-                />
-                <PracticePrompt
-                  api={api}
-                  courseId={course.id}
-                  changed={`${lastRun?.id}:${workspaceRevision}`}
-                  quietAfterTask
-                  onOpen={onPractice}
-                  onLive={onLive}
-                  onStart={async (exerciseId) => {
-                    for (const name of Object.keys(drafts))
-                      await saveFile(name);
-                    const task = await api<PracticeTask>("practice-start", {
-                      courseId: course.id,
-                      exerciseId,
-                    });
-                    await taskChanged(task.path);
-                  }}
-                />
-                <TaskGuide
-                  api={api}
-                  sessionId={session.id}
-                  courseId={course.id}
-                  workspace={session.workspace}
-                  changed={workspaceRevision}
-                  onWorking={setTaskWorking}
-                  blocked={running || projectRunning}
-                  onChanged={taskChanged}
-                  onOpenFile={(path) => void safe("open", () => openFile(path))}
-                  onPath={onPath}
-                  beforeCheck={async () => {
-                    for (const name of Object.keys(drafts))
-                      await saveFile(name);
-                  }}
-                  onAsk={guideQuestion}
-                />
-              </>
-            )}
             <div className="studio-toolbar">
               <span>
                 <Folder size={13} />
@@ -1176,18 +1241,120 @@ export function Studio({
                 )}
               </div>
             </div>
-            <div className="studio-bottom">
-              <ProjectConsole
-                api={api}
-                sessionId={session.id}
-                onRunning={setProjectRunning}
-                onFilesChanged={loadFiles}
-                beforeCommand={async () => {
-                  for (const name of Object.keys(drafts)) await saveFile(name);
+            <div className="studio-dock-tabs" aria-label="Workspace tools">
+              <button
+                aria-label="Output"
+                aria-expanded={outputOpen}
+                aria-controls="studio-output"
+                className={outputOpen ? "selected" : ""}
+                onClick={() => toggleDock("output")}
+              >
+                <Terminal size={13} />
+                Output
+                {running ? (
+                  <span className="dot" />
+                ) : exitCode !== null ? (
+                  <small className={exitCode === 0 ? "success" : "failure"}>
+                    {exitCode === 0 ? "✓" : `Exit ${exitCode}`}
+                  </small>
+                ) : null}
+              </button>
+              <button
+                aria-expanded={layout.terminalOpen}
+                className={layout.terminalOpen ? "selected" : ""}
+                onClick={() => {
+                  setDock("none");
+                  updateLayout({
+                    terminalOpen: !layout.terminalOpen,
+                    terminalMax: false,
+                  });
                 }}
-                onAsk={guideQuestion}
+              >
+                <Code2 size={13} />
+                Terminal
+              </button>
+              <button
+                aria-label="Project"
+                aria-expanded={dock === "project" && !layout.terminalOpen}
+                aria-controls="studio-project"
+                className={
+                  dock === "project" && !layout.terminalOpen ? "selected" : ""
+                }
+                onClick={() => toggleDock("project")}
+              >
+                <Folder size={13} />
+                Project
+                {projectRunning && (
+                  <Loader2
+                    size={12}
+                    className="spin"
+                    aria-label="Project running"
+                  />
+                )}
+              </button>
+              <button
+                aria-label="Notes"
+                aria-expanded={dock === "notes" && !layout.terminalOpen}
+                aria-controls="studio-notes"
+                className={
+                  dock === "notes" && !layout.terminalOpen ? "selected" : ""
+                }
+                onClick={() => toggleDock("notes")}
+              >
+                <BookOpen size={13} />
+                Notes{note !== savedNote ? " ·" : ""}
+              </button>
+              {(dock !== "none" || layout.terminalOpen) && (
+                <button
+                  className="dock-close"
+                  aria-label="Close bottom panel"
+                  onClick={() => {
+                    setDock("none");
+                    updateLayout({ terminalOpen: false, terminalMax: false });
+                  }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+            <div
+              className="studio-bottom"
+              hidden={dock === "none" || layout.terminalOpen}
+              style={{ height: layout.panel }}
+            >
+              <Divider
+                label="Bottom panel height"
+                axis="y"
+                reverse
+                value={layout.panel}
+                min={140}
+                max={480}
+                onChange={(panel) => updateLayout({ panel })}
               />
-              <details className="studio-notes">
+              <div
+                id="studio-project"
+                className="dock-project"
+                hidden={dock !== "project"}
+              >
+                <ProjectConsole
+                  embedded
+                  api={api}
+                  sessionId={session.id}
+                  onRunning={setProjectRunning}
+                  onFilesChanged={loadFiles}
+                  beforeCommand={async () => {
+                    for (const name of Object.keys(drafts))
+                      await saveFile(name);
+                  }}
+                  onAsk={guideQuestion}
+                />
+              </div>
+              <details
+                id="studio-notes"
+                className="studio-notes"
+                open
+                hidden={dock !== "notes"}
+              >
                 <summary>
                   <BookOpen size={13} />
                   Session notes{" "}
@@ -1207,161 +1374,169 @@ export function Studio({
                   placeholder="An idea worth keeping, a question for later…"
                 />
               </details>
-              <div className="output-header">
-                <span>
-                  <Terminal size={13} />
-                  <button
-                    aria-label={
-                      outputOpen
-                        ? "Collapse program output"
-                        : "Expand program output"
-                    }
-                    onClick={() => setOutputOpen(!outputOpen)}
-                  >
-                    Output{" "}
-                    <ChevronRight
-                      size={11}
-                      style={{
-                        transform: outputOpen ? "rotate(90deg)" : undefined,
-                      }}
-                    />
-                  </button>
-                  {exitCode !== null && (
-                    <small className={exitCode === 0 ? "success" : "failure"}>
-                      Exit {exitCode}
-                    </small>
-                  )}
-                </span>
-                {running ? (
-                  <button
-                    onClick={() =>
-                      safe("stop", async () => {
-                        await api("workspace-stop", { sessionId: session.id });
-                      })
-                    }
-                  >
-                    <Square size={12} />
-                    Stop
-                  </button>
-                ) : lastRun && exitCode !== 0 ? (
-                  <div className="run-help-actions">
+              <div
+                id="studio-output"
+                className="dock-output"
+                hidden={!outputOpen}
+              >
+                <div className="output-header">
+                  <span>
+                    <Terminal size={13} />
                     <button
-                      disabled={chatBusy}
-                      onClick={() => {
-                        setMode("help");
-                        setRightTab("chat");
-                        setMobileTab("assistant");
-                        setAttachedRun(true);
-                        setTutorStyle("hint");
-                        if (library?.enabled)
-                          void ask(
-                            "Give me one hint to understand this run’s failure, without solving it for me.",
-                            true,
-                            "hint",
-                          );
-                        else
-                          setQuestion(
-                            "Give me one hint to understand this run’s failure.",
-                          );
-                      }}
+                      aria-label={
+                        outputOpen
+                          ? "Collapse program output"
+                          : "Expand program output"
+                      }
+                      onClick={() => setOutputOpen(!outputOpen)}
                     >
-                      Give me a hint
+                      Output{" "}
+                      <ChevronRight
+                        size={11}
+                        style={{
+                          transform: outputOpen ? "rotate(90deg)" : undefined,
+                        }}
+                      />
                     </button>
-                    <button
-                      disabled={chatBusy}
-                      onClick={() => {
-                        setMode("help");
-                        setRightTab("chat");
-                        setMobileTab("assistant");
-                        setAttachedRun(true);
-                        setTutorStyle("explain");
-                        if (library?.enabled)
-                          void ask(
-                            "Explain the error in this run and suggest a small next step.",
-                            true,
-                            "explain",
-                          );
-                        else
-                          setQuestion(
-                            "Explain the error in this run and suggest a small next step.",
-                          );
-                      }}
-                    >
-                      Explain this error <MessageSquare size={12} />
-                    </button>
-                  </div>
-                ) : (
-                  <small>Local runtime · 10s limit</small>
-                )}
-              </div>
-              {outputOpen && lastRun && (
-                <div className="run-evidence-note">
-                  {lastRun.path} ·{" "}
-                  {new Date(lastRun.finishedAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                  {runChanged
-                    ? " · Code changed — save and rerun"
-                    : " · Saved entry file"}
-                  {lastRun.stopped ? " · Stopped" : ""}
-                  {lastRun.timedOut ? " · Timed out" : ""}
-                  {lastRun.outputTruncated ? " · Stored output shortened" : ""}
-                </div>
-              )}
-              {outputOpen && (
-                <>
-                  <pre className="program-output" aria-label="Program output">
-                    {output ||
-                      "Run a JavaScript, TypeScript, Python, C or C++ file. Start React/Next.js apps from Project console."}
-                  </pre>
-                  <div className="runner-note">
-                    {lastRun?.regression && (
-                      <div role="alert">
-                        <strong>Regression Alert</strong>
-                        <p>
-                          This file passed in an earlier lesson and now fails.
-                          Review the changed files and earlier checkpoint; a
-                          failed run does not prove the cause.
-                        </p>
-                        <small>
-                          {lastRun.regression.changedFiles.join(", ")}
-                        </small>
-                      </div>
+                    {exitCode !== null && (
+                      <small className={exitCode === 0 ? "success" : "failure"}>
+                        Exit {exitCode}
+                      </small>
                     )}
-                    {running && (
-                      <form
-                        className="run-line-input"
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          void safe("input", async () => {
-                            await api("workspace-input", {
-                              sessionId: session.id,
-                              text: runInput,
-                            });
-                            setRunInput("");
+                  </span>
+                  {running ? (
+                    <button
+                      onClick={() =>
+                        safe("stop", async () => {
+                          await api("workspace-stop", {
+                            sessionId: session.id,
                           });
+                        })
+                      }
+                    >
+                      <Square size={12} />
+                      Stop
+                    </button>
+                  ) : lastRun && exitCode !== 0 ? (
+                    <div className="run-help-actions">
+                      <button
+                        disabled={chatBusy}
+                        onClick={() => {
+                          setMode("help");
+                          openAssistant("chat");
+                          setAttachedRun(true);
+                          setTutorStyle("hint");
+                          if (library?.enabled)
+                            void ask(
+                              "Give me one hint to understand this run’s failure, without solving it for me.",
+                              true,
+                              "hint",
+                            );
+                          else
+                            setQuestion(
+                              "Give me one hint to understand this run’s failure.",
+                            );
                         }}
                       >
-                        <label htmlFor="run-line">
-                          Program input · one line · 10s run limit
-                        </label>
-                        <input
-                          id="run-line"
-                          value={runInput}
-                          maxLength={4000}
-                          onChange={(e) => setRunInput(e.target.value)}
-                          autoComplete="off"
-                        />
-                        <button type="submit">Send line</button>
-                      </form>
-                    )}
-                    <ShieldCheck size={11} />
-                    Runs saved code with your computer’s permissions. Your API
-                    key is excluded from the runner environment.
+                        Give me a hint
+                      </button>
+                      <button
+                        disabled={chatBusy}
+                        onClick={() => {
+                          setMode("help");
+                          openAssistant("chat");
+                          setAttachedRun(true);
+                          setTutorStyle("explain");
+                          if (library?.enabled)
+                            void ask(
+                              "Explain the error in this run and suggest a small next step.",
+                              true,
+                              "explain",
+                            );
+                          else
+                            setQuestion(
+                              "Explain the error in this run and suggest a small next step.",
+                            );
+                        }}
+                      >
+                        Explain this error <MessageSquare size={12} />
+                      </button>
+                    </div>
+                  ) : (
+                    <small>Local runtime · 10s limit</small>
+                  )}
+                </div>
+                {outputOpen && lastRun && (
+                  <div className="run-evidence-note">
+                    {lastRun.path} ·{" "}
+                    {new Date(lastRun.finishedAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                    {runChanged
+                      ? " · Code changed — save and rerun"
+                      : " · Saved entry file"}
+                    {lastRun.stopped ? " · Stopped" : ""}
+                    {lastRun.timedOut ? " · Timed out" : ""}
+                    {lastRun.outputTruncated
+                      ? " · Stored output shortened"
+                      : ""}
                   </div>
-                </>
-              )}
+                )}
+                {outputOpen && (
+                  <>
+                    <pre className="program-output" aria-label="Program output">
+                      {output ||
+                        "Run a JavaScript, TypeScript, Python, C or C++ file. Start React/Next.js apps from Project console."}
+                    </pre>
+                    <div className="runner-note">
+                      {lastRun?.regression && (
+                        <div role="alert">
+                          <strong>Regression Alert</strong>
+                          <p>
+                            This file passed in an earlier lesson and now fails.
+                            Review the changed files and earlier checkpoint; a
+                            failed run does not prove the cause.
+                          </p>
+                          <small>
+                            {lastRun.regression.changedFiles.join(", ")}
+                          </small>
+                        </div>
+                      )}
+                      {running && (
+                        <form
+                          className="run-line-input"
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            void safe("input", async () => {
+                              await api("workspace-input", {
+                                sessionId: session.id,
+                                text: runInput,
+                              });
+                              setRunInput("");
+                            });
+                          }}
+                        >
+                          <label htmlFor="run-line">
+                            Program input · one line · 10s run limit
+                          </label>
+                          <input
+                            id="run-line"
+                            value={runInput}
+                            maxLength={4000}
+                            onChange={(e) => setRunInput(e.target.value)}
+                            autoComplete="off"
+                          />
+                          <button type="submit">Send line</button>
+                        </form>
+                      )}
+                      <ShieldCheck size={11} />
+                      Runs saved code with your computer’s permissions. Your API
+                      key is excluded from the runner environment.
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </>
         )}
@@ -1382,18 +1557,32 @@ export function Studio({
             <MessageSquare size={15} />
           </div>
           <strong>
-            {rightTab === "architect" ? "The Architect" : "OffCourse"}
+            {rightTab === "architect"
+              ? "The Architect"
+              : rightTab === "lesson"
+                ? "Your lesson"
+                : "OffCourse"}
           </strong>
           <span className="assistant-tag">Course aware</span>
           <button
             className="assistant-mobile-close"
-            aria-label="Show code editor"
-            onClick={() => setMobileTab("editor")}
+            aria-label="Close assistant panel"
+            title="Close assistant panel"
+            onClick={() => {
+              setMobileTab("editor");
+              updateLayout({ hideAssistant: true });
+            }}
           >
             <PanelRightClose size={15} />
           </button>
         </div>
         <div className="assistant-tabs">
+          <button
+            className={rightTab === "lesson" ? "selected" : ""}
+            onClick={() => setRightTab("lesson")}
+          >
+            Lesson
+          </button>
           <button
             className={rightTab === "architect" ? "selected" : ""}
             onClick={() => setRightTab("architect")}
@@ -1445,7 +1634,82 @@ export function Studio({
             {notice}
           </div>
         )}
-        {rightTab === "architect" ? (
+        <div className="lesson-panel" hidden={rightTab !== "lesson"}>
+          <div className="lesson-panel-heading">
+            <BookOpen size={17} />
+            <h2>{session?.lessonTitle || course.title}</h2>
+          </div>
+          <p className="lesson-panel-section">
+            {session?.section || `${course.lessons.length} lessons`}
+          </p>
+          {session ? (
+            <>
+              <LearnAssignment
+                api={api}
+                onDirty={setAssignmentDirty}
+                courseId={course.id}
+                lessonId={session.lessonId}
+              />
+              {session.contributionId ? (
+                <div className="contribution-context">
+                  Contribution workspace · you write the change; the teacher
+                  guides your reasoning.
+                  <button onClick={onLive}>Plan & review</button>
+                </div>
+              ) : (
+                <>
+                  <SessionDirection
+                    api={api}
+                    courseId={course.id}
+                    changed={workspaceRevision}
+                    onOpen={onPath}
+                  />
+                  <PracticePrompt
+                    onOpportunity={setPracticeReady}
+                    api={api}
+                    courseId={course.id}
+                    changed={`${lastRun?.id}:${workspaceRevision}`}
+                    quietAfterTask
+                    onOpen={onPractice}
+                    onLive={onLive}
+                    onStart={async (exerciseId) => {
+                      for (const name of Object.keys(drafts))
+                        await saveFile(name);
+                      const task = await api<PracticeTask>("practice-start", {
+                        courseId: course.id,
+                        exerciseId,
+                      });
+                      await taskChanged(task.path);
+                    }}
+                  />
+                  <TaskGuide
+                    api={api}
+                    sessionId={session.id}
+                    courseId={course.id}
+                    workspace={session.workspace}
+                    changed={workspaceRevision}
+                    onWorking={setTaskWorking}
+                    blocked={running || projectRunning}
+                    onChanged={taskChanged}
+                    onOpenFile={(path) => {
+                      setMobileTab("editor");
+                      void safe("open", () => openFile(path));
+                    }}
+                    onPath={onPath}
+                    beforeCheck={async () => {
+                      for (const name of Object.keys(drafts))
+                        await saveFile(name);
+                    }}
+                    onAsk={guideQuestion}
+                  />
+                </>
+              )}
+            </>
+          ) : (
+            <p>Start a lesson to see its practice and project guidance here.</p>
+          )}
+        </div>
+        {rightTab === "lesson" ? null : rightTab === "architect" ? (
           <ArchitectNotebook
             api={api}
             courses={state.courses}
@@ -1622,14 +1886,8 @@ export function Studio({
                   <div className="chat-orbit">
                     <MessageSquare size={23} />
                   </div>
-                  <h2>
-                    A little clarity.
-                    <br />A better next step.
-                  </h2>
-                  <p>
-                    Think through your code, connect ideas, or ask a question
-                    grounded in your course materials.
-                  </p>
+                  <h2>Where are you stuck?</h2>
+                  <p>Get a hint for your code or ask about this lesson.</p>
                   <div className="chat-context">
                     <BookOpen size={12} />
                     <span>{course.title}</span>
@@ -1803,7 +2061,10 @@ export function Studio({
                 </button>
               </div>
               {mode === "help" && (
-                <div className="tutor-controls">
+                <details className="tutor-controls">
+                  <summary>
+                    Hint style & context{attachedRun ? " · Run attached" : ""}
+                  </summary>
                   <label>
                     Help style{" "}
                     <select
@@ -1842,7 +2103,7 @@ export function Studio({
                       · Output and saved source are sent with your question.
                     </small>
                   )}
-                </div>
+                </details>
               )}
               <textarea
                 aria-label="Ask learning assistant"

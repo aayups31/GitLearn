@@ -121,6 +121,7 @@ export function IntegratedTerminal({
   const current = sessions.find((s) => s.id === active);
   return (
     <section
+      hidden={!layout.terminalOpen}
       className={`local-terminal ${layout.terminalMax && layout.terminalOpen ? "maximized" : ""}`}
       aria-label="Integrated terminal"
       style={{

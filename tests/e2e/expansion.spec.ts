@@ -108,6 +108,10 @@ test("author a course, launch Learn, approve grounded copy and prepare a manual 
     .click();
   await expect(page.locator(".topbar")).toContainText("Code & learn");
   expect(store.state().session?.note).toContain("Handle empty input");
+  await page
+    .locator(".layout-tools")
+    .getByRole("button", { name: "Lesson", exact: true })
+    .click();
   await expect(page.locator(".learn-assignment")).toContainText(
     "Handle repeated students",
   );
@@ -131,6 +135,7 @@ test("author a course, launch Learn, approve grounded copy and prepare a manual 
       )
       .get(store.state().session!.courseId),
   ).toMatchObject({ total: 1 });
+  await page.locator(".workspace-more > summary").click();
   await page
     .getByRole("button", { name: "Creator Studio", exact: true })
     .click();

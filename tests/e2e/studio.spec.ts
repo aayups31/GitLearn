@@ -9,6 +9,7 @@ import { Application } from "../../src/server/application";
 import { createApp } from "../../src/server/http";
 const base = "http://127.0.0.1:47835";
 let directory: string, source: string, store: Store, server: Server;
+let web: express.Express;
 test.beforeAll(async () => {
   directory = await mkdtemp(path.join(tmpdir(), "gitlearn-studio-browser-"));
   store = new Store(path.join(directory, "data"));
@@ -42,7 +43,7 @@ test.beforeAll(async () => {
     path.join(source, "main.js"),
     "// One small step at a time.\nfunction greet(name) {\n  return `Hello, ${name}`;\n}\n\nconsole.log(greet('GitLearn'));\n",
   );
-  const app = createApp(application, 47835);
+  const app = (web = createApp(application, 47835));
   app.use((_req, res, next) => {
     res.setHeader(
       "Content-Security-Policy",
@@ -55,12 +56,117 @@ test.beforeAll(async () => {
   await new Promise<void>((resolve) => server.once("listening", resolve));
 });
 test.afterAll(async () => {
+  await web.locals.stopPrograms();
   await new Promise<void>((resolve) => server.close(() => resolve()));
   store.close();
   await rm(directory, { recursive: true, force: true });
 });
 test.afterEach(async ({ page }) => {
   await page.unrouteAll({ behavior: "wait" });
+});
+
+test("editor-first layout keeps tools optional, restores focus and preserves drafts", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await page.emulateMedia({ colorScheme: "dark" });
+  // Migrate old panel sizes without reopening the previously crowded layout.
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      "outclass-layout-v1",
+      JSON.stringify({ assistant: 370, hideAssistant: false }),
+    ),
+  );
+  await page.goto(base + "/?view=studio");
+  const editor = page.getByRole("textbox", { name: "Code editor" });
+  const surface = page.locator(".code-editor");
+  await expect(editor).toBeVisible();
+  await expect(
+    page.getByLabel("Course assistant", { exact: true }),
+  ).toBeHidden();
+  await expect(page.locator(".studio-bottom")).toBeHidden();
+  await expect(
+    page.getByLabel("Integrated terminal", { exact: true }),
+  ).toBeHidden();
+  const initial = (await surface.boundingBox())!;
+  expect(initial.width).toBeGreaterThan(1366 * 0.7);
+  expect(initial.height).toBeGreaterThan(768 * 0.65);
+  await page.screenshot({ path: ".local/design/studio-minimal-laptop.png" });
+  await editor.fill(
+    "// Keep my unfinished idea\nconsole.log('A focused workspace');",
+  );
+  await page
+    .locator(".layout-tools")
+    .getByRole("button", { name: "Lesson", exact: true })
+    .click();
+  await expect(page.locator(".lesson-panel")).toBeVisible();
+  await expect(editor).toContainText("Keep my unfinished idea");
+  await page.getByRole("button", { name: "Focus editor", exact: true }).click();
+  await expect(page.locator(".sidebar")).toBeHidden();
+  await expect(page.locator(".file-explorer")).toBeHidden();
+  await expect(
+    page.getByLabel("Course assistant", { exact: true }),
+  ).toBeHidden();
+  expect((await surface.boundingBox())!.width).toBeGreaterThan(1366 * 0.95);
+  expect((await surface.boundingBox())!.height).toBeGreaterThan(768 * 0.8);
+  await page.screenshot({ path: ".local/design/studio-minimal-focus.png" });
+  await page.getByRole("button", { name: "Exit focus mode" }).click();
+  await expect(page.locator(".lesson-panel")).toBeVisible();
+  await expect(page.locator(".sidebar")).toBeVisible();
+  await expect(editor).toContainText("Keep my unfinished idea");
+  await page.getByRole("button", { name: "Close assistant panel" }).click();
+  await page.getByRole("button", { name: "Notes", exact: true }).click();
+  await expect(page.getByLabel("Studio session notes")).toBeVisible();
+  await page.getByRole("separator", { name: "Bottom panel height" }).focus();
+  await page.keyboard.press("ArrowUp");
+  await expect(
+    page.getByRole("separator", { name: "Bottom panel height" }),
+  ).toHaveAttribute("aria-valuenow", "236");
+  await page.getByRole("button", { name: "Project", exact: true }).click();
+  await expect(page.getByLabel("Studio session notes")).toBeHidden();
+  await expect(page.getByLabel("Project technology")).toBeVisible();
+  await page.getByRole("button", { name: "Terminal", exact: true }).click();
+  await expect(page.getByLabel("Project technology")).toBeHidden();
+  await expect(
+    page.getByLabel("Integrated terminal", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Close bottom panel" }).click();
+  await expect(
+    page.getByLabel("Integrated terminal", { exact: true }),
+  ).toBeHidden();
+  await expect(editor).toContainText("Keep my unfinished idea");
+  await page.reload();
+  await expect(
+    page.getByLabel("Course assistant", { exact: true }),
+  ).toBeHidden();
+  await expect(page.locator(".studio-bottom")).toBeHidden();
+  await page.locator(".workspace-more > summary").click();
+  await expect(
+    page.getByRole("button", { name: "Academy", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Creator Studio", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "GTM", exact: true }),
+  ).toBeVisible();
+  await page.locator(".workspace-more > summary").click();
+  for (const width of [1000, 768, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    await expect(editor).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await page.getByRole("button", { name: "Assistant", exact: true }).click();
+    await expect(
+      page.getByLabel("Course assistant", { exact: true }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Close assistant panel" }).click();
+    await expect(editor).toBeVisible();
+  }
+  await page.screenshot({ path: ".local/design/studio-minimal-mobile.png" });
 });
 test("local studio edits, runs, preserves external edits, imports course material, cites passages, and checkpoints", async ({
   page,
@@ -95,6 +201,7 @@ test("local studio edits, runs, preserves external edits, imports course materia
     .getByRole("button", { name: "Reload current file from disk" })
     .click();
   await expect(editor).toContainText("External edit preserved");
+  await page.getByRole("button", { name: "Show OffCourse" }).click();
   await page.getByRole("button", { name: "Sources", exact: false }).click();
   await page.getByRole("button", { name: "Add material", exact: true }).click();
   await page.getByLabel("Source title").fill("Lesson 7 · Tool descriptions");
@@ -223,7 +330,7 @@ test("local studio edits, runs, preserves external edits, imports course materia
       }
     }),
   ).toBe(false);
-  await page.locator(".studio-notes summary").click();
+  await page.getByRole("button", { name: "Notes", exact: true }).click();
   await page
     .getByLabel("Studio session notes")
     .fill("I practiced one focused tool and ran the saved code locally.");
@@ -235,7 +342,7 @@ test("local studio edits, runs, preserves external edits, imports course materia
     "I practiced one focused tool and ran the saved code locally.",
   );
   await page.getByRole("button", { name: "Code & learn", exact: true }).click();
-  await page.locator(".studio-notes summary").click();
+  await page.getByRole("button", { name: "Notes", exact: true }).click();
   await expect(page.getByLabel("Studio session notes")).toHaveValue(
     "I practiced one focused tool and ran the saved code locally.",
   );

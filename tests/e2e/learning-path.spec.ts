@@ -69,6 +69,7 @@ test("personal direction, evidence milestones, ledger downloads and changed-requ
   page.on("pageerror", (e) => errors.push(e.message));
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto(base + "/?view=overview");
+  await page.locator(".workspace-more > summary").click();
   await page
     .getByRole("button", { name: "Learn by doing", exact: true })
     .click();
@@ -127,6 +128,10 @@ test("personal direction, evidence milestones, ledger downloads and changed-requ
   await page.locator(".task-row").first().click();
   await page
     .getByRole("button", { name: "Try the changed requirement" })
+    .click();
+  await page
+    .locator(".layout-tools")
+    .getByRole("button", { name: "Lesson", exact: true })
     .click();
   await expect(page.locator(".task-guide")).toContainText(
     "unexpected price inputs",

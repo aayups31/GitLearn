@@ -177,6 +177,11 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
     await expect(
       reopened.getByRole("textbox", { name: "Code editor" }),
     ).toBeVisible();
+    await expect(reopened.locator(".studio-bottom")).toBeHidden();
+    await reopened
+      .locator(".studio-dock-tabs")
+      .getByRole("button", { name: "Output", exact: true })
+      .click();
     await expect(
       reopened.getByLabel("Program output", { exact: true }),
     ).toContainText("Bundled desktop runtime 42");
@@ -211,10 +216,15 @@ test("desktop first-run, encrypted key persistence, local files, and bundled Jav
         );
         throw error;
       });
+    await expect(reopened.locator(".studio-bottom")).toBeHidden();
+    await reopened
+      .locator(".studio-dock-tabs")
+      .getByRole("button", { name: "Output", exact: true })
+      .click();
     await expect(
       reopened.getByLabel("Program output", { exact: true }),
     ).toContainText("Bundled desktop runtime 42");
-    await reopened.locator(".studio-notes summary").click();
+    await reopened.getByRole("button", { name: "Notes", exact: true }).click();
     await expect(reopened.getByLabel("Studio session notes")).toHaveValue(
       "Next: add an input check.",
     );

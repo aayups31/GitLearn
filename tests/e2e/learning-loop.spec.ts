@@ -149,13 +149,19 @@ test("included sign-in, lesson practice, actual failure, teacher, stale guard, r
   await expect(access).toContainText("5 of 5 answers remaining");
   expect(store.state().settings.assistantEnabled).toBe(true);
   await page.getByRole("button", { name: "Code & learn", exact: true }).click();
+  await page
+    .locator(".layout-tools")
+    .getByRole("button", { name: "Lesson", exact: true })
+    .click();
   await expect(page.getByLabel("Your learning direction")).toContainText(
     "shop price calculator",
   );
   await page.getByRole("button", { name: "Try it here", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Expand program output" }),
-  ).toBeVisible();
+    page
+      .locator(".studio-dock-tabs")
+      .getByRole("button", { name: "Output", exact: true }),
+  ).toHaveAttribute("aria-expanded", "false");
   const editor = page.getByRole("textbox", { name: "Code editor" });
   await expect(editor).toContainText("discountedPrice");
   await page
@@ -195,7 +201,15 @@ test("included sign-in, lesson practice, actual failure, teacher, stale guard, r
     await route.continue();
   });
   await page
+    .locator(".assistant-tabs")
+    .getByRole("button", { name: "Lesson", exact: true })
+    .click();
+  await page
     .getByRole("button", { name: "Check my work", exact: true })
+    .click();
+  await page
+    .locator(".assistant-tabs")
+    .getByRole("button", { name: "Conversation", exact: true })
     .click();
   await expect(
     page.getByRole("button", { name: "Send question", exact: true }),
@@ -205,7 +219,7 @@ test("included sign-in, lesson practice, actual failure, teacher, stale guard, r
   ).toBeDisabled();
   resumeCheck();
   await expect(
-    page.getByRole("button", { name: "Check my work", exact: true }),
+    page.getByRole("button", { name: "Run", exact: true }),
   ).toBeEnabled();
   await page.unroute("**/api/practice-check");
   failNext = true;
@@ -230,6 +244,10 @@ test("included sign-in, lesson practice, actual failure, teacher, stale guard, r
   await editor.fill(
     "export function discountedPrice(p,d){if(p<0||d<0||d>100)throw Error('Invalid');return Math.round(p*(1-d/100)*100)/100;}\n",
   );
+  await page
+    .locator(".assistant-tabs")
+    .getByRole("button", { name: "Lesson", exact: true })
+    .click();
   await page
     .getByRole("button", { name: "Check my work", exact: true })
     .click();

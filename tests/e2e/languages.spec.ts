@@ -63,7 +63,7 @@ test("language-aware studio creates React/Next/Python/native projects and runs T
   await expect(
     page.getByLabel("Program output", { exact: true }),
   ).toContainText("TypeScript works");
-  await page.locator(".project-console summary").click();
+  await page.getByRole("button", { name: "Project", exact: true }).click();
   for (const kind of ["react-ts", "next", "python", "cpp"]) {
     await page.getByLabel("Project technology").selectOption(kind);
     if (kind === "python")
@@ -118,6 +118,7 @@ test("language-aware studio creates React/Next/Python/native projects and runs T
     fullPage: true,
   });
   await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.locator(".workspace-more > summary").click();
   await page
     .getByRole("button", { name: "Learn by doing", exact: true })
     .click();

@@ -62,6 +62,7 @@ export function PracticePrompt({
   onLive,
   onStart,
   quietAfterTask,
+  onOpportunity,
 }: {
   api: Api;
   courseId?: string;
@@ -70,6 +71,7 @@ export function PracticePrompt({
   onLive?: () => void;
   onStart?: (exerciseId: string) => Promise<void>;
   quietAfterTask?: boolean;
+  onOpportunity?: (available: boolean) => void;
 }) {
   const [data, setData] = useState<Dashboard>();
   const action = useAction();
@@ -89,9 +91,18 @@ export function PracticePrompt({
   const suggestion = data?.opportunities[0],
     exercise = data?.exercises.find((e) => e.id === suggestion?.exerciseId);
   const liveSuggestion = data?.liveOpportunities[0];
-  if (data?.tasks.some((t) => t.status === "active")) return null;
-  if (quietAfterTask && data?.tasks.some((t) => t.status === "completed"))
-    return null;
+  const hasActiveTask = !!data?.tasks.some((t) => t.status === "active");
+  const quiet = !!(
+    quietAfterTask && data?.tasks.some((t) => t.status === "completed")
+  );
+  const available =
+    !hasActiveTask &&
+    !quiet &&
+    !!((suggestion && exercise) || (liveSuggestion && onLive));
+  useEffect(() => {
+    onOpportunity?.(available);
+  }, [available, onOpportunity]);
+  if (hasActiveTask || quiet) return null;
   if ((!suggestion || !exercise) && liveSuggestion && onLive)
     return (
       <section className="practice-prompt">
@@ -930,6 +941,7 @@ export function TaskGuide({
   );
 }
 export function ProjectConsole({
+  embedded = false,
   api,
   sessionId,
   onRunning,
@@ -937,6 +949,7 @@ export function ProjectConsole({
   beforeCommand,
   onAsk,
 }: {
+  embedded?: boolean;
   api: Api;
   sessionId: string;
   onRunning: (running: boolean) => void;
@@ -944,11 +957,12 @@ export function ProjectConsole({
   beforeCommand?: () => Promise<void>;
   onAsk?: (question: string) => void;
 }) {
-  const [open, setOpen] = useState(false),
+  const [expanded, setOpen] = useState(false),
     [commands, setCommands] = useState<CommandRecord[]>([]),
     [command, setCommand] = useState("node --test"),
     [input, setInput] = useState(""),
     [port, setPort] = useState("5173");
+  const open = embedded || expanded;
   const [kind, setKind] = useState<ProjectKind>("react-ts"),
     [profile, setProfile] = useState<PythonProfile>("minimal"),
     [diagnostics, setDiagnostics] = useState<Diagnostics>();
@@ -991,7 +1005,7 @@ export function ProjectConsole({
     running = commands.find((c) => c.state === "running");
   return (
     <details
-      className="project-console"
+      className={`project-console ${embedded ? "embedded" : ""}`}
       open={open}
       onToggle={(e) => setOpen(e.currentTarget.open)}
     >

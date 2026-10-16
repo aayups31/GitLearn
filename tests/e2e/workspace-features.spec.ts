@@ -9,6 +9,7 @@ import { Application } from "../../src/server/application";
 import { createApp } from "../../src/server/http";
 const base = "http://127.0.0.1:47843";
 let directory: string, store: Store, server: Server;
+let web: express.Express;
 test.beforeAll(async () => {
   directory = await mkdtemp(path.join(tmpdir(), "outclass-features-"));
   store = new Store(path.join(directory, "data"));
@@ -37,12 +38,13 @@ test.beforeAll(async () => {
     path.join(store.state().session!.workspace, "main.py"),
     "print(42)\n",
   );
-  const app = createApp(application, 47843);
+  const app = (web = createApp(application, 47843));
   app.use(express.static(path.resolve("dist/web")));
   server = app.listen(47843, "127.0.0.1");
   await new Promise<void>((r) => server.once("listening", r));
 });
 test.afterAll(async () => {
+  await web.locals.stopPrograms();
   await new Promise<void>((r) => server.close(() => r()));
   store.close();
   await rm(directory, { recursive: true, force: true });
@@ -59,6 +61,9 @@ test("adjustable layout supports keyboard, pointer, persistence, focus and reset
   const divider = page.getByRole("separator", {
     name: "OffCourse panel width",
   });
+  await page
+    .getByRole("button", { name: "Show OffCourse", exact: true })
+    .click();
   await divider.focus();
   await divider.press("ArrowLeft");
   await expect(divider).toHaveAttribute("aria-valuenow", "370");
@@ -68,19 +73,26 @@ test("adjustable layout supports keyboard, pointer, persistence, focus and reset
   await page.mouse.down();
   await page.mouse.move(b.x + 43, b.y + 150);
   await page.mouse.up();
-  await expect(sidebar).toHaveAttribute("aria-valuenow", "265");
+  await expect(sidebar).toHaveAttribute("aria-valuenow", "240");
   await page.reload();
   await expect(
     page.getByRole("separator", { name: "OffCourse panel width" }),
   ).toHaveAttribute("aria-valuenow", "370");
-  await page.getByRole("button", { name: "Teacher ←" }).click();
+  await page.getByLabel("Layout options", { exact: true }).click();
+  await page.getByRole("button", { name: "Assistant on the left" }).click();
+  await page.getByLabel("Layout options", { exact: true }).click();
   await expect(page.locator(".studio")).toHaveClass(/assistant-left/);
   await page.getByRole("button", { name: "Focus editor", exact: true }).click();
   await expect(page.getByLabel("Course assistant")).toBeHidden();
   await page
     .getByRole("button", { name: "Show OffCourse", exact: true })
     .click();
+  await page.getByLabel("Layout options", { exact: true }).click();
   await page.getByRole("button", { name: "Reset layout", exact: true }).click();
+  await page.getByLabel("Layout options", { exact: true }).click();
+  await page
+    .getByRole("button", { name: "Show OffCourse", exact: true })
+    .click();
   await expect(divider).toHaveAttribute("aria-valuenow", "354");
   await page.getByRole("button", { name: "Terminal", exact: true }).click();
   await expect(
@@ -122,6 +134,9 @@ test("a delayed OffCourse answer stays with its course when switching courses", 
     });
   });
   await page.goto(base + "/?view=studio");
+  await page
+    .getByRole("button", { name: "Show OffCourse", exact: true })
+    .click();
   await page
     .getByLabel("Ask learning assistant")
     .fill("Explain this saved Python attempt.");

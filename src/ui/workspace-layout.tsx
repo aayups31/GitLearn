@@ -5,6 +5,7 @@ export type Layout = {
   assistant: number;
   explorer: number;
   terminal: number;
+  panel: number;
   hideSidebar: boolean;
   hideAssistant: boolean;
   hideExplorer: boolean;
@@ -13,31 +14,44 @@ export type Layout = {
   terminalMax: boolean;
 };
 const defaults: Layout = {
-  sidebar: 225,
+  sidebar: 200,
   assistant: 354,
-  explorer: 152,
+  explorer: 140,
   terminal: 240,
+  panel: 220,
   hideSidebar: false,
-  hideAssistant: false,
+  hideAssistant: true,
   hideExplorer: false,
   assistantSide: "right",
   terminalOpen: false,
   terminalMax: false,
 };
-const key = "outclass-layout-v1";
+const key = "outclass-layout-v2";
 function read(): Layout {
   try {
     const stored = JSON.parse(localStorage.getItem(key) || "{}");
+    // Carry forward resized dimensions, while starting the new workspace with
+    // secondary panels closed. Subsequent visibility choices are remembered.
+    const sizes = localStorage.getItem(key)
+      ? stored
+      : JSON.parse(localStorage.getItem("outclass-layout-v1") || "{}");
     const result = { ...defaults };
-    for (const n of ["sidebar", "assistant", "explorer", "terminal"] as const) {
+    for (const n of [
+      "sidebar",
+      "assistant",
+      "explorer",
+      "terminal",
+      "panel",
+    ] as const) {
       const bounds = {
         sidebar: [180, 340],
         assistant: [280, 650],
         explorer: [120, 320],
         terminal: [140, 650],
+        panel: [140, 480],
       }[n];
-      if (Number.isFinite(stored[n]))
-        result[n] = Math.max(bounds[0], Math.min(bounds[1], stored[n]));
+      if (Number.isFinite(sizes[n]))
+        result[n] = Math.max(bounds[0], Math.min(bounds[1], sizes[n]));
     }
     for (const n of [
       "hideSidebar",

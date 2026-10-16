@@ -18,6 +18,7 @@ import {
   Link2,
   Loader2,
   Moon,
+  MoreHorizontal,
   Pause,
   Play,
   Plus,
@@ -38,6 +39,7 @@ import { ArchitectNotebook, LaunchIdeaPrompt } from "./notebook";
 import { AIAccessSettings } from "./ai-access";
 import { EditorsAndExtensions } from "./editors";
 import { LearningHub, LiveWorkHub, PracticePrompt } from "./practical";
+import "./workspace-clean.css";
 const Studio = lazy(() =>
   import("./studio").then((module) => ({ default: module.Studio })),
 );
@@ -78,8 +80,8 @@ type Page =
   | "creator"
   | "gtm";
 function App() {
-  const { layout } = useWorkspaceLayout();
   const layoutControl = useWorkspaceLayout();
+  const { layout } = layoutControl;
   const [theme, setTheme] = useState<Theme>(initialTheme);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -274,14 +276,6 @@ function App() {
               { id: "overview", label: "Overview", icon: LayoutGrid },
               { id: "studio", label: "Code & learn", icon: Code2 },
               { id: "courses", label: "My courses", icon: BookOpen },
-              { id: "practice", label: "Learn by doing", icon: Sparkles },
-              { id: "live", label: "Live work", icon: Github },
-              { id: "ideas", label: "Ideas & architecture", icon: Sparkles },
-              { id: "editors", label: "Editors & extensions", icon: Code2 },
-              { id: "history", label: "Checkpoints", icon: History },
-              { id: "academy", label: "Academy", icon: BookOpen },
-              { id: "creator", label: "Creator Studio", icon: LayoutGrid },
-              { id: "gtm", label: "GTM", icon: ArrowUpRight },
             ] as const
           ).map((item) => (
             <button
@@ -298,6 +292,54 @@ function App() {
               )}
             </button>
           ))}
+          <details
+            className="workspace-more"
+            key={page}
+            open={[
+              "practice",
+              "live",
+              "ideas",
+              "editors",
+              "history",
+              "academy",
+              "creator",
+              "gtm",
+            ].includes(page)}
+          >
+            <summary title="More tools">
+              <MoreHorizontal size={17} />
+              <span>More tools</span>
+            </summary>
+            <div className="workspace-more-items">
+              {(
+                [
+                  { id: "practice", label: "Learn by doing", icon: Sparkles },
+                  { id: "live", label: "Live work", icon: Github },
+                  {
+                    id: "ideas",
+                    label: "Ideas & architecture",
+                    icon: Sparkles,
+                  },
+                  { id: "history", label: "Checkpoints", icon: History },
+                  { id: "editors", label: "Editors & extensions", icon: Code2 },
+                  { id: "academy", label: "Academy", icon: BookOpen },
+                  { id: "creator", label: "Creator Studio", icon: LayoutGrid },
+                  { id: "gtm", label: "GTM", icon: ArrowUpRight },
+                ] as const
+              ).map((item) => (
+                <button
+                  key={item.id}
+                  className={page === item.id ? "nav active" : "nav"}
+                  onClick={() => navigate(item.id)}
+                  aria-label={item.label}
+                  aria-current={page === item.id ? "page" : undefined}
+                >
+                  <item.icon size={17} strokeWidth={1.5} />
+                  <span className="nav-label">{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </details>
         </nav>
         {!!state?.courses.length && (
           <div className="sidebar-course-list">
@@ -458,7 +500,7 @@ function App() {
               {page === "editors" && (
                 <EditorsAndExtensions api={request} state={state} />
               )}
-              {configured && (
+              {configured && page === "overview" && (
                 <LaunchIdeaPrompt
                   api={request}
                   onOpen={() => navigate("ideas")}

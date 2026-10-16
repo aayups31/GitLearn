@@ -183,6 +183,7 @@ test("first-time setup → Udemy lesson → source code → reviewed local check
   expect(await readFile(path.join(source, "main.cpp"), "utf8")).toContain(
     "newer edit",
   );
+  await page.locator(".workspace-more > summary").click();
   await page.getByRole("button", { name: "Checkpoints", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Your checkpoints" }),
